@@ -1,7 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+import { useDitheringShader } from "@/lib/use-dithering-shader";
 
 const declarePI = `
 #define TWO_PI 6.28318530718
@@ -233,68 +234,24 @@ export function DitheringShader({
   const uniformsRef = useRef<Record<string, WebGLUniformLocation | null>>({});
   const startTimeRef = useRef(0);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const gl = canvas.getContext("webgl2");
-    if (!gl) return;
-    glRef.current = gl;
-
-    const program = createProgram(gl, vertexShaderSource, fragmentShaderSource);
-    if (!program) return;
-    programRef.current = program;
-
-    uniformsRef.current = {
-      u_time: gl.getUniformLocation(program, "u_time"),
-      u_resolution: gl.getUniformLocation(program, "u_resolution"),
-      u_colorBack: gl.getUniformLocation(program, "u_colorBack"),
-      u_colorFront: gl.getUniformLocation(program, "u_colorFront"),
-      u_shape: gl.getUniformLocation(program, "u_shape"),
-      u_type: gl.getUniformLocation(program, "u_type"),
-      u_pxSize: gl.getUniformLocation(program, "u_pxSize"),
-    };
-
-    const posLoc = gl.getAttribLocation(program, "a_position");
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(posLoc);
-    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
-
-    canvas.width = width;
-    canvas.height = height;
-    gl.viewport(0, 0, width, height);
-    startTimeRef.current = performance.now();
-
-    const render = () => {
-      const t = (performance.now() - startTimeRef.current) * 0.001 * speed;
-      const ctx = glRef.current;
-      const prog = programRef.current;
-      if (!ctx || !prog) return;
-
-      ctx.clear(ctx.COLOR_BUFFER_BIT);
-      ctx.useProgram(prog);
-
-      const u = uniformsRef.current;
-      if (u.u_time) ctx.uniform1f(u.u_time, t);
-      if (u.u_resolution) ctx.uniform2f(u.u_resolution, width, height);
-      if (u.u_colorBack) ctx.uniform4fv(u.u_colorBack, hexToRgba(colorBack));
-      if (u.u_colorFront) ctx.uniform4fv(u.u_colorFront, hexToRgba(colorFront));
-      if (u.u_shape) ctx.uniform1f(u.u_shape, 6);
-      if (u.u_type) ctx.uniform1f(u.u_type, 3);
-      if (u.u_pxSize) ctx.uniform1f(u.u_pxSize, pxSize);
-
-      ctx.drawArrays(ctx.TRIANGLES, 0, 6);
-      animationRef.current = requestAnimationFrame(render);
-    };
-
-    animationRef.current = requestAnimationFrame(render);
-
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      if (glRef.current && programRef.current) glRef.current.deleteProgram(programRef.current);
-    };
-  }, [width, height, colorBack, colorFront, pxSize, speed]);
+  useDitheringShader({
+    animationRef,
+    canvasRef,
+    colorBack,
+    colorFront,
+    createProgram,
+    fragmentShaderSource,
+    glRef,
+    height,
+    hexToRgba,
+    programRef,
+    pxSize,
+    speed,
+    startTimeRef,
+    uniformsRef,
+    vertexShaderSource,
+    width,
+  });
 
   return (
     <div

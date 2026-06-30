@@ -106,8 +106,14 @@ function drawLine(line: TrailLine, ctx: CanvasRenderingContext2D) {
 
 export function renderCanvas() {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-  const ctx = canvas.getContext("2d")!;
+  if (!canvas) return;
+
+  const context = canvas.getContext("2d");
+  if (!context) return;
+  const ctx = context;
+
   let running = true;
+  let frameId = 0;
   const pos = { x: 0, y: 0 };
   let lines: TrailLine[] = [];
 
@@ -140,7 +146,7 @@ export function renderCanvas() {
       updateLine(line, pos);
       drawLine(line, ctx);
     }
-    requestAnimationFrame(render);
+    frameId = requestAnimationFrame(render);
   }
 
   function handlePointer(e: MouseEvent | TouchEvent) {
@@ -172,18 +178,36 @@ export function renderCanvas() {
     render();
   }
 
-  document.addEventListener("mousemove", onFirstInteraction as EventListener);
-  document.addEventListener("touchstart", onFirstInteraction as EventListener);
-  window.addEventListener("resize", resize);
-  window.addEventListener("focus", () => {
+  function handleFocus() {
     if (!running) {
       running = true;
       render();
     }
-  });
-  window.addEventListener("blur", () => {
+  }
+
+  function handleBlur() {
     running = false;
-  });
+    if (frameId) cancelAnimationFrame(frameId);
+  }
+
+  document.addEventListener("mousemove", onFirstInteraction as EventListener);
+  document.addEventListener("touchstart", onFirstInteraction as EventListener);
+  window.addEventListener("resize", resize);
+  window.addEventListener("focus", handleFocus);
+  window.addEventListener("blur", handleBlur);
 
   resize();
+
+  return () => {
+    running = false;
+    if (frameId) cancelAnimationFrame(frameId);
+    document.removeEventListener("mousemove", onFirstInteraction as EventListener);
+    document.removeEventListener("touchstart", onFirstInteraction as EventListener);
+    document.removeEventListener("mousemove", handlePointer as EventListener);
+    document.removeEventListener("touchmove", handlePointer as EventListener);
+    document.removeEventListener("touchstart", handleTouchStart as EventListener);
+    window.removeEventListener("resize", resize);
+    window.removeEventListener("focus", handleFocus);
+    window.removeEventListener("blur", handleBlur);
+  };
 }

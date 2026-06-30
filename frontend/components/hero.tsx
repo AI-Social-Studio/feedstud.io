@@ -1,29 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Plus } from "@phosphor-icons/react/dist/ssr";
 import { renderCanvas } from "@/components/ui/canvas";
 import { Button } from "@/components/ui/button";
+import { useMountEffect } from "@/lib/use-mount-effect";
+import { useTypewriter } from "@/lib/use-typewriter";
 
 const FULL_TEXT = "The Smartest Way to Create Content.";
 
 export function Hero() {
-  const [displayed, setDisplayed] = useState("");
+  const displayed = useTypewriter(FULL_TEXT, 38);
   const done = displayed.length >= FULL_TEXT.length;
 
-  useEffect(() => {
-    renderCanvas();
-  }, []);
-
-  useEffect(() => {
-    if (displayed.length >= FULL_TEXT.length) return;
-    const timeout = setTimeout(() => {
-      setDisplayed(FULL_TEXT.slice(0, displayed.length + 1));
-    }, 38);
-    return () => clearTimeout(timeout);
-  }, [displayed]);
+  useMountEffect(() => renderCanvas());
 
   return (
     <section id="home" className="relative h-screen flex flex-col overflow-hidden bg-white">
