@@ -4,6 +4,10 @@
 .env
 .env.*
 !.env.example
+!frontend/.env.example
+!frontend/.env.development
+!frontend/.env.production
+!backend/.env.example
 *.local
 secrets.json
 *.pem

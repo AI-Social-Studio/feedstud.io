@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { env } from './env';
 
 const nextConfig: NextConfig = {
   devIndicators: false,
@@ -6,7 +7,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/backend/:path*',
-        destination: `${process.env.BACKEND_URL ?? 'http://localhost:4000'}/api/v1/:path*`,
+        destination: `${env.BACKEND_URL}/api/v1/:path*`,
       },
     ];
   },

@@ -1,6 +1,7 @@
 import type { Draft, DraftSummary } from "@/lib/flowforge-api";
+import { env } from "@/env";
 
-const backendBaseUrl = `${process.env.BACKEND_URL ?? "http://localhost:4000"}/api/v1`;
+const backendBaseUrl = `${env.BACKEND_URL}/api/v1`;
 
 export async function fetchDraftServer(draftId: string): Promise<Draft | null> {
   const response = await fetch(`${backendBaseUrl}/drafts/${draftId}`, { cache: "no-store" });

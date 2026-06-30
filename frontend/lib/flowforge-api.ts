@@ -1,8 +1,9 @@
 import axios, { AxiosError } from "axios";
 import type { Platform, RefineAction } from "@/components/studio/content-engine";
+import { env } from "@/env";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL ?? "/api/backend",
+  baseURL: env.NEXT_PUBLIC_BACKEND_URL,
   timeout: 60000,
 });
 
