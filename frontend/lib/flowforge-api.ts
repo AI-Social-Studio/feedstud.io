@@ -40,6 +40,36 @@ export type UploadResponse = {
   files: UploadedFile[];
 };
 
+export type DraftSummary = {
+  id: string;
+  title: string;
+  selected_platforms: Platform[];
+  posts_count: number;
+  raw_text_preview: string;
+  updated_at: string;
+  created_at: string;
+};
+
+export type Draft = {
+  id: string;
+  title: string;
+  raw: string;
+  platforms: Platform[];
+  posts: Partial<Record<Platform, string>>;
+  file_ids: string[];
+  created_at: string;
+  updated_at: string;
+  files: UploadedFile[];
+};
+
+export type SaveDraftRequest = {
+  title?: string;
+  raw: string;
+  platforms: Platform[];
+  posts: Partial<Record<Platform, string>>;
+  file_ids: string[];
+};
+
 type ApiErrorPayload = {
   detail?: string | { msg?: string }[];
   code?: string;
@@ -59,6 +89,26 @@ export async function uploadFiles(files: File[]): Promise<UploadResponse> {
   const formData = new FormData();
   for (const file of files) formData.append("files", file);
   const response = await api.post<UploadResponse>("/uploads", formData);
+  return response.data;
+}
+
+export async function createDraft(payload: SaveDraftRequest): Promise<Draft> {
+  const response = await api.post<Draft>("/drafts", payload);
+  return response.data;
+}
+
+export async function updateDraft(draftId: string, payload: SaveDraftRequest): Promise<Draft> {
+  const response = await api.put<Draft>(`/drafts/${draftId}`, payload);
+  return response.data;
+}
+
+export async function getDraft(draftId: string): Promise<Draft> {
+  const response = await api.get<Draft>(`/drafts/${draftId}`);
+  return response.data;
+}
+
+export async function listDrafts(limit = 50): Promise<DraftSummary[]> {
+  const response = await api.get<DraftSummary[]>("/drafts", { params: { limit } });
   return response.data;
 }
 

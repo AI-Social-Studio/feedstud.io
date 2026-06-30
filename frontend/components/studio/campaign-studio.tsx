@@ -24,10 +24,13 @@ import {
   type RefineAction,
 } from "./content-engine";
 import {
+  createDraft,
   generatePosts,
   getApiErrorMessage,
   refinePost,
+  updateDraft,
   uploadFiles,
+  type Draft,
   type UploadedFile,
 } from "@/lib/flowforge-api";
 
@@ -47,6 +50,10 @@ type Toast = {
   id: number;
   tone: "success" | "error" | "info";
   message: string;
+};
+
+type Props = {
+  initialDraft?: Draft | null;
 };
 
 const INITIAL_ASSETS: AssetPreview[] = [
@@ -90,34 +97,60 @@ const REFINE_ACTIONS: {
   { action: "hashtags", label: "Hashtagi", icon: <Hash size={13} weight="bold" /> },
 ];
 
-export function CampaignStudio() {
+export function CampaignStudio({ initialDraft }: Props) {
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
-  const [raw, setRaw] = useState(
-    "robiłem apkę całą noc, błędy w kodzie, zjadłem pizzę, fajne uczucie",
+  const toastIdRef = useRef(0);
+  const initialSelected = buildSelectedState(initialDraft?.platforms ?? DEFAULT_PLATFORMS);
+  const initialResults: Partial<Record<Platform, string>> = initialDraft?.posts ?? {};
+  const initialFiles = initialDraft?.files ?? [];
+  const initialSnapshot = buildSnapshot(
+    initialDraft?.raw ?? DEFAULT_RAW,
+    initialSelected,
+    initialResults,
+    initialDraft?.file_ids ?? [],
   );
-  const [selected, setSelected] = useState<Record<Platform, boolean>>({
-    linkedin: true,
-    instagram: true,
-    x: false,
-  });
-  const [results, setResults] = useState<Partial<Record<Platform, string>>>({});
+
+  const [draftId, setDraftId] = useState(initialDraft?.id ?? null);
+  const [draftTitle, setDraftTitle] = useState(initialDraft?.title ?? "");
+  const [raw, setRaw] = useState(initialDraft?.raw ?? DEFAULT_RAW);
+  const [selected, setSelected] = useState<Record<Platform, boolean>>(initialSelected);
+  const [results, setResults] = useState<Partial<Record<Platform, string>>>(initialResults);
+  const [pristineResults, setPristineResults] =
+    useState<Partial<Record<Platform, string>>>(initialResults);
+  const [savedSnapshot, setSavedSnapshot] = useState(initialSnapshot);
   const [copied, setCopied] = useState<Platform | null>(null);
-  const [assets, setAssets] = useState<AssetPreview[]>(INITIAL_ASSETS);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [assets, setAssets] = useState<AssetPreview[]>(
+    initialFiles.length > 0 ? uploadedFilesToAssets(initialFiles) : INITIAL_ASSETS,
+  );
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(initialFiles);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [refining, setRefining] = useState<Partial<Record<Platform, boolean>>>({});
+  const [regenerating, setRegenerating] = useState<Partial<Record<Platform, boolean>>>({});
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const anySelected = PLATFORM_ORDER.some((platform) => selected[platform]);
   const activePlatforms = PLATFORM_ORDER.filter((platform) => selected[platform]);
+  const hasAnyContent =
+    raw.trim().length > 0 ||
+    uploadedFiles.length > 0 ||
+    Object.values(results).some((value) => Boolean(value?.trim()));
+  const hasUnsavedChanges =
+    buildSnapshot(
+      raw,
+      selected,
+      results,
+      uploadedFiles.map((file) => file.id),
+    ) !== savedSnapshot;
 
   function togglePlatform(platform: Platform) {
     setSelected((prev) => ({ ...prev, [platform]: !prev[platform] }));
   }
 
   function pushToast(tone: Toast["tone"], message: string) {
-    const id = Date.now() + Math.random();
+    toastIdRef.current += 1;
+    const id = toastIdRef.current;
     setToasts((prev) => [...prev, { id, tone, message }]);
     window.setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
@@ -135,6 +168,7 @@ export function CampaignStudio() {
     try {
       const response = await refinePost({ platform, text: current, action });
       setResults((prev) => ({ ...prev, [platform]: response.text }));
+      setPristineResults((prev) => ({ ...prev, [platform]: response.text }));
       pushToast("success", "Treść została dopracowana.");
     } catch (error) {
       pushToast("error", getApiErrorMessage(error));
@@ -157,6 +191,7 @@ export function CampaignStudio() {
         file_ids: uploadedFiles.map((file) => file.id),
       });
       setResults(response.posts);
+      setPristineResults(response.posts);
       const generatedCount = Object.keys(response.posts).length;
       if (generatedCount > 0) pushToast("success", `Wygenerowano ${generatedCount} posty.`);
       for (const [platform, message] of Object.entries(response.errors)) {
@@ -172,6 +207,59 @@ export function CampaignStudio() {
     }
   }
 
+  async function regeneratePlatform(platform: Platform) {
+    setRegenerating((prev) => ({ ...prev, [platform]: true }));
+    try {
+      const response = await generatePosts({
+        raw,
+        platforms: [platform],
+        file_ids: uploadedFiles.map((file) => file.id),
+      });
+      const nextText = response.posts[platform];
+      if (!nextText) {
+        const message = response.errors[platform] ?? "Backend nie zwrócił treści dla tej platformy.";
+        pushToast("error", message);
+        return;
+      }
+      setResults((prev) => ({ ...prev, [platform]: nextText }));
+      setPristineResults((prev) => ({ ...prev, [platform]: nextText }));
+      pushToast("success", `${PLATFORM_META[platform].name}: wygenerowano nową wersję.`);
+    } catch (error) {
+      pushToast("error", getApiErrorMessage(error));
+    } finally {
+      setRegenerating((prev) => ({ ...prev, [platform]: false }));
+    }
+  }
+
+  async function saveDraftState() {
+    if (!hasAnyContent) {
+      pushToast("info", "Najpierw dodaj treść lub pliki do szkicu.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const payload = {
+        raw,
+        platforms: activePlatforms,
+        posts: results,
+        file_ids: uploadedFiles.map((file) => file.id),
+      };
+      const savedDraft = draftId
+        ? await updateDraft(draftId, payload)
+        : await createDraft(payload);
+      setDraftId(savedDraft.id);
+      setDraftTitle(savedDraft.title);
+      setSavedSnapshot(buildSnapshot(raw, selected, results, uploadedFiles.map((file) => file.id)));
+      setPristineResults(results);
+      pushToast("success", draftId ? "Szkic zaktualizowany." : "Szkic zapisany.");
+    } catch (error) {
+      pushToast("error", getApiErrorMessage(error));
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   async function handleUpload(files: FileList | null) {
     const nextFiles = Array.from(files ?? []);
     if (nextFiles.length === 0) return;
@@ -180,15 +268,10 @@ export function CampaignStudio() {
     try {
       const response = await uploadFiles(nextFiles);
       setUploadedFiles((prev) => [...prev, ...response.files]);
-      setAssets((prev) => [
-        ...response.files.map((file) => ({
-          kind: "image" as const,
-          src: file.url,
-          alt: file.filename,
-          fileId: file.id,
-        })),
-        ...prev,
-      ]);
+      setAssets((prev) => {
+        const nextAssets = uploadedFilesToAssets(response.files);
+        return prev === INITIAL_ASSETS ? nextAssets : [...nextAssets, ...prev];
+      });
       pushToast("success", `Dodano ${response.files.length} pliki.`);
     } catch (error) {
       pushToast("error", getApiErrorMessage(error));
@@ -207,19 +290,52 @@ export function CampaignStudio() {
     window.setTimeout(() => setCopied(null), 1500);
   }
 
+  function updateResult(platform: Platform, text: string) {
+    setResults((prev) => ({ ...prev, [platform]: text }));
+  }
+
+  function discardPlatformChanges(platform: Platform) {
+    const nextText = pristineResults[platform] ?? "";
+    setResults((prev) => ({ ...prev, [platform]: nextText }));
+  }
+
   return (
     <>
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">New AI Campaign</h1>
-        <p className="text-sm text-gray-500">
-          Wrzuć surowe myśli i materiały. AI samo wyciąga rdzeń przekazu i pisze
-          pod każdą wybraną platformę.
-        </p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">
+            {draftTitle || "New AI Campaign"}
+          </h1>
+          <p className="text-sm text-gray-500">
+            Wrzuć surowe myśli i materiały. AI samo wyciąga rdzeń przekazu i pisze
+            pod każdą wybraną platformę.
+          </p>
+        </div>
+
+        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+          <div
+            className={`rounded-lg border px-3 py-2 text-xs font-medium ${
+              hasUnsavedChanges
+                ? "border-amber-200 bg-amber-50 text-amber-800"
+                : "border-emerald-200 bg-emerald-50 text-emerald-800"
+            }`}
+          >
+            {hasUnsavedChanges ? "Masz niezapisane zmiany" : "Wszystkie zmiany zapisane"}
+          </div>
+          <button
+            type="button"
+            onClick={saveDraftState}
+            disabled={isSaving || !hasAnyContent}
+            className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gray-800 disabled:pointer-events-none disabled:opacity-50"
+          >
+            {isSaving ? "Zapisuję..." : draftId ? "Zapisz zmiany" : "Zapisz szkic"}
+          </button>
+        </div>
       </div>
 
       <div>
         <StepHeader marker="1" title="Target Lock" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {PLATFORM_ORDER.map((platform) => {
             const meta = PLATFORM_META[platform];
             const isOn = selected[platform];
@@ -228,24 +344,22 @@ export function CampaignStudio() {
                 key={platform}
                 type="button"
                 onClick={() => togglePlatform(platform)}
-                className={`text-left bg-white rounded-xl p-5 shadow-sm relative transition-opacity ${
+                className={`relative rounded-xl bg-white p-5 text-left shadow-sm transition-opacity ${
                   isOn
                     ? "border-2 border-blue-600"
                     : "border border-gray-200 opacity-60 hover:opacity-100"
                 }`}
               >
                 {isOn ? (
-                  <div className="absolute top-4 right-4 text-blue-600">
+                  <div className="absolute right-4 top-4 text-blue-600">
                     <CheckCircle size={20} weight="fill" />
                   </div>
                 ) : null}
                 <div className="mb-4">
                   <PlatformIconBadge platform={platform} size="md" />
                 </div>
-                <div className="text-sm font-semibold text-gray-900">
-                  {meta.name}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">{meta.subtitle}</div>
+                <div className="text-sm font-semibold text-gray-900">{meta.name}</div>
+                <div className="mt-1 text-xs text-gray-500">{meta.subtitle}</div>
               </button>
             );
           })}
@@ -254,32 +368,29 @@ export function CampaignStudio() {
 
       <div>
         <StepHeader marker="2" title="The Brain Dump" />
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm lg:grid-cols-2">
           <div className="flex flex-col">
-            <label
-              htmlFor="brain-dump-text"
-              className="text-sm font-medium text-gray-700 mb-2"
-            >
+            <label htmlFor="brain-dump-text" className="mb-2 text-sm font-medium text-gray-700">
               Raw Thoughts
             </label>
             <textarea
               id="brain-dump-text"
               value={raw}
               onChange={(event) => setRaw(event.target.value)}
-              className="w-full flex-1 min-h-[160px] bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+              className="min-h-[160px] flex-1 resize-none rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
           <div className="flex flex-col">
-            <div className="flex items-center justify-between mb-2">
+            <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-medium text-gray-700">
-                Raw Media Assets (4)
+                Raw Media Assets ({assets.length})
               </span>
               <button
                 type="button"
                 onClick={() => uploadInputRef.current?.click()}
                 disabled={isUploading}
-                className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
               >
                 <Plus size={12} /> {isUploading ? "Uploading" : "Upload"}
               </button>
@@ -292,7 +403,7 @@ export function CampaignStudio() {
                 onChange={(event) => handleUpload(event.target.files)}
               />
             </div>
-            <div className="flex-1 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 p-4 grid grid-cols-2 gap-3">
+            <div className="grid flex-1 grid-cols-2 gap-3 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 p-4">
               {assets.slice(0, 4).map((asset, index) =>
                 asset.kind === "image" ? (
                   <AssetThumb
@@ -314,46 +425,57 @@ export function CampaignStudio() {
       {anySelected ? (
         <div>
           <StepHeader marker="3" title="Platform Previews" />
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
             {activePlatforms.map((platform) => {
               const meta = PLATFORM_META[platform];
               const text = results[platform] ?? "";
+              const pristine = pristineResults[platform] ?? "";
               const length = text.length;
               const over = length > meta.limit;
+              const hasManualChanges = text !== pristine;
               return (
                 <div
                   key={platform}
-                  className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col"
+                  className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
                 >
-                  <div className="p-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50/50">
+                  <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50/50 p-4">
                     <PlatformIconBadge platform={platform} size="sm" weight="bold" />
                     <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-gray-900">
-                        {meta.name}
-                      </h3>
-                      <p className="text-xs text-gray-500">
-                        Target: {meta.audience}
-                      </p>
+                      <h3 className="text-sm font-semibold text-gray-900">{meta.name}</h3>
+                      <p className="text-xs text-gray-500">Target: {meta.audience}</p>
                     </div>
-                    <span
-                      className={`text-xs font-medium ${
-                        over ? "text-red-500" : "text-gray-400"
-                      }`}
-                    >
+                    <span className={`text-xs font-medium ${over ? "text-red-500" : "text-gray-400"}`}>
                       {length} / {meta.limit}
                     </span>
                   </div>
 
-                  <div className="p-5 flex justify-center bg-gray-50/40">
-                    <PlatformPreview
-                      platform={platform}
-                      text={text}
-                      image={DEMO_IMAGE[platform]}
+                  <div className="flex justify-center bg-gray-50/40 p-5">
+                    <PlatformPreview platform={platform} text={text} image={DEMO_IMAGE[platform]} />
+                  </div>
+
+                  <div className="border-t border-gray-100 px-5 py-4">
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className="text-xs font-medium uppercase tracking-wider text-gray-400">
+                        Editable Copy
+                      </div>
+                      <div
+                        className={`text-xs font-medium ${
+                          hasManualChanges ? "text-amber-700" : "text-gray-400"
+                        }`}
+                      >
+                        {hasManualChanges ? "Unsaved edit" : "Synced"}
+                      </div>
+                    </div>
+                    <textarea
+                      value={text}
+                      onChange={(event) => updateResult(platform, event.target.value)}
+                      placeholder="Tutaj pojawi się wygenerowany post"
+                      className="min-h-[160px] w-full resize-y rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
 
-                  <div className="px-5 py-3 border-t border-gray-100">
-                    <div className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+                  <div className="border-t border-gray-100 px-5 py-3">
+                    <div className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-400">
                       Quick Refine
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -362,7 +484,7 @@ export function CampaignStudio() {
                           key={action}
                           type="button"
                           onClick={() => applyRefine(platform, action)}
-                          disabled={isGenerating || refining[platform]}
+                          disabled={isGenerating || refining[platform] || regenerating[platform]}
                           className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:pointer-events-none disabled:opacity-50"
                         >
                           {icon}
@@ -372,7 +494,26 @@ export function CampaignStudio() {
                     </div>
                   </div>
 
-                  <div className="px-5 py-3 border-t border-gray-100 flex justify-end">
+                  <div className="flex flex-wrap justify-between gap-2 border-t border-gray-100 px-5 py-3">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => regeneratePlatform(platform)}
+                        disabled={isGenerating || regenerating[platform]}
+                        className="rounded-lg border border-gray-200 px-3.5 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:pointer-events-none disabled:opacity-50"
+                      >
+                        {regenerating[platform] ? "Generuję..." : "Regenerate"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => discardPlatformChanges(platform)}
+                        disabled={!hasManualChanges}
+                        className="rounded-lg border border-gray-200 px-3.5 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 disabled:pointer-events-none disabled:opacity-50"
+                      >
+                        Discard changes
+                      </button>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => copyPost(platform)}
@@ -398,7 +539,7 @@ export function CampaignStudio() {
             type="button"
             onClick={createContent}
             disabled={isGenerating}
-            className="mt-6 w-full flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 cursor-pointer disabled:pointer-events-none disabled:opacity-70"
+            className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:pointer-events-none disabled:opacity-70"
           >
             <Sparkle size={16} weight="bold" />
             {isGenerating ? "Tworzę treść posta..." : "Utwórz treść posta"}
@@ -424,4 +565,39 @@ export function CampaignStudio() {
       </div>
     </>
   );
+}
+
+const DEFAULT_RAW =
+  "robiłem apkę całą noc, błędy w kodzie, zjadłem pizzę, fajne uczucie";
+const DEFAULT_PLATFORMS: Platform[] = ["linkedin", "instagram"];
+
+function buildSelectedState(platforms: Platform[]): Record<Platform, boolean> {
+  return {
+    linkedin: platforms.includes("linkedin"),
+    instagram: platforms.includes("instagram"),
+    x: platforms.includes("x"),
+  };
+}
+
+function uploadedFilesToAssets(files: UploadedFile[]): AssetPreview[] {
+  return files.map((file) => ({
+    kind: "image",
+    src: file.url,
+    alt: file.filename,
+    fileId: file.id,
+  }));
+}
+
+function buildSnapshot(
+  raw: string,
+  selected: Record<Platform, boolean>,
+  results: Partial<Record<Platform, string>>,
+  fileIds: string[],
+): string {
+  return JSON.stringify({
+    raw,
+    fileIds,
+    selected: PLATFORM_ORDER.map((platform) => [platform, selected[platform]]),
+    results: PLATFORM_ORDER.map((platform) => [platform, results[platform] ?? ""]),
+  });
 }

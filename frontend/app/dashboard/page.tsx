@@ -4,7 +4,7 @@ import { CampaignStudio } from "@/components/studio/campaign-studio";
 export default function DashboardPage() {
   return (
     <DashboardShell>
-      <CampaignStudio />
+      <CampaignStudio initialDraft={null} />
     </DashboardShell>
   );
 }
