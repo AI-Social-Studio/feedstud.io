@@ -43,6 +43,12 @@ const DEMO_IMAGE: Record<Platform, string | undefined> = {
   x: undefined,
 };
 
+const DEMO_PREVIEW_IMAGES: Record<Platform, string[]> = {
+  linkedin: DEMO_IMAGE.linkedin ? [DEMO_IMAGE.linkedin] : [],
+  instagram: DEMO_IMAGE.instagram ? [DEMO_IMAGE.instagram] : [],
+  x: DEMO_IMAGE.x ? [DEMO_IMAGE.x] : [],
+};
+
 type AssetPreview =
   | { kind: "image"; src: string; alt: string; objectPosition?: "top" | "center"; fileId?: string }
   | { kind: "meme"; label: string };
@@ -509,7 +515,11 @@ export function CampaignStudio({ initialDraft }: Props) {
                   </div>
 
                   <div className="flex justify-center bg-gray-50/40 p-5">
-                    <PlatformPreview platform={platform} text={text} image={DEMO_IMAGE[platform]} />
+                    <PlatformPreview
+                      platform={platform}
+                      text={text}
+                      images={getPreviewImages(uploadedFiles, platform)}
+                    />
                   </div>
 
                   <div className="border-t border-gray-100 px-5 py-4">
@@ -644,6 +654,10 @@ function uploadedFilesToAssets(files: UploadedFile[]): UploadedAssetPreview[] {
     alt: file.filename,
     fileId: file.id,
   }));
+}
+
+function getPreviewImages(files: UploadedFile[], platform: Platform): string[] {
+  return files.length > 0 ? files.map((file) => file.url) : DEMO_PREVIEW_IMAGES[platform];
 }
 
 function buildSnapshot(
