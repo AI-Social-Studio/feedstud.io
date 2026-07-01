@@ -10,7 +10,7 @@ export async function DashboardShell({
   children: ReactNode;
   role?: AppRole;
 }) {
-  const resolvedRole = role ?? (await getSessionAppRole());
+  const resolvedRole = role ?? (await getSessionAppRole()) ?? "user";
 
   return (
     <div className="h-screen flex overflow-hidden w-full">

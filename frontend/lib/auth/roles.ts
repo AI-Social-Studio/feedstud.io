@@ -21,9 +21,9 @@ export function getRoleFromPublicMetadata(publicMetadata: unknown): AppRole | nu
   return normalizeAppRole((publicMetadata as { role?: unknown }).role);
 }
 
-export const getSessionAppRole = cache(async (): Promise<AppRole> => {
+export const getSessionAppRole = cache(async (): Promise<AppRole | null> => {
   const { sessionClaims } = await auth();
-  return getRoleFromSessionClaims(sessionClaims) ?? "user";
+  return getRoleFromSessionClaims(sessionClaims);
 });
 
 export async function checkRole(
@@ -31,8 +31,16 @@ export async function checkRole(
   sessionClaims?: CustomJwtSessionClaims | null,
 ): Promise<boolean> {
   const currentSessionClaims = sessionClaims ?? (await auth()).sessionClaims;
+  if (role === "admin") {
+    const { userId } = await auth();
+    if (!userId) return false;
+
+    const user = await currentUser();
+    return getRoleFromPublicMetadata(user?.publicMetadata) === "admin";
+  }
+
   const sessionRole = getRoleFromSessionClaims(currentSessionClaims);
-  if (sessionRole) return sessionRole === role;
+  if (sessionRole) return sessionRole === "user";
 
   if (sessionClaims) return role === "user";
 
