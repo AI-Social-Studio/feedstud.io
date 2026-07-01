@@ -1,0 +1,290 @@
+import type { Dictionary } from "./types";
+
+export const en: Dictionary = {
+  common: {
+    signIn: "Sign in",
+    tryItFree: "Try it free",
+    goToDashboard: "Go to dashboard",
+  },
+  hero: {
+    headline: "The Smartest Way to Create Content.",
+    subtitle:
+      "Paste your raw ideas. Pick a platform. Get a finished post — tailored for LinkedIn, Instagram, or X with the right tone and format.",
+    cta: "Start Creating",
+  },
+  howItWorks: {
+    eyebrow: "how it works",
+    title: "From raw ideas to publish-ready in seconds.",
+    steps: [
+      {
+        title: "Drop your raw content",
+        description:
+          "Paste notes, a blog draft, a transcript, bullet points — anything. No need to format it first.",
+      },
+      {
+        title: "Pick a platform",
+        description:
+          "Choose LinkedIn, Instagram, or X. The AI reads the platform rules and adjusts tone and structure automatically.",
+      },
+      {
+        title: "Copy and post",
+        description:
+          "Your finished, platform-native post is ready. One click copies it. No editing needed.",
+      },
+    ],
+  },
+  features: {
+    eyebrow: "features",
+    title: "Built to eliminate the busywork.",
+    subtitle:
+      "People who work with words drown in reformatting. SocialStudio.ai does the mechanical work so you can focus on the ideas.",
+    items: [
+      {
+        title: "Platform-aware AI",
+        description:
+          "LinkedIn gets authoritative, value-driven copy. Instagram gets visual storytelling with hashtags. X gets punchy hooks under 280 characters. The AI knows the difference.",
+      },
+      {
+        title: "One generation, publish-ready",
+        description:
+          "No prompt engineering, no back-and-forth. Paste your content, pick the platform, and the output is finished — not a rough draft.",
+      },
+      {
+        title: "Hours saved every week",
+        description:
+          "Content teams spend 3–5 hours per week manually reformatting the same ideas for different channels. SocialStudio.ai cuts that to seconds.",
+      },
+      {
+        title: "Consistent brand voice",
+        description:
+          "The tone adapts to the platform, not to the AI's mood. Your message stays coherent whether it goes out on LinkedIn or X.",
+      },
+    ],
+  },
+  platforms: {
+    eyebrow: "supported platforms",
+    title: "One idea. Three audiences. Zero extra work.",
+    subtitle: "Each platform has its own grammar. SocialStudio.ai speaks all three fluently.",
+    exampleLabel: "example output",
+    items: [
+      {
+        tagline: "Professional · B2B · Thought leadership",
+        traits: ["Value-driven hooks", "Paragraph breaks", "No hashtag spam", "First-person authority"],
+        example:
+          "Most teams waste 3 hours a week reformatting content. Here's how we cut that to 30 seconds…",
+      },
+      {
+        tagline: "Visual · Lifestyle · Community",
+        traits: ["Emoji-forward", "Short punchy sentences", "Hashtag block", "Relatable tone"],
+        example:
+          "Imagine spending 30 seconds on what used to take hours ✨ This changed everything for our team →",
+      },
+      {
+        tagline: "Short-form · Trending · Direct",
+        traits: ["Under 280 chars", "Strong opening hook", "No filler", "Conversational"],
+        example: "We killed 3 hours of weekly busywork with one tool. Here's the breakdown:",
+      },
+    ],
+  },
+  cta: {
+    title: "Stop reformatting. Start publishing.",
+    subtitle:
+      "Your ideas are already good. SocialStudio.ai just makes them fit wherever they need to go.",
+    button: "Start Creating",
+  },
+  footer: {
+    tagline: "AI-powered content repurposing. Paste your raw ideas, pick a platform, get a finished post.",
+    columns: [
+      {
+        title: "Product",
+        links: [
+          { label: "How it works", href: "/#how-it-works" },
+          { label: "Features", href: "/#features" },
+          { label: "Platforms", href: "/#platforms" },
+        ],
+      },
+      { title: "Company", links: [{ label: "Contact", href: "/contact" }] },
+      {
+        title: "Legal",
+        links: [
+          { label: "Privacy Policy", href: "/privacy" },
+          { label: "Terms & Conditions", href: "/terms" },
+        ],
+      },
+    ],
+    copyrightSuffix: "socialstudio.ai — ai-powered content repurposing.",
+  },
+  legal: {
+    lastUpdated: "Last updated",
+    contactHeading: "Contact",
+    contactBody: "Questions? Reach out via the",
+    contactLinkText: "contact page",
+    privacy: {
+      title: "Privacy Policy",
+      updatedDate: "July 1, 2026",
+      intro:
+        'This Privacy Policy explains what information socialstudio.ai ("we", "us") collects when you use the app, and how that information is used.',
+      sections: [
+        {
+          heading: "Information we collect",
+          body: [
+            "Account information (name, email address) provided when you sign up.",
+            "Content you paste or upload — raw notes, files, and images — to generate posts.",
+            "The posts and drafts generated or saved through the app.",
+            "Basic usage data (pages visited, actions taken) used to keep the app working reliably.",
+          ],
+        },
+        {
+          heading: "How we use your information",
+          body: "We use the content you provide to generate platform-specific posts through our AI provider, to save and display your drafts, and to operate and improve the app. We do not sell your data.",
+        },
+        {
+          heading: "Third-party services",
+          body: [
+            "Authentication is handled by Clerk.",
+            "Post generation is handled by our AI provider, which processes the text and files you submit.",
+            "Uploaded files are stored in our object storage.",
+          ],
+        },
+        {
+          heading: "Data retention",
+          body: "Drafts, generated posts, and uploaded files are kept until you delete them or close your account. You can delete individual drafts and uploads at any time from within the app.",
+        },
+        {
+          heading: "Your rights",
+          body: "You can request access to, correction of, or deletion of your personal data at any time by contacting us.",
+        },
+      ],
+    },
+    terms: {
+      title: "Terms & Conditions",
+      updatedDate: "July 1, 2026",
+      intro:
+        "These Terms & Conditions govern your use of socialstudio.ai. By creating an account or using the app, you agree to these terms.",
+      sections: [
+        {
+          heading: "Using the service",
+          body: "You're responsible for the content you paste, upload, or generate through the app, and for keeping your account credentials secure. Don't use socialstudio.ai to generate content that is illegal, abusive, or infringes on someone else's rights.",
+        },
+        {
+          heading: "Your content",
+          body: "You retain ownership of the content you submit and the posts generated for you. We only use it to provide the service — generating, previewing, and storing your drafts.",
+        },
+        {
+          heading: "AI-generated content",
+          body: "Posts are generated automatically by an AI model. We don't guarantee that generated content is accurate, complete, or suitable for every purpose — always review a post before publishing it.",
+        },
+        {
+          heading: "Availability",
+          body: "We aim to keep the app available and reliable, but we don't guarantee uninterrupted access and may need to modify or pause the service from time to time.",
+        },
+        {
+          heading: "Limitation of liability",
+          body: 'socialstudio.ai is provided "as is". To the extent permitted by law, we\'re not liable for damages arising from your use of generated content or the service.',
+        },
+        {
+          heading: "Changes to these terms",
+          body: "We may update these terms occasionally. Continued use of the app after changes means you accept the updated terms.",
+        },
+      ],
+    },
+    contact: {
+      title: "Contact",
+      description:
+        "Questions, feedback, or something not working the way it should? Send us an email and we'll get back to you.",
+    },
+  },
+  nav: {
+    mainMenu: "Main menu",
+    home: "Home",
+    myCampaigns: "My Campaigns",
+    newCampaign: "New Campaign",
+    draft: "Draft",
+  },
+  home: {
+    title: "Home",
+    subtitle: "Your activity overview on socialstudio.ai.",
+    newCampaign: "New campaign",
+    statLast7: "Last 7 days",
+    statLast30: "Last 30 days",
+    statTotal: "Total campaigns",
+    recentCampaigns: "Recent campaigns",
+    viewAll: "View all",
+    emptyState: "You don't have any campaigns yet. Start a new one above.",
+    noDescription: "No description",
+  },
+  myCampaigns: {
+    title: "My Campaigns",
+    subtitle: "Return to saved drafts and reopen them in the studio.",
+    newCampaign: "New campaign",
+    emptyState: "You do not have any saved drafts yet.",
+    noDescription: "No description",
+    version: "version",
+    versions: "versions",
+  },
+  studio: {
+    defaultTitle: "New AI Campaign",
+    subtitle:
+      "Drop your raw thoughts and materials. The AI pulls out the core message and writes it for every platform you pick.",
+    unsavedChanges: "You have unsaved changes",
+    allSaved: "All changes saved",
+    saving: "Saving...",
+    saveChanges: "Save changes",
+    saveDraft: "Save draft",
+    step1Title: "Target Lock",
+    step2Title: "The Brain Dump",
+    step3Title: "Platform Previews",
+    rawThoughts: "Raw Thoughts",
+    rawMediaAssets: "Raw Media Assets",
+    upload: "Upload",
+    uploading: "Uploading",
+    noFilesYet: "You haven't uploaded any files yet",
+    noFilesHint: "Add images so the AI can use them when generating your post.",
+    demoAssetsHint: "You're seeing sample assets above. They'll disappear after your first upload.",
+    target: "Target",
+    editableCopy: "Editable Copy",
+    unsavedEdit: "Unsaved edit",
+    synced: "Synced",
+    textareaPlaceholder: "Your generated post will appear here",
+    quickRefine: "Quick Refine",
+    refineActions: {
+      hook: "Change hook",
+      shorten: "Shorten",
+      formal: "More formal",
+      casual: "More casual",
+      cta: "Add CTA",
+      hashtags: "Hashtags",
+    },
+    regenerate: "Regenerate",
+    regenerating: "Generating...",
+    discardChanges: "Discard changes",
+    copy: "Copy",
+    copied: "Copied",
+    createPost: "Create post content",
+    creatingPost: "Creating post content...",
+    removeFile: "Remove file",
+    removeFileLocked: "Removal is locked while generating or saving",
+    confirmDeleteFile: "Permanently delete this file from the draft and storage?",
+    toasts: {
+      selectPlatform: "Select at least one platform.",
+      generateFirst: "Generate the post content first.",
+      refined: "Content has been refined.",
+      generated: (count) => `Generated ${count} posts.`,
+      noBackendContent: "The backend didn't return any content.",
+      noBackendContentPlatform: "The backend didn't return content for this platform.",
+      regenerated: (platformName) => `${platformName}: a new version has been generated.`,
+      addContentFirst: "Add content or files to the draft first.",
+      draftUpdated: "Draft updated.",
+      draftSaved: "Draft saved.",
+      filesAdded: (count) => `Added ${count} files.`,
+      waitForLock: "Wait for generation or saving to finish.",
+      fileDeleted: "File deleted.",
+      postCopied: "Post copied to clipboard.",
+    },
+    platforms: {
+      linkedin: { subtitle: "B2B, Professional, Networking", audience: "Tech Professionals" },
+      instagram: { subtitle: "Visual, Lifestyle, Engagement", audience: "Lifestyle & Vibe" },
+      x: { subtitle: "Short-form, News, Trends", audience: "Fast, skim-first feed" },
+    },
+  },
+};

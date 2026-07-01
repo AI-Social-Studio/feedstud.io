@@ -20,9 +20,9 @@ type MemeThumb = {
 export function AssetThumb(props: ImageThumb | MemeThumb) {
   if (props.kind === "meme") {
     return (
-      <div className="relative rounded-md overflow-hidden border border-gray-200 bg-yellow-100 flex items-center justify-center aspect-video">
+      <div className="relative rounded-md overflow-hidden border border-gray-200 bg-yellow-100 flex items-center justify-center aspect-video dark:border-gray-700 dark:bg-yellow-500/20">
         <SmileyWink size={28} weight="fill" className="text-yellow-500" />
-        <span className="absolute bottom-1 left-1 bg-white/80 text-[9px] font-medium px-1.5 rounded text-gray-700">
+        <span className="absolute bottom-1 left-1 bg-white/80 text-[9px] font-medium px-1.5 rounded text-gray-700 dark:bg-gray-900/80 dark:text-gray-300">
           {props.label}
         </span>
       </div>
@@ -34,7 +34,7 @@ export function AssetThumb(props: ImageThumb | MemeThumb) {
 
   if (props.src.startsWith("blob:") || props.src.startsWith("http://localhost")) {
     return (
-      <div className="relative rounded-md overflow-hidden border border-gray-200 aspect-video">
+      <div className="relative rounded-md overflow-hidden border border-gray-200 aspect-video dark:border-gray-700">
         {props.onRemove ? (
           <RemoveButton
             onClick={props.onRemove}
@@ -48,7 +48,7 @@ export function AssetThumb(props: ImageThumb | MemeThumb) {
   }
 
   return (
-    <div className="relative rounded-md overflow-hidden border border-gray-200 aspect-video">
+    <div className="relative rounded-md overflow-hidden border border-gray-200 aspect-video dark:border-gray-700">
       {props.onRemove ? (
         <RemoveButton
           onClick={props.onRemove}
