@@ -1,30 +1,4 @@
-interface WaveConfig {
-  phase?: number;
-  offset?: number;
-  frequency?: number;
-  amplitude?: number;
-}
-
-class Wave {
-  phase: number;
-  offset: number;
-  frequency: number;
-  amplitude: number;
-  private current: number = 0;
-
-  constructor(config: WaveConfig = {}) {
-    this.phase = config.phase ?? 0;
-    this.offset = config.offset ?? 0;
-    this.frequency = config.frequency ?? 0.001;
-    this.amplitude = config.amplitude ?? 1;
-  }
-
-  update(): number {
-    this.phase += this.frequency;
-    this.current = this.offset + Math.sin(this.phase) * this.amplitude;
-    return this.current;
-  }
-}
+const TRAIL_COLOR = "hsla(220, 93%, 50%, 0.025)";
 
 interface NodePoint {
   x: number;
@@ -118,13 +92,6 @@ export function renderCanvas() {
   const pos = { x: 0, y: 0 };
   let lines: TrailLine[] = [];
 
-  const wave = new Wave({
-    phase: Math.random() * 2 * Math.PI,
-    amplitude: 85,
-    frequency: 0.0015,
-    offset: 285,
-  });
-
   function resize() {
     canvas.width = window.innerWidth - 20;
     canvas.height = window.innerHeight;
@@ -141,7 +108,7 @@ export function renderCanvas() {
     ctx.globalCompositeOperation = "source-over";
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.globalCompositeOperation = "lighter";
-    ctx.strokeStyle = `hsla(${Math.round(wave.update())},100%,50%,0.025)`;
+    ctx.strokeStyle = TRAIL_COLOR;
     ctx.lineWidth = 10;
     for (const line of lines) {
       updateLine(line, pos);
@@ -150,21 +117,29 @@ export function renderCanvas() {
     frameId = requestAnimationFrame(render);
   }
 
+  function getCanvasPos(clientX: number, clientY: number) {
+    const rect = canvas.getBoundingClientRect();
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
   function handlePointer(e: MouseEvent | TouchEvent) {
     if ("touches" in e) {
-      pos.x = e.touches[0].pageX;
-      pos.y = e.touches[0].pageY;
+      const p = getCanvasPos(e.touches[0].clientX, e.touches[0].clientY);
+      pos.x = p.x;
+      pos.y = p.y;
     } else {
-      pos.x = e.clientX;
-      pos.y = e.clientY;
+      const p = getCanvasPos(e.clientX, e.clientY);
+      pos.x = p.x;
+      pos.y = p.y;
     }
     e.preventDefault();
   }
 
   function handleTouchStart(e: TouchEvent) {
     if (e.touches.length === 1) {
-      pos.x = e.touches[0].pageX;
-      pos.y = e.touches[0].pageY;
+      const p = getCanvasPos(e.touches[0].clientX, e.touches[0].clientY);
+      pos.x = p.x;
+      pos.y = p.y;
     }
   }
 

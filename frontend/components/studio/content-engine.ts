@@ -8,8 +8,6 @@ export type CoreIdea = {
 export type PlatformMeta = {
   id: Platform;
   name: string;
-  subtitle: string;
-  audience: string;
   limit: number;
 };
 
@@ -24,27 +22,9 @@ export type RefineAction =
 export const PLATFORM_ORDER: Platform[] = ["linkedin", "instagram", "x"];
 
 export const PLATFORM_META: Record<Platform, PlatformMeta> = {
-  linkedin: {
-    id: "linkedin",
-    name: "LinkedIn",
-    subtitle: "B2B, Professional, Networking",
-    audience: "Tech Professionals",
-    limit: 3000,
-  },
-  instagram: {
-    id: "instagram",
-    name: "Instagram",
-    subtitle: "Visual, Lifestyle, Engagement",
-    audience: "Lifestyle & Vibe",
-    limit: 2200,
-  },
-  x: {
-    id: "x",
-    name: "X (Twitter)",
-    subtitle: "Short-form, News, Trends",
-    audience: "Fast, skim-first feed",
-    limit: 280,
-  },
+  linkedin: { id: "linkedin", name: "LinkedIn", limit: 3000 },
+  instagram: { id: "instagram", name: "Instagram", limit: 2200 },
+  x: { id: "x", name: "X (Twitter)", limit: 280 },
 };
 
 const FILLER = new Set([

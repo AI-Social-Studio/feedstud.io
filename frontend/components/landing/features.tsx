@@ -1,77 +1,54 @@
+"use client";
+
 import {
   Brain,
   CheckCircle,
   Clock,
   Lightning,
 } from "@phosphor-icons/react/dist/ssr";
-import type { ReactNode } from "react";
+import { Reveal } from "@/components/ui/reveal";
+import { useDictionary } from "@/lib/i18n";
 
-interface Feature {
-  icon: ReactNode;
-  title: string;
-  description: string;
-}
-
-const features: Feature[] = [
-  {
-    icon: <Brain size={24} weight="fill" className="text-blue-600" />,
-    title: "Platform-aware AI",
-    description:
-      "LinkedIn gets authoritative, value-driven copy. Instagram gets visual storytelling with hashtags. X gets punchy hooks under 280 characters. The AI knows the difference.",
-  },
-  {
-    icon: <Lightning size={24} weight="fill" className="text-blue-600" />,
-    title: "One generation, publish-ready",
-    description:
-      "No prompt engineering, no back-and-forth. Paste your content, pick the platform, and the output is finished — not a rough draft.",
-  },
-  {
-    icon: <Clock size={24} weight="fill" className="text-blue-600" />,
-    title: "Hours saved every week",
-    description:
-      "Content teams spend 3–5 hours per week manually reformatting the same ideas for different channels. SocialStudio.ai cuts that to seconds.",
-  },
-  {
-    icon: <CheckCircle size={24} weight="fill" className="text-blue-600" />,
-    title: "Consistent brand voice",
-    description:
-      "The tone adapts to the platform, not to the AI's mood. Your message stays coherent whether it goes out on LinkedIn or X.",
-  },
+const ICONS = [
+  <Brain key="brain" size={24} weight="fill" className="text-blue-600" />,
+  <Lightning key="lightning" size={24} weight="fill" className="text-blue-600" />,
+  <Clock key="clock" size={24} weight="fill" className="text-blue-600" />,
+  <CheckCircle key="check" size={24} weight="fill" className="text-blue-600" />,
 ];
 
 export function Features() {
+  const dict = useDictionary();
+
   return (
-    <section className="bg-gray-50 py-24 px-4">
+    <section id="features" className="bg-white py-24 px-4 dark:bg-gray-950">
       <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-16">
-          <p className="font-mono text-xs font-semibold uppercase tracking-widest text-blue-600 mb-3">
-            features
+        <Reveal className="text-center mb-16">
+          <p className="font-mono text-xs font-semibold uppercase tracking-widest text-blue-600 mb-3 dark:text-blue-400">
+            {dict.features.eyebrow}
           </p>
-          <h2 className="text-4xl font-semibold tracking-tight text-gray-900">
-            Built to eliminate the busywork.
+          <h2 className="text-4xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
+            {dict.features.title}
           </h2>
-          <p className="mt-4 text-gray-500 max-w-xl mx-auto">
-            People who work with words drown in reformatting. SocialStudio.ai
-            does the mechanical work so you can focus on the ideas.
+          <p className="mt-4 text-gray-500 max-w-xl mx-auto dark:text-gray-400">
+            {dict.features.subtitle}
           </p>
-        </div>
+        </Reveal>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm"
-            >
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
-                {feature.icon}
+          {dict.features.items.map((feature, index) => (
+            <Reveal key={feature.title} delayMs={index * 80}>
+              <div className="h-full bg-gray-50 rounded-2xl p-6 border border-gray-100 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:bg-gray-900 dark:border-gray-800">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-4 dark:bg-blue-500/10">
+                  {ICONS[index]}
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 mb-2 dark:text-gray-100">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-gray-500 leading-relaxed dark:text-gray-400">
+                  {feature.description}
+                </p>
               </div>
-              <h3 className="text-base font-semibold text-gray-900 mb-2">
-                {feature.title}
-              </h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                {feature.description}
-              </p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>

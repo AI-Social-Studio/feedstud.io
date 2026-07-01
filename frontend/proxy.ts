@@ -4,7 +4,15 @@ import { checkRole } from "@/lib/auth/roles";
 
 const isAdminRoute = createRouteMatcher(["/dashboard/admin(.*)"]);
 const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
-const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)", "/api/webhooks/clerk"]);
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/privacy",
+  "/terms",
+  "/contact",
+  "/api/webhooks/clerk",
+]);
 
 export default clerkMiddleware(async (auth, request) => {
   const authState = await auth();
