@@ -113,6 +113,7 @@ export function renderCanvas() {
   const ctx = context;
 
   let running = true;
+  let hasStarted = false;
   let frameId = 0;
   const pos = { x: 0, y: 0 };
   let lines: TrailLine[] = [];
@@ -175,11 +176,12 @@ export function renderCanvas() {
     document.addEventListener("touchstart", handleTouchStart as EventListener);
     handlePointer(e);
     initLines();
+    hasStarted = true;
     render();
   }
 
   function handleFocus() {
-    if (!running) {
+    if (hasStarted && !running) {
       running = true;
       render();
     }

@@ -68,6 +68,12 @@ export function useDitheringShader({
 
     const posLoc = gl.getAttribLocation(program, "a_position");
     const buf = gl.createBuffer();
+    if (!buf) {
+      gl.deleteProgram(program);
+      programRef.current = null;
+      return;
+    }
+
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
     gl.enableVertexAttribArray(posLoc);
@@ -104,6 +110,7 @@ export function useDitheringShader({
 
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      gl.deleteBuffer(buf);
       if (glRef.current && programRef.current) glRef.current.deleteProgram(programRef.current);
     };
   }, [animationRef, canvasRef, colorBack, colorFront, createProgram, fragmentShaderSource, glRef, height, hexToRgba, programRef, pxSize, speed, startTimeRef, uniformsRef, vertexShaderSource, width]);
