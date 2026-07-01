@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import { AppProviders } from "@/components/providers/app-providers";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { LOCALE_INIT_SCRIPT } from "@/lib/i18n";
@@ -35,8 +36,8 @@ export default function RootLayout({
       className={`${inter.variable} ${geistMono.variable} min-h-full antialiased`}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-        <script dangerouslySetInnerHTML={{ __html: LOCALE_INIT_SCRIPT }} />
+        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <Script id="locale-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: LOCALE_INIT_SCRIPT }} />
       </head>
       <body className="min-h-screen">
         <AppProviders>{children}</AppProviders>
