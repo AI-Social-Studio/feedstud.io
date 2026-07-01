@@ -1,6 +1,7 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
+import type { AppRole } from "@/lib/auth/roles";
 import {
   ClockCounterClockwise,
   House,
@@ -11,8 +12,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SidebarNavItem } from "./sidebar-nav-item";
 
-export function Sidebar() {
+export function Sidebar({ role }: { role: AppRole }) {
   const pathname = usePathname();
+  const isAdmin = role === "admin";
 
   return (
     <aside className="z-10 flex h-full w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-white">
@@ -46,6 +48,22 @@ export function Sidebar() {
           />
         </nav>
 
+        {isAdmin ? (
+          <>
+            <div className="mb-3 px-3 text-xs font-medium uppercase tracking-wider text-gray-400">
+              Admin
+            </div>
+            <nav className="mb-8 space-y-1">
+              <SidebarNavItem
+                href="/dashboard/admin"
+                icon={<span className="h-2.5 w-2.5 rounded-full bg-violet-500" />}
+                label="Admin Workspace"
+                active={pathname === "/dashboard/admin" || pathname.startsWith("/dashboard/admin/")}
+              />
+            </nav>
+          </>
+        ) : null}
+
         <div className="mb-3 px-3 text-xs font-medium uppercase tracking-wider text-gray-400">
           AI Engines
         </div>
@@ -72,7 +90,7 @@ export function Sidebar() {
         <div className="flex items-center justify-between rounded-xl border border-gray-200 p-3">
           <div>
             <div className="text-sm font-semibold text-gray-900">Your account</div>
-            <div className="text-xs text-gray-500">Manage session and profile</div>
+            <div className="text-xs text-gray-500">Role: {role}</div>
           </div>
           <UserButton />
         </div>

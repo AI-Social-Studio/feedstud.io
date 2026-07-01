@@ -6,6 +6,7 @@ import { CaretRight, House } from "@phosphor-icons/react/dist/ssr";
 
 export function TopHeader() {
   const pathname = usePathname();
+  const isAdmin = pathname === "/dashboard/admin" || pathname.startsWith("/dashboard/admin/");
   const isHistory = pathname === "/dashboard/history";
   const isDraft = pathname.startsWith("/dashboard/drafts/");
 
@@ -20,7 +21,12 @@ export function TopHeader() {
           <span>Overview</span>
         </Link>
 
-        {isHistory ? (
+        {isAdmin ? (
+          <>
+            <CaretRight size={12} className="text-gray-300" />
+            <span className="font-medium text-gray-900">Admin Workspace</span>
+          </>
+        ) : isHistory ? (
           <>
             <CaretRight size={12} className="text-gray-300" />
             <span className="font-medium text-gray-900">History</span>
