@@ -176,6 +176,7 @@ export function renderCanvas() {
     document.addEventListener("touchstart", handleTouchStart as EventListener);
     handlePointer(e);
     initLines();
+    running = true;
     hasStarted = true;
     render();
   }
@@ -190,6 +191,7 @@ export function renderCanvas() {
   function handleBlur() {
     running = false;
     if (frameId) cancelAnimationFrame(frameId);
+    frameId = 0;
   }
 
   document.addEventListener("mousemove", onFirstInteraction as EventListener);
