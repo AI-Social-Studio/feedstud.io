@@ -1,20 +1,16 @@
 "use client";
 
 import {
-  createContext,
   useCallback,
   useContext,
   useEffect,
   useSyncExternalStore,
-  type ReactNode,
 } from "react";
 import { dictionaries, type Dictionary, type Locale } from "@/dictionaries";
+import { DEFAULT_LOCALE, LanguageContext, LOCALE_COOKIE_NAME } from "@/lib/language-context";
 
 const STORAGE_KEY = "locale";
-export const LOCALE_COOKIE_NAME = "locale";
-const DEFAULT_LOCALE: Locale = "pl";
 const listeners = new Set<() => void>();
-const LanguageContext = createContext<Locale>(DEFAULT_LOCALE);
 
 function emitChange() {
   for (const listener of listeners) listener();
@@ -30,10 +26,6 @@ function getSnapshot(): Locale {
   return stored === "pl" || stored === "en" ? stored : DEFAULT_LOCALE;
 }
 
-export function LanguageProvider({ children, initialLocale }: { children: ReactNode; initialLocale: Locale }) {
-  return <LanguageContext.Provider value={initialLocale}>{children}</LanguageContext.Provider>;
-}
-
 export function useLanguage(): { locale: Locale; setLocale: (locale: Locale) => void; dict: Dictionary } {
   const initialLocale = useContext(LanguageContext);
   const locale = useSyncExternalStore(subscribe, getSnapshot, () => initialLocale);
@@ -47,6 +39,7 @@ export function useLanguage(): { locale: Locale; setLocale: (locale: Locale) => 
 
   useEffect(() => {
     document.documentElement.lang = locale;
+    document.documentElement.setAttribute("data-locale-ready", "true");
   }, [locale]);
 
   return { locale, setLocale, dict: dictionaries[locale] };
