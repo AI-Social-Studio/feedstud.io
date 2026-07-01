@@ -12,14 +12,14 @@ export default async function HistoryPage() {
       <div>
         <h1 className="mb-1 text-2xl font-bold text-gray-900">History</h1>
         <p className="text-sm text-gray-500">
-          Wróć do zapisanych szkiców i otwórz je ponownie w studio.
+          Return to saved drafts and reopen them in the studio.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
         {drafts.length === 0 ? (
           <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-sm text-gray-500">
-            Nie masz jeszcze zapisanych szkiców.
+            You do not have any saved drafts yet.
           </div>
         ) : (
           drafts.map((draft) => (
@@ -31,7 +31,7 @@ export default async function HistoryPage() {
               <div className="mb-3 flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-base font-semibold text-gray-900">{draft.title}</h2>
-                  <p className="mt-1 text-sm text-gray-500">{draft.raw_text_preview || "Brak opisu"}</p>
+                  <p className="mt-1 text-sm text-gray-500">{draft.raw_text_preview || "No description"}</p>
                 </div>
                 <div className="shrink-0 text-xs text-gray-400">
                   {formatDate(draft.updated_at)}
@@ -49,7 +49,7 @@ export default async function HistoryPage() {
                   </div>
                 ))}
                 <span className="ml-auto text-xs font-medium text-gray-500">
-                  {draft.posts_count} {draft.posts_count === 1 ? "wersja" : "wersje"}
+                  {draft.posts_count} {draft.posts_count === 1 ? "version" : "versions"}
                 </span>
               </div>
             </Link>
@@ -61,7 +61,7 @@ export default async function HistoryPage() {
 }
 
 function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("pl-PL", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
