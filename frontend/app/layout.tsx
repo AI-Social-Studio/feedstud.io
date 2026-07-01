@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import { AppProviders } from "@/components/providers/app-providers";
-import { THEME_INIT_SCRIPT } from "@/lib/theme";
-import { LOCALE_INIT_SCRIPT } from "@/lib/i18n";
+import { ScriptInjector } from "@/components/ui/script-injector";
 import "./globals.css";
 
 const inter = Inter({
@@ -35,11 +33,9 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${geistMono.variable} min-h-full antialiased`}
     >
-      <head>
-        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-        <Script id="locale-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: LOCALE_INIT_SCRIPT }} />
-      </head>
+      <head />
       <body className="min-h-screen">
+        <ScriptInjector />
         <AppProviders>{children}</AppProviders>
       </body>
     </html>
