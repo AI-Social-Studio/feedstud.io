@@ -4,7 +4,7 @@ import { listDraftsServer } from "@/lib/flowforge-api-server";
 import type { DraftSummary } from "@/lib/flowforge-api";
 
 export default async function DashboardHomePage() {
-  const drafts = await listDraftsServer(200);
+  const drafts = await listDraftsServer(100);
   // connection() opts this page into per-request dynamic rendering, making Date.now() safe here:
   // https://nextjs.org/docs/app/getting-started/caching#working-with-non-deterministic-operations
   await connection();

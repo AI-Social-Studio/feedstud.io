@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PlatformIconBadge } from "@/components/ui/platform-icon-badge";
-import { useDictionary, useLanguage } from "@/lib/i18n";
+import { useLanguage } from "@/lib/i18n";
 import type { DraftSummary } from "@/lib/flowforge-api";
 import type { Platform } from "@/components/studio/content-engine";
 
