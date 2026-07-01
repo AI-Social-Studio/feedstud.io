@@ -3,7 +3,12 @@ import "server-only";
 import { cache } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { normalizeAppRole, type AppRole } from "@/lib/auth/roles";
+import {
+  checkRole,
+  getRoleFromPublicMetadata,
+  getRoleFromSessionClaims,
+  type AppRole,
+} from "@/lib/auth/roles";
 
 type RoleSource = "session_claims" | "public_metadata" | "default";
 
@@ -37,11 +42,6 @@ export async function getAuthContext(): Promise<AuthContext | null> {
   return getCachedAuthContext();
 }
 
-export const getSessionAppRole = cache(async (): Promise<AppRole> => {
-  const { sessionClaims } = await auth();
-  return getRoleFromSessionClaims(sessionClaims) ?? "user";
-});
-
 export async function requireAuthContext(): Promise<AuthContext> {
   const context = await getAuthContext();
   if (!context) redirect("/sign-in");
@@ -50,7 +50,7 @@ export async function requireAuthContext(): Promise<AuthContext> {
 
 export async function requireAdminContext(): Promise<AuthContext> {
   const context = await requireAuthContext();
-  if (context.role !== "admin") redirect("/dashboard");
+  if (!(await checkRole("admin"))) redirect("/dashboard");
   return context;
 }
 
@@ -68,7 +68,7 @@ function resolveRole({
   sessionClaims,
 }: {
   publicMetadata: unknown;
-  sessionClaims: Awaited<ReturnType<typeof auth>>["sessionClaims"];
+  sessionClaims: CustomJwtSessionClaims | null | undefined;
 }): { value: AppRole; source: RoleSource } {
   const sessionRole = getRoleFromSessionClaims(sessionClaims);
   if (sessionRole) return { value: sessionRole, source: "session_claims" };
@@ -77,21 +77,4 @@ function resolveRole({
   if (publicRole) return { value: publicRole, source: "public_metadata" };
 
   return { value: "user", source: "default" };
-}
-
-function getRoleFromSessionClaims(sessionClaims: Awaited<ReturnType<typeof auth>>["sessionClaims"]): AppRole | null {
-  if (!sessionClaims || typeof sessionClaims !== "object") return null;
-
-  const metadata = (sessionClaims as { metadata?: unknown }).metadata;
-  if (metadata && typeof metadata === "object") {
-    const nestedRole = normalizeAppRole((metadata as { role?: unknown }).role);
-    if (nestedRole) return nestedRole;
-  }
-
-  return normalizeAppRole((sessionClaims as { role?: unknown }).role);
-}
-
-function getRoleFromPublicMetadata(publicMetadata: unknown): AppRole | null {
-  if (!publicMetadata || typeof publicMetadata !== "object") return null;
-  return normalizeAppRole((publicMetadata as { role?: unknown }).role);
 }

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import { getSessionAppRole } from "@/lib/auth/get-auth-context";
-import type { AppRole } from "@/lib/auth/roles";
+import { getSessionAppRole, type AppRole } from "@/lib/auth/roles";
 import { Sidebar } from "./sidebar";
 import { TopHeader } from "./top-header";
 
