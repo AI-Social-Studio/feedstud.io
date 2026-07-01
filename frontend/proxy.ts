@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { checkRole } from "@/lib/auth/roles";
+import { checkSessionRole } from "@/lib/auth/roles";
 
 const isAdminRoute = createRouteMatcher(["/dashboard/admin(.*)"]);
 const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
@@ -25,7 +25,7 @@ export default clerkMiddleware(async (auth, request) => {
     await auth.protect();
   }
 
-  if (isAdminRoute(request) && !(await checkRole("admin", authState.sessionClaims))) {
+  if (isAdminRoute(request) && !checkSessionRole("admin", authState.sessionClaims)) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 });

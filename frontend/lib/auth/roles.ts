@@ -26,28 +26,24 @@ export const getSessionAppRole = cache(async (): Promise<AppRole | null> => {
   return getRoleFromSessionClaims(sessionClaims);
 });
 
-export async function checkRole(
+export function checkSessionRole(
   role: AppRole,
-  sessionClaims?: CustomJwtSessionClaims | null,
-): Promise<boolean> {
-  const currentSessionClaims = sessionClaims ?? (await auth()).sessionClaims;
-  if (role === "admin") {
-    const { userId } = await auth();
-    if (!userId) return false;
+  sessionClaims: CustomJwtSessionClaims | null | undefined,
+): boolean {
+  const sessionRole = getRoleFromSessionClaims(sessionClaims);
+  if (!sessionRole) return false;
+  if (role === "user") return sessionRole === "user" || sessionRole === "admin";
+  return sessionRole === "admin";
+}
 
+export async function checkRole(role: AppRole): Promise<boolean> {
+  const { userId } = await auth();
+  if (!userId) return false;
+
+  if (role === "admin") {
     const user = await currentUser();
     return getRoleFromPublicMetadata(user?.publicMetadata) === "admin";
   }
 
-  const sessionRole = getRoleFromSessionClaims(currentSessionClaims);
-  if (sessionRole) return sessionRole === "user" || sessionRole === "admin";
-
-  if (sessionClaims) return role === "user";
-
-  const { userId } = await auth();
-  if (!userId) return false;
-  if (role === "user") return true;
-
-  const user = await currentUser();
-  return getRoleFromPublicMetadata(user?.publicMetadata) === role;
+  return true;
 }
