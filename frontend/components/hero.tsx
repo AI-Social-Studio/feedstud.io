@@ -29,10 +29,10 @@ export function Hero() {
         />
 
         <div className="flex items-center gap-3">
-          <SignInButton>
+          <SignInButton fallbackRedirectUrl="/dashboard" forceRedirectUrl="/dashboard">
             <Button variant="ghost" size="sm">Sign in</Button>
           </SignInButton>
-          <SignUpButton>
+          <SignUpButton fallbackRedirectUrl="/dashboard" forceRedirectUrl="/dashboard">
             <Button size="sm">
               Try it free
               <ArrowRight size={14} className="ml-1.5" />
