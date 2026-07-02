@@ -19,6 +19,12 @@ export type Dictionary = {
     switchToLight: string;
     darkTheme: string;
     lightTheme: string;
+    cancel: string;
+    createCampaign: string;
+    campaignNamePromptTitle: string;
+    campaignNamePromptDescription: string;
+    campaignNameLabel: string;
+    campaignNamePlaceholder: string;
   };
   hero: {
     headline: string;
@@ -90,7 +96,11 @@ export type Dictionary = {
     title: string;
     subtitle: string;
     newCampaign: string;
+    searchPlaceholder: string;
+    sortNewest: string;
+    sortOldest: string;
     emptyState: string;
+    noResults: string;
     noDescription: string;
     version: string;
     versions: string;

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { NewCampaignButton } from "@/components/dashboard/new-campaign-button";
 import { PlatformIconBadge } from "@/components/ui/platform-icon-badge";
 import type { AppRole } from "@/lib/auth/roles";
 import { useLanguage } from "@/lib/i18n";
@@ -27,13 +27,7 @@ export function HomeView({ role, last7Days, last30Days, total, recentDrafts }: P
           <h1 className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-50">{dict.home.title}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">{dict.home.subtitle}</p>
         </div>
-        <Link
-          href="/dashboard/new"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:bg-gray-800 hover:-translate-y-px active:translate-y-0 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
-        >
-          <Plus size={16} weight="bold" />
-          {dict.home.newCampaign}
-        </Link>
+        <NewCampaignButton label={dict.home.newCampaign} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
