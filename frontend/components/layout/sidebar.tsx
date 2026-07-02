@@ -79,7 +79,7 @@ export function Sidebar({
           />
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto p-4 animate-page-in">
+        <div className="flex-1 overflow-y-auto p-4 transition-opacity duration-150">
           <div className="mb-3 px-3 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">
             {dict.nav.mainMenu}
           </div>
