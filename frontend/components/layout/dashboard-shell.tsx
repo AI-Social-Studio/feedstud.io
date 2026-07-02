@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import type { AppRole } from "@/lib/auth/roles";
@@ -21,6 +21,7 @@ export function DashboardShell({
 }) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(initialCollapsed);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   function toggleSidebar() {
     setSidebarCollapsed((prev) => {
@@ -31,13 +32,50 @@ export function DashboardShell({
     });
   }
 
+  function closeMobileNav() {
+    setMobileNavOpen(false);
+  }
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMobileNavOpen(false);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileNavOpen]);
+
+  useEffect(() => {
+    // The drawer is a mobile-only affordance; if the viewport is resized past
+    // the `md` breakpoint while it's open, drop the state so it doesn't linger.
+    const query = window.matchMedia("(min-width: 768px)");
+    function handleChange(event: MediaQueryListEvent) {
+      if (event.matches) setMobileNavOpen(false);
+    }
+    query.addEventListener("change", handleChange);
+    return () => query.removeEventListener("change", handleChange);
+  }, []);
+
   return (
     <div className="bg-app relative flex h-screen w-full overflow-hidden dark:bg-gray-950">
       <div className="hero-grid pointer-events-none absolute inset-0 opacity-50 dark:opacity-100" />
-      <Sidebar role={role} collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+      <Sidebar
+        role={role}
+        collapsed={sidebarCollapsed}
+        onToggle={toggleSidebar}
+        mobileOpen={mobileNavOpen}
+        onMobileClose={closeMobileNav}
+      />
+      {mobileNavOpen ? (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          aria-hidden="true"
+          onClick={closeMobileNav}
+        />
+      ) : null}
       <div className="relative z-10 flex h-full flex-1 flex-col overflow-hidden">
-        <TopHeader />
-        <main className="flex-1 overflow-y-auto p-8">
+        <TopHeader onOpenMobileNav={() => setMobileNavOpen(true)} />
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div key={pathname} className="animate-page-in container mx-auto max-w-6xl space-y-8 pb-12">
             {children}
           </div>
