@@ -250,20 +250,37 @@ function fromAxiosError(error: AxiosError<ApiErrorPayload>): string {
 
 async function waitForGenerateJob(jobId: string): Promise<GenerateResponse> {
   const deadline = Date.now() + 90_000;
+  let delayMs = 1000;
+  let transientFailures = 0;
 
   while (Date.now() < deadline) {
-    const response = await trustedApi.get<GenerateJobResponse>(`/api/generate/${jobId}`);
-    if (response.data.status === "completed") {
-      return {
-        posts: response.data.posts,
-        errors: response.data.errors,
-      };
+    try {
+      const response = await trustedApi.get<GenerateJobResponse>(`/api/generate/${jobId}`);
+      transientFailures = 0;
+      if (response.data.status === "completed") {
+        return {
+          posts: response.data.posts,
+          errors: response.data.errors,
+        };
+      }
+      if (response.data.status === "failed") {
+        throw new Error(response.data.error?.detail ?? "Generowanie nie powiodło się");
+      }
+    } catch (error) {
+      if (!isTransientGeneratePollError(error) || transientFailures >= 3 || Date.now() + delayMs >= deadline) {
+        throw error;
+      }
+      transientFailures += 1;
     }
-    if (response.data.status === "failed") {
-      throw new Error(response.data.error?.detail ?? "Generowanie nie powiodło się");
-    }
-    await new Promise((resolve) => window.setTimeout(resolve, 1000));
+    await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+    delayMs = Math.min(delayMs + 1000, 5000);
   }
 
   throw new Error("Backend nie odpowiedział na czas");
+}
+
+function isTransientGeneratePollError(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) return false;
+  if (!error.response) return true;
+  return [502, 503, 504].includes(error.response.status);
 }
