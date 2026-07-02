@@ -12,7 +12,7 @@ export function ContactContent() {
     <div className="flex min-h-screen flex-col">
       <MarketingHeader />
       <main className="flex-1 bg-white px-4 py-16 dark:bg-gray-950">
-        <div className="animate-page-in container max-w-3xl">
+        <div className="animate-page-in container mx-auto max-w-3xl">
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
             {dict.legal.contact.title}
           </h1>

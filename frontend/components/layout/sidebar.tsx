@@ -90,11 +90,11 @@ export function Sidebar({
 
       <div className="flex flex-shrink-0 items-center justify-between border-t border-gray-200 px-[18px] py-4 dark:border-gray-800">
         <div
-          className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsed ? "w-0 opacity-0" : "w-[92px] opacity-100"}`}
+          className={`transition-all duration-300 ease-in-out ${collapsed ? "w-0 opacity-0 pointer-events-none" : "w-[92px] opacity-100"}`}
         >
           <div className="flex w-[92px] items-center gap-2">
             <ThemeToggle />
-            <LanguageToggle />
+            <LanguageToggle direction="up" />
           </div>
         </div>
         <div className="flex size-9 flex-shrink-0 items-center justify-center">
