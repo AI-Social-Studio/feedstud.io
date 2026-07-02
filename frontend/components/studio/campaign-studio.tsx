@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   CaretLeft,
   CaretRight,
@@ -175,20 +175,13 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const focusedOver = focusedLength > focusedMeta.limit;
   const hasFocusedManualChanges = focusedText !== focusedPristine;
 
-  useEffect(() => {
-    if (activePlatforms.length === 0) return;
-    if (!activePlatforms.includes(activePlatform)) {
-      setActivePlatform(activePlatforms[0]);
-    }
-  }, [activePlatform, activePlatforms]);
-
   function togglePlatform(platform: Platform) {
     setSelected((prev) => ({ ...prev, [platform]: !prev[platform] }));
   }
 
   function goToAdjacentPlatform(direction: -1 | 1) {
     if (activePlatforms.length <= 1) return;
-    const currentIndex = activePlatforms.indexOf(activePlatform);
+    const currentIndex = activePlatforms.indexOf(focusedPlatform);
     const nextIndex = (currentIndex + direction + activePlatforms.length) % activePlatforms.length;
     setActivePlatform(activePlatforms[nextIndex]);
   }
@@ -543,7 +536,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                   <button
                     type="button"
                     onClick={() => goToAdjacentPlatform(-1)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-blue-700 dark:hover:text-blue-400"
+                    className="inline-flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-blue-700 dark:hover:text-blue-400"
                     aria-label="Previous platform"
                   >
                     <CaretLeft size={16} weight="bold" />
@@ -563,7 +556,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                   <button
                     type="button"
                     onClick={() => goToAdjacentPlatform(1)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-blue-700 dark:hover:text-blue-400"
+                    className="inline-flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-blue-700 dark:hover:text-blue-400"
                     aria-label="Next platform"
                   >
                     <CaretRight size={16} weight="bold" />

@@ -15,8 +15,8 @@ export function StepHeader({
 }: StepHeaderProps) {
   const markerClasses =
     markerVariant === "brand"
-      ? "w-6 h-6 rounded-md bg-blue-100 border border-blue-200 flex items-center justify-center text-xs text-blue-600 dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-400"
-      : "w-6 h-6 rounded-md bg-gray-100 border border-gray-200 flex items-center justify-center text-xs text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400";
+      ? "flex size-6 items-center justify-center rounded-md border border-blue-200 bg-blue-100 text-xs text-blue-600 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400"
+      : "flex size-6 items-center justify-center rounded-md border border-gray-200 bg-gray-100 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400";
 
   if (right) {
     return (

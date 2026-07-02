@@ -4,8 +4,8 @@ type Platform = "linkedin" | "instagram" | "x";
 type Size = "sm" | "md";
 
 const containerSize: Record<Size, string> = {
-  sm: "w-8 h-8 rounded",
-  md: "w-10 h-10 rounded-lg",
+  sm: "size-8 rounded",
+  md: "size-10 rounded-lg",
 };
 
 const iconSize: Record<Size, number> = {
@@ -15,7 +15,7 @@ const iconSize: Record<Size, number> = {
 
 const background: Record<Platform, string> = {
   linkedin: "bg-blue-600",
-  instagram: "bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500",
+  instagram: "bg-linear-to-tr from-yellow-400 via-pink-500 to-purple-500",
   x: "bg-gray-900",
 };
 

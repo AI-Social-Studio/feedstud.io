@@ -27,12 +27,7 @@ export function Sidebar({
   const [showExpandedContent, setShowExpandedContent] = useState(!collapsed);
 
   useEffect(() => {
-    if (collapsed) {
-      setShowExpandedContent(false);
-      return;
-    }
-
-    const timeout = window.setTimeout(() => setShowExpandedContent(true), 140);
+    const timeout = window.setTimeout(() => setShowExpandedContent(!collapsed), collapsed ? 0 : 140);
     return () => window.clearTimeout(timeout);
   }, [collapsed]);
 
@@ -54,7 +49,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={onToggle}
-          className={`inline-flex items-center justify-center border text-gray-500 transition-all duration-150 hover:-translate-y-px hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-blue-700 dark:hover:text-blue-400 ${collapsed ? "h-10 w-10 rounded-xl bg-gray-50 shadow-sm dark:bg-gray-900" : "h-9 w-9 rounded-lg bg-white"}`}
+          className={`inline-flex items-center justify-center border text-gray-500 transition-all duration-150 hover:-translate-y-px hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-blue-700 dark:hover:text-blue-400 ${collapsed ? "size-10 rounded-xl bg-gray-50 shadow-sm dark:bg-gray-900" : "size-9 rounded-lg bg-white"}`}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? <List size={18} weight="bold" /> : <X size={18} weight="bold" />}
@@ -106,7 +101,7 @@ export function Sidebar({
               <nav className="space-y-1">
                 <SidebarNavItem
                   href="/dashboard/admin"
-                  icon={<span className="h-2.5 w-2.5 rounded-full bg-violet-500" />}
+                  icon={<span className="size-2.5 rounded-full bg-violet-500" />}
                   label={dict.nav.admin}
                   active={pathname === "/dashboard/admin" || pathname.startsWith("/dashboard/admin/")}
                 />

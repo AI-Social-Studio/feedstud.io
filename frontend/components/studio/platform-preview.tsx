@@ -24,7 +24,7 @@ type Props = {
 function Avatar({ size }: { size: number }) {
   return (
     <div
-      className="rounded-full bg-gradient-to-tr from-blue-500 to-violet-500 flex items-center justify-center text-white font-semibold shrink-0"
+      className="flex shrink-0 items-center justify-center rounded-full bg-linear-to-tr from-blue-500 to-violet-500 font-semibold text-white"
       style={{ width: size, height: size, fontSize: size * 0.36 }}
     >
       YN
@@ -36,6 +36,8 @@ function FeedImage({ src, ratio }: { src: string; ratio: string }) {
   if (src.startsWith("blob:") || src.startsWith("http://localhost") || src.startsWith("https://localhost")) {
     return (
       <div className={`relative w-full ${ratio} bg-gray-100`}>
+        {/* Blob and localhost previews bypass next/image optimization intentionally. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt="" className="h-full w-full object-cover" />
       </div>
     );
@@ -65,7 +67,7 @@ function MediaCarousel({ images, ratio }: { images: string[]; ratio: string }) {
           <button
             type="button"
             onClick={() => setActiveIndex((index) => (index === 0 ? lastIndex : index - 1))}
-            className="absolute left-3 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/75"
+            className="absolute left-3 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/75"
             aria-label="Poprzednie zdjęcie"
           >
             <CaretLeft size={18} weight="bold" />
@@ -73,7 +75,7 @@ function MediaCarousel({ images, ratio }: { images: string[]; ratio: string }) {
           <button
             type="button"
             onClick={() => setActiveIndex((index) => (index === lastIndex ? 0 : index + 1))}
-            className="absolute right-3 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/75"
+            className="absolute right-3 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/75"
             aria-label="Następne zdjęcie"
           >
             <CaretRight size={18} weight="bold" />
@@ -133,7 +135,7 @@ function InstagramPreview({ text, images }: { text: string; images: string[] }) 
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden max-w-[400px] w-full">
       <div className="flex items-center gap-3 p-3">
-        <div className="rounded-full p-[2px] bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500">
+        <div className="rounded-full bg-linear-to-tr from-yellow-400 via-pink-500 to-purple-500 p-[2px]">
           <div className="rounded-full bg-white p-[2px]">
             <Avatar size={32} />
           </div>
