@@ -5,13 +5,41 @@ import type {
   Draft,
   DraftSummary,
 } from "@/lib/flowforge-api";
-import { backendJson } from "@/lib/flowforge-backend";
+import { BackendRequestError, backendJson } from "@/lib/flowforge-backend";
 
 export async function fetchDraftServer(draftId: string): Promise<Draft | null> {
   try {
-    return await backendJson<Draft>(`/drafts/${draftId}`);
+    return await backendJson<Draft>(`/drafts/${encodeURIComponent(draftId)}`);
+  } catch (error) {
+    if (error instanceof BackendRequestError && error.status === 404) return null;
+    throw error;
+  }
+}
+
+export async function fetchAiUsageSummaryServer(filters: AiUsageFilters = {}): Promise<AiUsageSummary> {
+  try {
+    return await backendJson<AiUsageSummary>(`/admin/ai-usage/summary${toQueryString(filters)}`);
   } catch {
-    return null;
+    return emptyAiUsageSummary();
+  }
+}
+
+export async function listAiExecutionsServer(filters: AiUsageFilters = {}): Promise<AiExecutionListItem[]> {
+  try {
+    return await backendJson<AiExecutionListItem[]>(`/admin/ai-usage/executions${toQueryString(filters)}`);
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchAiExecutionServer(executionId: string): Promise<AiExecutionDetail | null> {
+  try {
+    return await backendJson<AiExecutionDetail>(
+      `/admin/ai-usage/executions/${encodeURIComponent(executionId)}`,
+    );
+  } catch (error) {
+    if (error instanceof BackendRequestError && error.status === 404) return null;
+    throw error;
   }
 }
 
@@ -32,20 +60,19 @@ type AiUsageFilters = {
   to?: string;
 };
 
-export async function fetchAiUsageSummaryServer(filters: AiUsageFilters = {}): Promise<AiUsageSummary> {
-  return backendJson<AiUsageSummary>(`/admin/ai-usage/summary${toQueryString(filters)}`);
-}
-
-export async function listAiExecutionsServer(filters: AiUsageFilters = {}): Promise<AiExecutionListItem[]> {
-  return backendJson<AiExecutionListItem[]>(`/admin/ai-usage/executions${toQueryString(filters)}`);
-}
-
-export async function fetchAiExecutionServer(executionId: string): Promise<AiExecutionDetail | null> {
-  try {
-    return await backendJson<AiExecutionDetail>(`/admin/ai-usage/executions/${executionId}`);
-  } catch {
-    return null;
-  }
+function emptyAiUsageSummary(): AiUsageSummary {
+  return {
+    total_requests: 0,
+    success_requests: 0,
+    error_requests: 0,
+    total_cost: 0,
+    total_prompt_tokens: 0,
+    total_completion_tokens: 0,
+    total_tokens: 0,
+    total_cached_tokens: 0,
+    total_reasoning_tokens: 0,
+    average_cost_per_request: 0,
+  };
 }
 
 function toQueryString(filters: AiUsageFilters): string {

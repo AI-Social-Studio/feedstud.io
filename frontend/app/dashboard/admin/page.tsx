@@ -7,6 +7,7 @@ import {
 } from "@/lib/flowforge-api-server";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+const MAX_EXECUTIONS_LIMIT = 200;
 
 export default async function AdminPage({
   searchParams,
@@ -21,7 +22,7 @@ export default async function AdminPage({
   const [summary, executions, selectedExecution] = await Promise.all([
     fetchAiUsageSummaryServer(filters),
     listAiExecutionsServer(filters),
-    filters.executionId ? fetchAiExecutionServer(filters.executionId) : Promise.resolve(null),
+    filters.executionId ? fetchAiExecutionServer(filters.executionId).catch(() => null) : Promise.resolve(null),
   ]);
 
   return (
@@ -97,7 +98,8 @@ function first(value: string | string[] | undefined): string | undefined {
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) return fallback;
   const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.min(parsed, MAX_EXECUTIONS_LIMIT);
 }
 
 function parseNonNegativeInt(value: string | undefined): number | undefined {

@@ -9,6 +9,7 @@ const publicBackendUrlSchema = z.union([
 export const env = createEnv({
   server: {
     BACKEND_URL: z.string().url().default("http://localhost:4000"),
+    BACKEND_INTERNAL_API_KEY: z.string().min(1).optional(),
     CLERK_WEBHOOK_SIGNING_SECRET: z.string().min(1).optional(),
   },
   client: {
@@ -19,6 +20,7 @@ export const env = createEnv({
   },
   runtimeEnv: {
     BACKEND_URL: process.env.BACKEND_URL,
+    BACKEND_INTERNAL_API_KEY: process.env.BACKEND_INTERNAL_API_KEY,
     CLERK_WEBHOOK_SIGNING_SECRET: process.env.CLERK_WEBHOOK_SIGNING_SECRET,
     NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
     NODE_ENV: process.env.NODE_ENV,

@@ -271,9 +271,9 @@ export const pl: Dictionary = {
       errorRate: "Wskaźnik błędów",
       averageCostPerRequest: "Śr. koszt / żądanie",
       requests: "{count} żądań",
-      tokenHint: "{prompt} promptów / {completion} completion",
+      tokenHint: "{prompt} tokenów wejściowych / {completion} tokenów wyjściowych",
       errorHint: "{failed} błędnych / {successful} udanych",
-      reasoningTokens: "{count} tokenów reasoning",
+      reasoningTokens: "{count} tokenów rozumowania",
     },
     table: {
       title: "Ostatnie wykonania",
