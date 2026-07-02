@@ -19,7 +19,18 @@ export type GenerateRequest = {
 
 export type GenerateResponse = {
   posts: Partial<Record<Platform, string>>;
-  errors: Partial<Record<Platform, { code: string; detail: string; meta?: Record<string, unknown> }>>;
+  errors: Partial<Record<Platform, GenerateErrorInfo>>;
+};
+
+export type GenerateErrorCode =
+  | "content_generation_failed"
+  | "invalid_model_output"
+  | "model_empty_output";
+
+export type GenerateErrorInfo = {
+  code: GenerateErrorCode;
+  detail: string;
+  meta?: Record<string, unknown>;
 };
 
 export type RefineRequest = {
