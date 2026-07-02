@@ -3,26 +3,34 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { backendFetch } from "@/lib/flowforge-backend";
 
-export async function createAuthedBackendProxy(request: NextRequest, path: string) {
+type ProxyMethod = "GET" | "POST" | "PUT" | "DELETE";
+
+export async function createAuthedBackendProxy(
+  request: NextRequest,
+  path: string,
+  method: ProxyMethod = "POST",
+) {
   const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ detail: "Unauthorized", code: "unauthorized" }, { status: 401 });
   }
 
   let payload: unknown;
-  try {
-    payload = await request.json();
-  } catch {
-    return NextResponse.json(
-      { detail: "Invalid JSON payload", code: "invalid_payload" },
-      { status: 400 },
-    );
+  if (method !== "GET") {
+    try {
+      payload = await request.json();
+    } catch {
+      return NextResponse.json(
+        { detail: "Invalid JSON payload", code: "invalid_payload" },
+        { status: 400 },
+      );
+    }
   }
 
   let response: Response;
   try {
     response = await backendFetch(path, {
-      method: "POST",
+      method,
       body: payload,
       headers: {
         "X-Actor-Id": userId,
