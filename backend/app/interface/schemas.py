@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -25,6 +25,13 @@ class UploadResponse(BaseModel):
 class ErrorResponse(BaseModel):
     detail: str
     code: str
+    meta: dict[str, Any] | None = None
+
+
+class PlatformErrorResponse(BaseModel):
+    detail: str
+    code: str
+    meta: dict[str, Any] | None = None
 
 
 class GenerateRequest(BaseModel):
@@ -40,9 +47,9 @@ class GenerateResponse(BaseModel):
         default_factory=dict,
         description="Mapa platform -> gotowy post (PL, z \\n\\n, hashtagi w ostatniej linii)",
     )
-    errors: dict[str, str] = Field(
+    errors: dict[str, PlatformErrorResponse] = Field(
         default_factory=dict,
-        description="Mapa platform -> komunikat błędu (gdy generacja danej platformy padła)",
+        description="Mapa platform -> strukturalny błąd generacji dla danej platformy",
     )
 
 

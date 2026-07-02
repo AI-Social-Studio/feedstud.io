@@ -3,6 +3,8 @@ from datetime import datetime
 from typing import Any, BinaryIO
 from uuid import UUID
 
+from app.domain.error_codes import ErrorCode
+
 
 @dataclass
 class IncomingFile:
@@ -23,9 +25,16 @@ class UploadedFileView:
 
 
 @dataclass
+class ErrorView:
+    code: ErrorCode
+    detail: str
+    meta: dict[str, Any] | None = None
+
+
+@dataclass
 class GenerateResultView:
     posts: dict[str, str]
-    errors: dict[str, str]
+    errors: dict[str, ErrorView]
 
 
 @dataclass

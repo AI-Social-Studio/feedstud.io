@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, UploadFile, status
 
 from app.application.dto import IncomingFile
 from app.application.use_cases.upload_files import (
@@ -8,11 +8,13 @@ from app.application.use_cases.upload_files import (
     GetFileUseCase,
     UploadFilesUseCase,
 )
+from app.domain.error_codes import ErrorCode
 from app.interface.dependencies import (
     get_delete_use_case,
     get_get_use_case,
     get_upload_use_case,
 )
+from app.interface.errors import api_error
 from app.interface.schemas import UploadedFileResponse, UploadResponse
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
@@ -63,7 +65,12 @@ async def get_file(
 ) -> UploadedFileResponse:
     view = await use_case.execute(file_id)
     if view is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+        raise api_error(
+            status.HTTP_404_NOT_FOUND,
+            ErrorCode.FILE_NOT_FOUND,
+            "File not found",
+            {"file_id": str(file_id)},
+        )
     return UploadedFileResponse(
         id=view.id,
         filename=view.original_filename,
@@ -81,4 +88,9 @@ async def delete_file(
 ) -> None:
     deleted = await use_case.execute(file_id)
     if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+        raise api_error(
+            status.HTTP_404_NOT_FOUND,
+            ErrorCode.FILE_NOT_FOUND,
+            "File not found",
+            {"file_id": str(file_id)},
+        )

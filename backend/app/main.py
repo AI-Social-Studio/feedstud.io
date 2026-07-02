@@ -2,24 +2,18 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings
-from app.domain.exceptions import (
-    ContentGenerationError,
-    EmptyFileError,
-    FileTooLargeError,
-    InvalidGenerateInputError,
-    RefineError,
-    TooManyFilesError,
-    UnsupportedFileTypeError,
-)
+from app.domain.error_codes import ErrorCode
+from app.domain.exceptions import DomainError
 from app.infrastructure.db.models import Base
 from app.infrastructure.db.repositories import SqlAlchemyAiExecutionRepository
 from app.interface.api.v1.router import api_router
 from app.interface.dependencies import _database, _storage
+from app.interface.errors import domain_error_response, error_payload
 
 logger = logging.getLogger(__name__)
 
@@ -65,53 +59,17 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    @app.exception_handler(TooManyFilesError)
-    async def _too_many(_: Request, exc: TooManyFilesError) -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={"detail": str(exc), "code": "too_many_files"},
-        )
+    @app.exception_handler(DomainError)
+    async def _domain_error(_: Request, exc: DomainError) -> JSONResponse:
+        return domain_error_response(exc)
 
-    @app.exception_handler(FileTooLargeError)
-    async def _too_large(_: Request, exc: FileTooLargeError) -> JSONResponse:
+    @app.exception_handler(HTTPException)
+    async def _http_error(_: Request, exc: HTTPException) -> JSONResponse:
+        if isinstance(exc.detail, dict) and "code" in exc.detail and "detail" in exc.detail:
+            return JSONResponse(status_code=exc.status_code, content=exc.detail)
         return JSONResponse(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            content={"detail": str(exc), "code": "file_too_large"},
-        )
-
-    @app.exception_handler(UnsupportedFileTypeError)
-    async def _unsupported(_: Request, exc: UnsupportedFileTypeError) -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            content={"detail": str(exc), "code": "unsupported_file_type"},
-        )
-
-    @app.exception_handler(EmptyFileError)
-    async def _empty(_: Request, exc: EmptyFileError) -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={"detail": str(exc), "code": "empty_file"},
-        )
-
-    @app.exception_handler(InvalidGenerateInputError)
-    async def _invalid_generate(_: Request, exc: InvalidGenerateInputError) -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={"detail": str(exc), "code": "invalid_generate_input"},
-        )
-
-    @app.exception_handler(ContentGenerationError)
-    async def _gen_error(_: Request, exc: ContentGenerationError) -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            content={"detail": str(exc), "code": "content_generation_failed"},
-        )
-
-    @app.exception_handler(RefineError)
-    async def _refine_error(_: Request, exc: RefineError) -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            content={"detail": str(exc), "code": "refine_failed"},
+            status_code=exc.status_code,
+            content=error_payload(ErrorCode.INTERNAL_SERVER_ERROR, str(exc.detail)),
         )
 
     @app.get("/health", tags=["meta"])

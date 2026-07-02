@@ -9,6 +9,7 @@ from app.application.prompts.refine_prompts import (
     build_refine_prompt,
 )
 from app.domain.entities import AiExecution, GeneratedPost, GeneratedPostResult
+from app.domain.error_codes import ErrorCode
 from app.domain.exceptions import ContentGenerationError, RefineError
 from app.domain.value_objects import Platform, RefineAction
 from app.infrastructure.ai.openrouter_types import (
@@ -58,10 +59,12 @@ class OpenRouterContentGenerator(ContentGenerator):
             user=user,
             platform=platform,
             action=None,
-            on_error=lambda reason, trace: ContentGenerationError(
+            on_error=lambda reason, trace, code: ContentGenerationError(
                 platform=platform.value,
                 reason=reason,
                 trace=trace,
+                code=code,
+                public_message=_public_message_for_error_code(code),
             ),
         )
         text = parse_post_output(trace.completion.choices[0].message.content or "").text
@@ -83,11 +86,13 @@ class OpenRouterContentGenerator(ContentGenerator):
             user=user,
             platform=platform,
             action=action,
-            on_error=lambda reason, trace: RefineError(
+            on_error=lambda reason, trace, code: RefineError(
                 platform=platform.value,
                 action=action.value,
                 reason=reason,
                 trace=trace,
+                code=code,
+                public_message=_public_message_for_error_code(code),
             ),
         )
         parsed = parse_post_output(trace.completion.choices[0].message.content or "")
@@ -104,7 +109,7 @@ class OpenRouterContentGenerator(ContentGenerator):
         user: str,
         platform: Platform,
         action: RefineAction | None,
-        on_error: Callable[[str, AiExecution | None], Exception],
+        on_error: Callable[[str, AiExecution | None, ErrorCode], Exception],
     ) -> OpenRouterCompletionTrace:
         messages = [
             OpenRouterRequestMessage(role="system", content=system),
@@ -131,7 +136,11 @@ class OpenRouterContentGenerator(ContentGenerator):
                     error_message=f"OpenRouter {response.status_code}: {response.text[:500]}",
                     raw_error=self._safe_json(response),
                 )
-                raise on_error(error_trace.error_message or "OpenRouter request failed", error_trace)
+                raise on_error(
+                    error_trace.error_message or "OpenRouter request failed",
+                    error_trace,
+                    ErrorCode.CONTENT_GENERATION_FAILED if kind == "generate" else ErrorCode.REFINE_FAILED,
+                )
             raw_completion = response.json()
             completion = OpenRouterCompletionResponse.model_validate(raw_completion)
             content = completion.choices[0].message.content or ""
@@ -146,10 +155,11 @@ class OpenRouterContentGenerator(ContentGenerator):
                     error_message="Model returned empty text",
                     raw_error=raw_completion,
                 )
-                raise on_error("Model returned empty text", error_trace)
+                raise on_error("Model returned empty text", error_trace, ErrorCode.MODEL_EMPTY_OUTPUT)
         except Exception as exc:
             if isinstance(exc, (ContentGenerationError, RefineError)):
                 raise
+            code = _error_code_for_exception(exc, kind)
             error_trace = self._build_error_execution(
                 kind=kind,
                 system=system,
@@ -159,7 +169,7 @@ class OpenRouterContentGenerator(ContentGenerator):
                 error_message=str(exc),
                 raw_error=raw_completion,
             )
-            raise on_error(str(exc), error_trace) from exc
+            raise on_error(str(exc), error_trace, code) from exc
 
         generation = await self._fetch_generation_details(completion.id)
         return OpenRouterCompletionTrace(
@@ -314,3 +324,24 @@ class OpenRouterContentGenerator(ContentGenerator):
             return data if isinstance(data, dict) else {"data": data}
         except Exception:
             return {"raw": response.text[:2000]}
+
+
+def _error_code_for_exception(exc: Exception, kind: str) -> ErrorCode:
+    message = str(exc)
+    if message == "Model returned invalid JSON output":
+        return ErrorCode.INVALID_MODEL_OUTPUT
+    if message == "Model returned empty text":
+        return ErrorCode.MODEL_EMPTY_OUTPUT
+    return ErrorCode.CONTENT_GENERATION_FAILED if kind == "generate" else ErrorCode.REFINE_FAILED
+
+
+def _public_message_for_error_code(code: ErrorCode) -> str:
+    if code == ErrorCode.INVALID_MODEL_OUTPUT:
+        return "Model returned an invalid response format. Please try again."
+    if code == ErrorCode.MODEL_EMPTY_OUTPUT:
+        return "Model returned an empty response. Please try again."
+    if code == ErrorCode.CONTENT_GENERATION_FAILED:
+        return "Content generation failed. Please try again."
+    if code == ErrorCode.REFINE_FAILED:
+        return "Content refinement failed. Please try again."
+    return "Request failed. Please try again."
