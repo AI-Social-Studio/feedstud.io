@@ -22,6 +22,21 @@ export type GenerateResponse = {
   errors: Partial<Record<Platform, GenerateErrorInfo>>;
 };
 
+type GenerateAcceptedResponse = {
+  job_id: string;
+  status: "queued";
+};
+
+type GenerateJobResponse = GenerateResponse & {
+  job_id: string;
+  status: "queued" | "processing" | "completed" | "failed";
+  error?: {
+    code: string;
+    detail: string;
+    meta?: Record<string, unknown>;
+  } | null;
+};
+
 export type GenerateErrorCode =
   | "content_generation_failed"
   | "invalid_model_output"
@@ -175,8 +190,8 @@ type ApiErrorPayload = {
 };
 
 export async function generatePosts(payload: GenerateRequest): Promise<GenerateResponse> {
-  const response = await trustedApi.post<GenerateResponse>("/api/generate", payload);
-  return response.data;
+  const accepted = await trustedApi.post<GenerateAcceptedResponse>("/api/generate", payload);
+  return waitForGenerateJob(accepted.data.job_id);
 }
 
 export async function refinePost(payload: RefineRequest): Promise<RefineResponse> {
@@ -231,4 +246,24 @@ function fromAxiosError(error: AxiosError<ApiErrorPayload>): string {
   if (error.code === "ECONNABORTED") return "Backend nie odpowiedział na czas";
   if (!error.response) return "Nie można połączyć się z backendem";
   return `Backend zwrócił błąd ${error.response.status}`;
+}
+
+async function waitForGenerateJob(jobId: string): Promise<GenerateResponse> {
+  const deadline = Date.now() + 90_000;
+
+  while (Date.now() < deadline) {
+    const response = await trustedApi.get<GenerateJobResponse>(`/api/generate/${jobId}`);
+    if (response.data.status === "completed") {
+      return {
+        posts: response.data.posts,
+        errors: response.data.errors,
+      };
+    }
+    if (response.data.status === "failed") {
+      throw new Error(response.data.error?.detail ?? "Generowanie nie powiodło się");
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 1000));
+  }
+
+  throw new Error("Backend nie odpowiedział na czas");
 }
