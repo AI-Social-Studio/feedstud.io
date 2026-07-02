@@ -1,7 +1,7 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { House, List, Megaphone, Shield, X } from "@phosphor-icons/react/dist/ssr";
+import { House, List, Megaphone, Shield, CaretDoubleLeft } from "@phosphor-icons/react/dist/ssr";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -28,14 +28,12 @@ export function Sidebar({
     <aside
       className={`relative z-10 flex h-full flex-shrink-0 flex-col border-r border-gray-200 bg-white/95 backdrop-blur-sm transition-[width] duration-300 ease-out dark:border-gray-800 dark:bg-gray-950/95 ${collapsed ? "w-[72px]" : "w-64"}`}
     >
-      <div
-        className={`flex h-16 items-center border-b border-gray-200 dark:border-gray-800 ${collapsed ? "justify-center px-0" : "justify-between px-5"}`}
-      >
+      <div className="flex h-16 flex-shrink-0 items-center justify-between border-b border-gray-200 px-[18px] dark:border-gray-800">
         <Link
           href="/"
-          className={`overflow-hidden transition-all duration-200 ${collapsed ? "w-0 opacity-0" : "w-[112px] opacity-100"}`}
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsed ? "w-0 opacity-0" : "w-[112px] opacity-100"}`}
         >
-          <div className="flex h-9 items-center">
+          <div className="flex h-9 w-[112px] items-center">
             <Image
               src="/feedstudio.png"
               alt="feedstud.io"
@@ -49,15 +47,15 @@ export function Sidebar({
         <button
           type="button"
           onClick={onToggle}
-          className={`inline-flex items-center justify-center border text-gray-500 transition-all duration-200 hover:-translate-y-px hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-blue-700 dark:hover:text-blue-400 ${collapsed ? "size-10 rounded-2xl bg-gray-50 shadow-sm dark:bg-gray-900" : "size-9 rounded-xl bg-white"}`}
+          className="inline-flex size-9 flex-shrink-0 items-center justify-center rounded-xl border bg-white text-gray-500 shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-px hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-blue-700 dark:hover:text-blue-400"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {collapsed ? <List size={18} weight="bold" /> : <X size={18} weight="bold" />}
+          {collapsed ? <List size={18} weight="bold" /> : <CaretDoubleLeft size={18} weight="bold" />}
         </button>
       </div>
 
-      <div className={`flex-1 overflow-y-auto ${collapsed ? "px-0 py-4" : "p-4"}`}>
-        <nav className={`space-y-1 ${collapsed ? "flex flex-col items-center" : ""}`}>
+      <div className="flex-1 overflow-y-auto p-[14px]">
+        <nav className="space-y-1">
           <SidebarNavItem
             href="/dashboard"
             icon={<House size={18} weight="fill" />}
@@ -90,18 +88,16 @@ export function Sidebar({
         </nav>
       </div>
 
-      <div
-        className={`border-t border-gray-200 dark:border-gray-800 ${collapsed ? "px-0 py-4" : "p-4"}`}
-      >
-        <div className={`flex items-center ${collapsed ? "justify-center" : "justify-between"}`}>
-          <div
-            className={`overflow-hidden transition-all duration-200 ${collapsed ? "w-0 opacity-0" : "w-[92px] opacity-100"}`}
-          >
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <LanguageToggle />
-            </div>
+      <div className="flex flex-shrink-0 items-center justify-between border-t border-gray-200 px-[18px] py-4 dark:border-gray-800">
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsed ? "w-0 opacity-0" : "w-[92px] opacity-100"}`}
+        >
+          <div className="flex w-[92px] items-center gap-2">
+            <ThemeToggle />
+            <LanguageToggle />
           </div>
+        </div>
+        <div className="flex size-9 flex-shrink-0 items-center justify-center">
           <UserButton />
         </div>
       </div>
