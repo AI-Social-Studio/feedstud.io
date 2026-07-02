@@ -301,7 +301,7 @@ export const en: Dictionary = {
       cost: "Cost",
       status: "Status",
       details: "Details",
-      openDetails: "Open details",
+      openDetails: "Open",
       openSelected: "Opened",
       noResults: "No AI executions match the current filters.",
       anonymous: "Anonymous",
