@@ -34,6 +34,7 @@ export function AdminTelemetryView({
   filters: FilterValues;
 }) {
   const dict = useDictionary();
+  const closeHref = queryString ? `/dashboard/admin?${queryString}` : "/dashboard/admin";
 
   return (
     <section className="space-y-6">
@@ -59,7 +60,7 @@ export function AdminTelemetryView({
         selectedExecutionId={selectedExecutionId}
         queryString={queryString}
       />
-      <AiExecutionDetailPanel execution={selectedExecution} />
+      <AiExecutionDetailPanel execution={selectedExecution} closeHref={closeHref} />
     </section>
   );
 }
