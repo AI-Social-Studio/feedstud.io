@@ -1,5 +1,16 @@
 name: flowforge
 
+x-app-shared-env: &app-shared-env
+  OPENROUTER_API_KEY: "${OPENROUTER_API_KEY:-}"
+  OPENROUTER_MODEL: "${OPENROUTER_MODEL:-openai/gpt-oss-120b:free}"
+  OPENROUTER_MAX_TOKENS: "${OPENROUTER_MAX_TOKENS:-8192}"
+  OPENROUTER_TEMPERATURE: "${OPENROUTER_TEMPERATURE:-0.9}"
+  OPENROUTER_SITE_URL: "${OPENROUTER_SITE_URL:-http://localhost:3000}"
+  OPENROUTER_APP_NAME: "${OPENROUTER_APP_NAME:-FlowForge}"
+  RABBITMQ_URL: "${RABBITMQ_URL}"
+  RABBITMQ_GENERATE_QUEUE: "${RABBITMQ_GENERATE_QUEUE:-generate_posts}"
+  RABBITMQ_PREFETCH_COUNT: "${RABBITMQ_PREFETCH_COUNT:-10}"
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -42,6 +53,8 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 5s
@@ -53,6 +66,7 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
+      <<: *app-shared-env
       APP_ENV: development
       APP_PORT: 4000
       CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
@@ -67,15 +81,6 @@ services:
       UPLOAD_MAX_FILE_BYTES: "10485760"
       DB_RESET_ON_START: "${DB_RESET_ON_START:-false}"
       BACKEND_INTERNAL_API_KEY: "${BACKEND_INTERNAL_API_KEY:-}"
-      OPENROUTER_API_KEY: "${OPENROUTER_API_KEY:-}"
-      OPENROUTER_MODEL: "${OPENROUTER_MODEL:-openai/gpt-oss-120b:free}"
-      OPENROUTER_MAX_TOKENS: "${OPENROUTER_MAX_TOKENS:-8192}"
-      OPENROUTER_TEMPERATURE: "${OPENROUTER_TEMPERATURE:-0.9}"
-      OPENROUTER_SITE_URL: "${OPENROUTER_SITE_URL:-http://localhost:3000}"
-      OPENROUTER_APP_NAME: "${OPENROUTER_APP_NAME:-FlowForge}"
-      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://flowforge:flowforge@rabbitmq:5672/}"
-      RABBITMQ_GENERATE_QUEUE: "${RABBITMQ_GENERATE_QUEUE:-generate_posts}"
-      RABBITMQ_PREFETCH_COUNT: "${RABBITMQ_PREFETCH_COUNT:-10}"
     ports:
       - "4000:4000"
     depends_on:
@@ -92,6 +97,7 @@ services:
       dockerfile: Dockerfile
     command: ["python", "-m", "app.worker"]
     environment:
+      <<: *app-shared-env
       APP_ENV: development
       DATABASE_URL: postgresql+asyncpg://flowforge:flowforge@postgres:5432/flowforge
       MINIO_ENDPOINT: minio:9000
@@ -100,15 +106,6 @@ services:
       MINIO_BUCKET: flowforge-uploads
       MINIO_SECURE: "false"
       MINIO_PUBLIC_ENDPOINT: http://localhost:9000
-      OPENROUTER_API_KEY: "${OPENROUTER_API_KEY:-}"
-      OPENROUTER_MODEL: "${OPENROUTER_MODEL:-openai/gpt-oss-120b:free}"
-      OPENROUTER_MAX_TOKENS: "${OPENROUTER_MAX_TOKENS:-8192}"
-      OPENROUTER_TEMPERATURE: "${OPENROUTER_TEMPERATURE:-0.9}"
-      OPENROUTER_SITE_URL: "${OPENROUTER_SITE_URL:-http://localhost:3000}"
-      OPENROUTER_APP_NAME: "${OPENROUTER_APP_NAME:-FlowForge}"
-      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://flowforge:flowforge@rabbitmq:5672/}"
-      RABBITMQ_GENERATE_QUEUE: "${RABBITMQ_GENERATE_QUEUE:-generate_posts}"
-      RABBITMQ_PREFETCH_COUNT: "${RABBITMQ_PREFETCH_COUNT:-10}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -120,3 +117,4 @@ services:
 volumes:
   postgres_data:
   minio_data:
+  rabbitmq_data:
