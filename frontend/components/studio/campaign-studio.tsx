@@ -30,6 +30,7 @@ import {
   generatePosts,
   getApiErrorMessage,
   refinePost,
+  type GenerateResponse,
   updateDraft,
   uploadFiles,
   type Draft,
@@ -190,6 +191,17 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
     }, 4500);
   }
 
+  function formatGenerationError(error: GenerateResponse["errors"][Platform] | undefined) {
+    if (!error) return dict.studio.toasts.noBackendContentPlatform;
+    if (error.code === "invalid_model_output" || error.code === "model_empty_output") {
+      return dict.studio.toasts.invalidModelOutput;
+    }
+    if (error.code === "content_generation_failed") {
+      return dict.studio.toasts.contentGenerationFailed;
+    }
+    return error.detail;
+  }
+
   async function applyRefine(platform: Platform, action: RefineAction) {
     const current = results[platform];
     if (!current) {
@@ -226,9 +238,22 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
       setResults(response.posts);
       setPristineResults(response.posts);
       const generatedCount = Object.keys(response.posts).length;
-      if (generatedCount > 0) pushToast("success", dict.studio.toasts.generated(generatedCount));
+      if (generatedCount > 0) {
+        const hasErrors = Object.keys(response.errors).length > 0;
+        pushToast(
+          "success",
+          hasErrors
+            ? dict.studio.toasts.generationPartial(generatedCount)
+            : dict.studio.toasts.generated(generatedCount),
+        );
+      }
       for (const [platform, message] of Object.entries(response.errors)) {
-        if (message) pushToast("error", `${PLATFORM_META[platform as Platform].name}: ${message}`);
+        if (message) {
+          pushToast(
+            "error",
+            `${PLATFORM_META[platform as Platform].name}: ${formatGenerationError(message)}`,
+          );
+        }
       }
       if (generatedCount === 0 && Object.keys(response.errors).length === 0) {
         pushToast("error", dict.studio.toasts.noBackendContent);
@@ -250,7 +275,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
       });
       const nextText = response.posts[platform];
       if (!nextText) {
-        const message = response.errors[platform] ?? dict.studio.toasts.noBackendContentPlatform;
+        const message = formatGenerationError(response.errors[platform]);
         pushToast("error", message);
         return;
       }

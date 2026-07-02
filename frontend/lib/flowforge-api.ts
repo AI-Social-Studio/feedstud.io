@@ -19,7 +19,7 @@ export type GenerateRequest = {
 
 export type GenerateResponse = {
   posts: Partial<Record<Platform, string>>;
-  errors: Partial<Record<Platform, string>>;
+  errors: Partial<Record<Platform, { code: string; detail: string; meta?: Record<string, unknown> }>>;
 };
 
 export type RefineRequest = {
@@ -160,6 +160,7 @@ export type SaveDraftRequest = {
 type ApiErrorPayload = {
   detail?: string | { msg?: string }[];
   code?: string;
+  meta?: Record<string, unknown>;
 };
 
 export async function generatePosts(payload: GenerateRequest): Promise<GenerateResponse> {

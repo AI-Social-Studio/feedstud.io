@@ -371,8 +371,14 @@ export const en: Dictionary = {
       generateFirst: "Generate the post content first.",
       refined: "Content has been refined.",
       generated: (count) => (count === 1 ? "Generated 1 post." : `Generated ${count} posts.`),
+      generationPartial: (count) =>
+        count === 1
+          ? "Generated 1 post. Some platforms need another try."
+          : `Generated ${count} posts. Some platforms need another try.`,
       noBackendContent: "The backend didn't return any content.",
       noBackendContentPlatform: "The backend didn't return content for this platform.",
+      invalidModelOutput: "The model returned an invalid response format. Please try again.",
+      contentGenerationFailed: "Content generation failed. Please try again.",
       regenerated: (platformName) => `${platformName}: a new version has been generated.`,
       addContentFirst: "Add content or files to the draft first.",
       draftUpdated: "Draft updated.",
