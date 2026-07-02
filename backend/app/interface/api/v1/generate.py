@@ -1,21 +1,30 @@
 from fastapi import APIRouter, Depends, status
+from uuid import UUID
 
+from app.application.use_cases.generate_jobs import (
+    GetGenerateJobUseCase,
+    SubmitGenerateJobInput,
+    SubmitGenerateJobUseCase,
+)
 from app.application.use_cases.generate_posts import (
-    GeneratePostsInput,
-    GeneratePostsUseCase,
     RefinePostInput,
     RefinePostUseCase,
 )
+from app.domain.error_codes import ErrorCode
 from app.domain.value_objects import Platform, RefineAction
 from app.interface.dependencies import (
-    get_generate_posts_use_case,
+    get_get_generate_job_use_case,
     get_refine_post_use_case,
+    get_submit_generate_job_use_case,
     get_trusted_actor_user_id,
 )
+from app.interface.errors import api_error
 from app.interface.schemas import (
+    ErrorResponse,
+    GenerateAcceptedResponse,
+    GenerateJobResponse,
     GenerateRequest,
     PlatformErrorResponse,
-    GenerateResponse,
     RefineRequest,
     RefineResponse,
 )
@@ -25,24 +34,43 @@ router = APIRouter(tags=["generate"])
 
 @router.post(
     "/generate",
-    response_model=GenerateResponse,
-    status_code=status.HTTP_200_OK,
+    response_model=GenerateAcceptedResponse,
+    status_code=status.HTTP_202_ACCEPTED,
     summary="Generuj posty pod wybrane platformy z brudnopisu",
 )
 async def generate_posts(
     payload: GenerateRequest,
     actor_user_id: str | None = Depends(get_trusted_actor_user_id),
-    use_case: GeneratePostsUseCase = Depends(get_generate_posts_use_case),
-) -> GenerateResponse:
+    use_case: SubmitGenerateJobUseCase = Depends(get_submit_generate_job_use_case),
+) -> GenerateAcceptedResponse:
     result = await use_case.execute(
-        GeneratePostsInput(
+        SubmitGenerateJobInput(
             raw_text=payload.raw,
             platforms=[Platform(p) for p in payload.platforms],
             file_ids=payload.file_ids,
             actor_user_id=actor_user_id,
         )
     )
-    return GenerateResponse(
+    return GenerateAcceptedResponse(job_id=result.job_id, status="queued")
+
+
+@router.get(
+    "/generate/{job_id}",
+    response_model=GenerateJobResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Pobierz status generowania",
+)
+async def get_generate_job(
+    job_id: UUID,
+    actor_user_id: str | None = Depends(get_trusted_actor_user_id),
+    use_case: GetGenerateJobUseCase = Depends(get_get_generate_job_use_case),
+) -> GenerateJobResponse:
+    result = await use_case.execute(job_id)
+    if result is None or result.actor_user_id != actor_user_id:
+        raise api_error(status.HTTP_404_NOT_FOUND, ErrorCode.NOT_FOUND, "Generate job not found")
+    return GenerateJobResponse(
+        job_id=result.job_id,
+        status=result.status,
         posts=result.posts,
         errors={
             platform: PlatformErrorResponse(
@@ -52,6 +80,17 @@ async def generate_posts(
             )
             for platform, error in result.errors.items()
         },
+        error=(
+            ErrorResponse(
+                code=result.error.code.value,
+                detail=result.error.detail,
+                meta=result.error.meta,
+            )
+            if result.error is not None
+            else None
+        ),
+        created_at=result.created_at,
+        updated_at=result.updated_at,
     )
 
 

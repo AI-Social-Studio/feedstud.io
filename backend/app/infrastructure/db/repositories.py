@@ -4,10 +4,15 @@ from uuid import UUID
 from sqlalchemy import case, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.application.ports import AiExecutionRepository, DraftRepository, FileRepository
-from app.domain.entities import AiExecution, Draft, UploadedFile
+from app.application.ports import (
+    AiExecutionRepository,
+    DraftRepository,
+    FileRepository,
+    GenerateJobRepository,
+)
+from app.domain.entities import AiExecution, Draft, GenerateJob, UploadedFile
 from app.domain.value_objects import ImageContentType, Platform
-from app.infrastructure.db.models import AiExecutionModel, DraftModel, UploadedFileModel
+from app.infrastructure.db.models import AiExecutionModel, DraftModel, GenerateJobModel, UploadedFileModel
 
 
 class SqlAlchemyFileRepository(FileRepository):
@@ -398,5 +403,102 @@ class SqlAlchemyAiExecutionRepository(AiExecutionRepository):
             error_message=model.error_message,
             error_json=model.error_json,
             created_at=model.created_at,
+        )
+
+
+class SqlAlchemyGenerateJobRepository(GenerateJobRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, job: GenerateJob) -> None:
+        self._session.add(self._to_model(job))
+        await self._session.commit()
+
+    async def get(self, job_id: UUID) -> GenerateJob | None:
+        model = await self._session.get(GenerateJobModel, job_id)
+        return self._to_entity(model) if model else None
+
+    async def mark_processing(self, job_id: UUID) -> bool:
+        model = await self._session.get(GenerateJobModel, job_id)
+        if model is None or model.status != "queued":
+            return False
+        model.status = "processing"
+        model.updated_at = datetime.now(timezone.utc)
+        await self._session.commit()
+        return True
+
+    async def complete(
+        self,
+        job_id: UUID,
+        *,
+        posts: dict[str, str],
+        errors: dict[str, dict[str, object]],
+    ) -> bool:
+        model = await self._session.get(GenerateJobModel, job_id)
+        if model is None:
+            return False
+        model.status = "completed"
+        model.posts = posts
+        model.errors = errors
+        model.error_code = None
+        model.error_detail = None
+        model.error_meta = None
+        model.updated_at = datetime.now(timezone.utc)
+        await self._session.commit()
+        return True
+
+    async def fail(
+        self,
+        job_id: UUID,
+        *,
+        code: str,
+        detail: str,
+        meta: dict[str, object] | None = None,
+    ) -> bool:
+        model = await self._session.get(GenerateJobModel, job_id)
+        if model is None:
+            return False
+        model.status = "failed"
+        model.error_code = code
+        model.error_detail = detail
+        model.error_meta = meta
+        model.updated_at = datetime.now(timezone.utc)
+        await self._session.commit()
+        return True
+
+    @staticmethod
+    def _to_model(job: GenerateJob) -> GenerateJobModel:
+        return GenerateJobModel(
+            id=job.id,
+            raw_text=job.raw_text,
+            selected_platforms=[platform.value for platform in job.selected_platforms],
+            file_ids=[str(file_id) for file_id in job.file_ids],
+            actor_user_id=job.actor_user_id,
+            status=job.status,
+            posts=job.posts,
+            errors=job.errors,
+            error_code=job.error_code,
+            error_detail=job.error_detail,
+            error_meta=job.error_meta,
+            created_at=job.created_at,
+            updated_at=job.updated_at,
+        )
+
+    @staticmethod
+    def _to_entity(model: GenerateJobModel) -> GenerateJob:
+        return GenerateJob(
+            id=model.id,
+            raw_text=model.raw_text,
+            selected_platforms=[Platform(platform) for platform in model.selected_platforms],
+            file_ids=[UUID(file_id) for file_id in model.file_ids],
+            actor_user_id=model.actor_user_id,
+            status=model.status,
+            posts=model.posts,
+            errors=model.errors,
+            error_code=model.error_code,
+            error_detail=model.error_detail,
+            error_meta=model.error_meta,
+            created_at=model.created_at,
+            updated_at=model.updated_at,
         )
 

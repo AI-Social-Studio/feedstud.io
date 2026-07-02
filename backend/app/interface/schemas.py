@@ -51,6 +51,21 @@ class GenerateResponse(BaseModel):
     )
 
 
+class GenerateAcceptedResponse(BaseModel):
+    job_id: UUID
+    status: Literal["queued"]
+
+
+class GenerateJobResponse(BaseModel):
+    job_id: UUID
+    status: Literal["queued", "processing", "completed", "failed"]
+    posts: dict[str, str] = Field(default_factory=dict)
+    errors: dict[str, PlatformErrorResponse] = Field(default_factory=dict)
+    error: ErrorResponse | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
 class RefineRequest(BaseModel):
     platform: PlatformLiteral
     text: str = Field(..., min_length=1)

@@ -98,3 +98,25 @@ class AiExecutionModel(Base):
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     error_json: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class GenerateJobModel(Base):
+    __tablename__ = "generate_jobs"
+    __table_args__ = (
+        Index("ix_generate_jobs_status", "status"),
+        Index("ix_generate_jobs_created_at", "created_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    raw_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    selected_platforms: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    file_ids: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    actor_user_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    posts: Mapped[dict[str, str]] = mapped_column(JSON, nullable=False, default=dict)
+    errors: Mapped[dict[str, dict[str, object]]] = mapped_column(JSON, nullable=False, default=dict)
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_meta: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

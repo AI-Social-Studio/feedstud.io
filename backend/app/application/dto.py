@@ -38,6 +38,24 @@ class GenerateResultView:
 
 
 @dataclass
+class GenerateJobAcceptedView:
+    job_id: UUID
+    status: str
+
+
+@dataclass
+class GenerateJobView:
+    job_id: UUID
+    actor_user_id: str | None
+    status: str
+    posts: dict[str, str]
+    errors: dict[str, ErrorView]
+    error: ErrorView | None
+    created_at: datetime
+    updated_at: datetime
+
+
+@dataclass
 class AiUsageView:
     prompt_tokens: int | None
     completion_tokens: int | None
