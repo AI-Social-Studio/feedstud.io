@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
@@ -9,6 +10,8 @@ from app.domain.entities import GenerateJob
 from app.domain.error_codes import ErrorCode
 from app.domain.exceptions import DomainError, InvalidGenerateInputError
 from app.domain.value_objects import Platform
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -96,6 +99,7 @@ class ProcessGenerateJobUseCase:
             )
             return
         except Exception:
+            logger.exception("Generate job execution failed", extra={"job_id": str(job_id)})
             await self._jobs.fail(
                 job_id,
                 code=ErrorCode.INTERNAL_SERVER_ERROR.value,
