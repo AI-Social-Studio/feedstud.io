@@ -51,6 +51,7 @@ class SubmitGenerateJobUseCase:
         except Exception:
             await self._jobs.fail(
                 job.id,
+                from_status="queued",
                 code=ErrorCode.INTERNAL_SERVER_ERROR.value,
                 detail="Failed to enqueue generate job",
             )
@@ -93,6 +94,7 @@ class ProcessGenerateJobUseCase:
         except DomainError as exc:
             await self._jobs.fail(
                 job_id,
+                from_status="processing",
                 code=exc.code.value,
                 detail=exc.public_message,
                 meta=_json_meta(exc.meta),
@@ -102,6 +104,7 @@ class ProcessGenerateJobUseCase:
             logger.exception("Generate job execution failed", extra={"job_id": str(job_id)})
             await self._jobs.fail(
                 job_id,
+                from_status="processing",
                 code=ErrorCode.INTERNAL_SERVER_ERROR.value,
                 detail="Internal server error",
             )
@@ -109,6 +112,7 @@ class ProcessGenerateJobUseCase:
 
         await self._jobs.complete(
             job_id,
+            from_status="processing",
             posts=result.posts,
             errors={
                 platform: {

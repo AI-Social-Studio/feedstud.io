@@ -115,6 +115,7 @@ class GenerateJobRepository(ABC):
         self,
         job_id: UUID,
         *,
+        from_status: str,
         posts: dict[str, str],
         errors: dict[str, dict[str, object]],
     ) -> bool: ...
@@ -124,6 +125,7 @@ class GenerateJobRepository(ABC):
         self,
         job_id: UUID,
         *,
+        from_status: str,
         code: str,
         detail: str,
         meta: dict[str, object] | None = None,
