@@ -204,23 +204,27 @@ export function AiExecutionDetailPanel({
               </section>
 
               <section className="grid gap-4 xl:grid-cols-2">
-                <ContentBlock
+                <DetailBlock
                   title={dict.adminTelemetry.detail.inputPrompt}
                   description={dict.adminTelemetry.detail.inputPromptHint}
-                  value={execution.user_prompt}
+                  text={execution.user_prompt}
                   copyLabel={dict.adminTelemetry.detail.copy}
                   copiedLabel={dict.adminTelemetry.detail.copied}
                   copied={copiedBlock === "input"}
                   onCopy={() => copyToClipboard("input", execution.user_prompt, setCopiedBlock)}
+                  preserveWhitespace
+                  textClassName="text-sm leading-relaxed text-gray-800 dark:text-gray-200"
                 />
-                <ContentBlock
+                <DetailBlock
                   title={dict.adminTelemetry.detail.modelOutput}
                   description={dict.adminTelemetry.detail.modelOutputHint}
-                  value={responseText}
+                  text={responseText}
                   copyLabel={dict.adminTelemetry.detail.copy}
                   copiedLabel={dict.adminTelemetry.detail.copied}
                   copied={copiedBlock === "output"}
                   onCopy={() => copyToClipboard("output", responseText, setCopiedBlock)}
+                  preserveWhitespace
+                  textClassName="text-sm leading-relaxed text-gray-800 dark:text-gray-200"
                 />
               </section>
 
@@ -234,41 +238,68 @@ export function AiExecutionDetailPanel({
 
           {activeTab === "prompts" ? (
             <div className="space-y-4">
-              <JsonBlock
+              <DetailBlock
                 title={dict.adminTelemetry.detail.systemPrompt}
-                value={execution.system_prompt}
+                text={execution.system_prompt}
                 copyLabel={dict.adminTelemetry.detail.copy}
                 copiedLabel={dict.adminTelemetry.detail.copied}
                 copied={copiedBlock === "system"}
                 onCopy={() => copyToClipboard("system", execution.system_prompt, setCopiedBlock)}
+                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
               />
-              <JsonBlock
+              <DetailBlock
                 title={dict.adminTelemetry.detail.userPrompt}
-                value={execution.user_prompt}
+                text={execution.user_prompt}
                 copyLabel={dict.adminTelemetry.detail.copy}
                 copiedLabel={dict.adminTelemetry.detail.copied}
                 copied={copiedBlock === "user"}
                 onCopy={() => copyToClipboard("user", execution.user_prompt, setCopiedBlock)}
+                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
               />
-              <JsonBlock
+              <DetailBlock
                 title={dict.adminTelemetry.detail.responseText}
-                value={responseText}
+                text={responseText}
                 copyLabel={dict.adminTelemetry.detail.copy}
                 copiedLabel={dict.adminTelemetry.detail.copied}
                 copied={copiedBlock === "response"}
                 onCopy={() => copyToClipboard("response", responseText, setCopiedBlock)}
+                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
               />
-              <JsonBlock title={dict.adminTelemetry.detail.reasoning} value={execution.response_reasoning ?? "-"} />
-              <JsonBlock title={dict.adminTelemetry.detail.messages} value={execution.messages} />
+              <DetailBlock
+                title={dict.adminTelemetry.detail.reasoning}
+                text={execution.response_reasoning ?? "-"}
+                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
+              />
+              <DetailBlock
+                title={dict.adminTelemetry.detail.messages}
+                text={stringifyDetailValue(execution.messages)}
+                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
+              />
             </div>
           ) : null}
 
           {activeTab === "payloads" ? (
             <div className="space-y-4">
-              <JsonBlock title={dict.adminTelemetry.detail.providerResponses} value={execution.provider_responses} />
-              <JsonBlock title={dict.adminTelemetry.detail.rawCompletionResponse} value={execution.raw_completion_response} />
-              <JsonBlock title={dict.adminTelemetry.detail.rawGenerationResponse} value={execution.raw_generation_response} />
-              <JsonBlock title={dict.adminTelemetry.detail.rawError} value={execution.error_json} />
+              <DetailBlock
+                title={dict.adminTelemetry.detail.providerResponses}
+                text={stringifyDetailValue(execution.provider_responses)}
+                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
+              />
+              <DetailBlock
+                title={dict.adminTelemetry.detail.rawCompletionResponse}
+                text={stringifyDetailValue(execution.raw_completion_response)}
+                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
+              />
+              <DetailBlock
+                title={dict.adminTelemetry.detail.rawGenerationResponse}
+                text={stringifyDetailValue(execution.raw_generation_response)}
+                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
+              />
+              <DetailBlock
+                title={dict.adminTelemetry.detail.rawError}
+                text={stringifyDetailValue(execution.error_json)}
+                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
+              />
             </div>
           ) : null}
           </div>
@@ -292,67 +323,42 @@ function KeyValueCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ContentBlock({
+function DetailBlock({
   title,
   description,
-  value,
+  text,
   copyLabel,
   copiedLabel,
   copied,
   onCopy,
+  preserveWhitespace,
+  textClassName,
 }: {
   title: string;
-  description: string;
-  value: string;
-  copyLabel: string;
-  copiedLabel: string;
-  copied: boolean;
-  onCopy: () => void;
-}) {
-  return (
-    <section className="space-y-4">
-      <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-2 dark:border-gray-800/60">
-        <div>
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">{title}</h3>
-          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{description}</p>
-        </div>
-        <CopyButton copyLabel={copyLabel} copiedLabel={copiedLabel} copied={copied} onCopy={onCopy} />
-      </div>
-      <div className="overflow-hidden rounded-md border border-gray-100 dark:border-gray-800/60">
-        <pre className="overflow-x-auto whitespace-pre-wrap bg-gray-50/50 p-4 text-sm leading-relaxed text-gray-800 dark:bg-gray-900/40 dark:text-gray-200 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2">
-          {value}
-        </pre>
-      </div>
-    </section>
-  );
-}
-
-function JsonBlock({
-  title,
-  value,
-  copyLabel,
-  copiedLabel,
-  copied,
-  onCopy,
-}: {
-  title: string;
-  value: unknown;
+  description?: string;
+  text: string;
   copyLabel?: string;
   copiedLabel?: string;
   copied?: boolean;
   onCopy?: () => void;
+  preserveWhitespace?: boolean;
+  textClassName: string;
 }) {
-  const text = typeof value === "string" ? value : (JSON.stringify(value, null, 2) ?? "null");
   return (
     <section className="space-y-3">
-      <div className="flex items-center justify-between gap-3 border-b border-gray-100 pb-2 dark:border-gray-800/60">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">{title}</h3>
+      <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-2 dark:border-gray-800/60">
+        <div>
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">{title}</h3>
+          {description ? <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{description}</p> : null}
+        </div>
         {copyLabel && copiedLabel && onCopy ? (
           <CopyButton copyLabel={copyLabel} copiedLabel={copiedLabel} copied={Boolean(copied)} onCopy={onCopy} />
         ) : null}
       </div>
       <div className="overflow-hidden rounded-md border border-gray-100 dark:border-gray-800/60">
-        <pre className="overflow-x-auto bg-gray-50/50 p-4 text-xs leading-relaxed text-gray-700 dark:bg-gray-900/40 dark:text-gray-300 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2">
+        <pre
+          className={`overflow-x-auto bg-gray-50/50 p-4 dark:bg-gray-900/40 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 ${preserveWhitespace ? "whitespace-pre-wrap" : ""} ${textClassName}`}
+        >
           {text}
         </pre>
       </div>
@@ -438,6 +444,10 @@ function formatCurrency(value: number | null, locale: string): string {
     minimumFractionDigits: 4,
     maximumFractionDigits: 6,
   }).format(value);
+}
+
+function stringifyDetailValue(value: unknown): string {
+  return typeof value === "string" ? value : (JSON.stringify(value, null, 2) ?? "null");
 }
 
 function copyToClipboard(
