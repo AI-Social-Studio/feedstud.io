@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { Check, Copy, X } from "@phosphor-icons/react/dist/ssr";
-import { useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import type { AiExecutionDetail } from "@/lib/flowforge-api";
 import { useLanguage } from "@/lib/i18n";
+import { useMountEffect } from "@/lib/use-mount-effect";
 import { formatTelemetryAction, formatTelemetryPlatform, formatTelemetryStatus } from "@/lib/admin-telemetry";
 
 export function AiExecutionDetailPanel({
@@ -16,13 +17,63 @@ export function AiExecutionDetailPanel({
   closeHref: string;
 }) {
   const { locale, dict } = useLanguage();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"overview" | "prompts" | "payloads">("overview");
   const [copiedBlock, setCopiedBlock] = useState<string | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useMountEffect(() => {
+    setMounted(true);
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus();
+
+    return () => {
+      previousFocusRef.current?.focus();
+    };
+  });
 
   if (!execution) return null;
+
+  const titleId = `ai-execution-detail-title-${execution.id}`;
+
+  function close() {
+    router.push(closeHref, { scroll: false });
+  }
+
+  function handleDialogKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      close();
+      return;
+    }
+
+    if (event.key !== "Tab") return;
+
+    const focusableElements = getFocusableElements(event.currentTarget);
+    if (focusableElements.length === 0) {
+      event.preventDefault();
+      return;
+    }
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    const activeElement = document.activeElement;
+
+    if (event.shiftKey) {
+      if (activeElement === firstElement || !event.currentTarget.contains(activeElement)) {
+        event.preventDefault();
+        lastElement.focus();
+      }
+      return;
+    }
+
+    if (activeElement === lastElement || !event.currentTarget.contains(activeElement)) {
+      event.preventDefault();
+      firstElement.focus();
+    }
+  }
 
   const responseText = execution.response_text ?? execution.error_message ?? "-";
   const overviewItems = [
@@ -63,14 +114,21 @@ export function AiExecutionDetailPanel({
 
   const content = (
     <>
-      <Link
-        href={closeHref}
-        scroll={false}
-        aria-label={dict.adminTelemetry.detail.close}
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        onClick={close}
         className="fixed inset-0 z-40 bg-gray-950/60 transition-opacity"
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-        <section className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-[#0a0a0f] dark:ring-white/10">
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          onKeyDown={handleDialogKeyDown}
+          className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-[#0a0a0f] dark:ring-white/10"
+        >
           <div className="flex-none border-b border-gray-100 bg-white px-6 py-5 dark:border-gray-800/60 dark:bg-[#0a0a0f]">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
@@ -82,21 +140,22 @@ export function AiExecutionDetailPanel({
                     {dict.adminTelemetry.detail.previewBadge}
                   </span>
                 </div>
-                <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
+                <h2 id={titleId} className="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
                   {dict.adminTelemetry.detail.title}
                 </h2>
                 <p className="mt-2 max-w-3xl text-sm text-gray-500 dark:text-gray-400">
                   {dict.adminTelemetry.detail.subtitle}
                 </p>
               </div>
-              <Link
-                href={closeHref}
-                scroll={false}
+              <button
+                type="button"
+                ref={closeButtonRef}
+                onClick={close}
                 className="inline-flex rounded-md p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
                 aria-label={dict.adminTelemetry.detail.close}
               >
                 <X className="size-5" />
-              </Link>
+              </button>
             </div>
 
             <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
@@ -390,4 +449,12 @@ function copyToClipboard(
     setCopiedBlock(key);
     setTimeout(() => setCopiedBlock(null), 1500);
   });
+}
+
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter((element) => !element.hasAttribute("aria-hidden"));
 }
