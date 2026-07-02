@@ -250,6 +250,13 @@ class SqlAlchemyAiExecutionRepository(AiExecutionRepository):
             "average_cost_per_request": total_cost / total_requests if total_requests else 0.0,
         }
 
+    async def delete_older_than(self, cutoff: datetime) -> int:
+        result = await self._session.execute(
+            delete(AiExecutionModel).where(AiExecutionModel.created_at < cutoff)
+        )
+        await self._session.commit()
+        return int(result.rowcount or 0)
+
     @staticmethod
     def _apply_filters(
         stmt,

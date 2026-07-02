@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import BigInteger, DateTime, Float, JSON, String, Text
+from sqlalchemy import BigInteger, DateTime, Float, Index, JSON, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -37,6 +37,15 @@ class DraftModel(Base):
 
 class AiExecutionModel(Base):
     __tablename__ = "ai_executions"
+    __table_args__ = (
+        Index("ix_ai_executions_kind", "kind"),
+        Index("ix_ai_executions_status", "status"),
+        Index("ix_ai_executions_platform", "platform"),
+        Index("ix_ai_executions_action", "action"),
+        Index("ix_ai_executions_requested_model", "requested_model"),
+        Index("ix_ai_executions_user_id", "user_id"),
+        Index("ix_ai_executions_created_at", "created_at"),
+    )
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
     provider: Mapped[str] = mapped_column(String(64), nullable=False)

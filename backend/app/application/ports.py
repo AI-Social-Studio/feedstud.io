@@ -96,6 +96,9 @@ class AiExecutionRepository(ABC):
         created_before: datetime | None = None,
     ) -> dict[str, float | int]: ...
 
+    @abstractmethod
+    async def delete_older_than(self, cutoff: datetime) -> int: ...
+
 
 class DraftRepository(ABC):
     @abstractmethod

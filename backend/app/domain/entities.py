@@ -24,6 +24,13 @@ class GeneratedPost:
 
 @dataclass
 class AiExecution:
+    """Raw AI telemetry retained for a limited debugging window.
+
+    These traces intentionally keep prompts, messages, outputs, and actor identifiers
+    so admin operators can debug provider behavior. They are purged on backend startup
+    using the configured retention window instead of being kept indefinitely.
+    """
+
     provider: str
     requested_model: str
     kind: str

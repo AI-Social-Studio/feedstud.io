@@ -1,7 +1,7 @@
 from collections.abc import AsyncIterator
 from functools import lru_cache
 
-from fastapi import Depends
+from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.ports import (
@@ -100,6 +100,29 @@ def get_ai_execution_details_use_case(
     executions: AiExecutionRepository = Depends(get_ai_execution_repository),
 ) -> GetAiExecutionDetailsUseCase:
     return GetAiExecutionDetailsUseCase(executions=executions)
+
+
+def require_internal_backend_request(
+    backend_token: str | None = Header(default=None, alias="X-Backend-Token"),
+    settings: Settings = Depends(get_settings),
+) -> None:
+    if not settings.backend_internal_api_key:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Backend internal auth is not configured",
+        )
+    if backend_token != settings.backend_internal_api_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized",
+        )
+
+
+def get_trusted_actor_user_id(
+    _: None = Depends(require_internal_backend_request),
+    actor_user_id: str | None = Header(default=None, alias="X-Actor-Id"),
+) -> str | None:
+    return actor_user_id
 
 
 def get_upload_limits(settings: Settings = Depends(get_settings)) -> UploadLimits:

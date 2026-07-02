@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +16,7 @@ from app.domain.exceptions import (
     UnsupportedFileTypeError,
 )
 from app.infrastructure.db.models import Base
+from app.infrastructure.db.repositories import SqlAlchemyAiExecutionRepository
 from app.interface.api.v1.router import api_router
 from app.interface.dependencies import _database, _storage
 
@@ -26,6 +28,10 @@ async def lifespan(_: FastAPI):
     if settings.db_reset_on_start:
         await db.drop_all(Base.metadata)
     await db.create_all(Base.metadata)
+    retention_cutoff = datetime.now(timezone.utc) - timedelta(days=settings.ai_execution_retention_days)
+    async for session in db.session():
+        await SqlAlchemyAiExecutionRepository(session).delete_older_than(retention_cutoff)
+        break
     await _storage().ensure_bucket()
     yield
     await db.dispose()

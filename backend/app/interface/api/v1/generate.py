@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Header, status
+from fastapi import APIRouter, Depends, status
 
 from app.application.use_cases.generate_posts import (
     GeneratePostsInput,
@@ -10,6 +10,7 @@ from app.domain.value_objects import Platform, RefineAction
 from app.interface.dependencies import (
     get_generate_posts_use_case,
     get_refine_post_use_case,
+    get_trusted_actor_user_id,
 )
 from app.interface.schemas import (
     GenerateRequest,
@@ -29,7 +30,7 @@ router = APIRouter(tags=["generate"])
 )
 async def generate_posts(
     payload: GenerateRequest,
-    actor_user_id: str | None = Header(default=None, alias="X-Actor-Id"),
+    actor_user_id: str | None = Depends(get_trusted_actor_user_id),
     use_case: GeneratePostsUseCase = Depends(get_generate_posts_use_case),
 ) -> GenerateResponse:
     result = await use_case.execute(
@@ -51,7 +52,7 @@ async def generate_posts(
 )
 async def refine_post(
     payload: RefineRequest,
-    actor_user_id: str | None = Header(default=None, alias="X-Actor-Id"),
+    actor_user_id: str | None = Depends(get_trusted_actor_user_id),
     use_case: RefinePostUseCase = Depends(get_refine_post_use_case),
 ) -> RefineResponse:
     text = await use_case.execute(

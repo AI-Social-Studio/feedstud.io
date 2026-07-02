@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     upload_max_file_bytes: int = Field(default=10 * 1024 * 1024, ge=1)
 
     db_reset_on_start: bool = False
+    ai_execution_retention_days: int = Field(default=30, ge=1, le=365)
+
+    backend_internal_api_key: str = ""
 
     ai_provider: Literal["anthropic", "openrouter"] = "anthropic"
 
