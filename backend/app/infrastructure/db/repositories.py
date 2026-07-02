@@ -1,7 +1,7 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from sqlalchemy import case, delete, func, select
+from sqlalchemy import case, delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.ports import (
@@ -13,6 +13,8 @@ from app.application.ports import (
 from app.domain.entities import AiExecution, Draft, GenerateJob, UploadedFile
 from app.domain.value_objects import ImageContentType, Platform
 from app.infrastructure.db.models import AiExecutionModel, DraftModel, GenerateJobModel, UploadedFileModel
+
+STALE_JOB_TIMEOUT = timedelta(minutes=15)
 
 
 class SqlAlchemyFileRepository(FileRepository):
@@ -419,13 +421,22 @@ class SqlAlchemyGenerateJobRepository(GenerateJobRepository):
         return self._to_entity(model) if model else None
 
     async def mark_processing(self, job_id: UUID) -> bool:
-        model = await self._session.get(GenerateJobModel, job_id)
-        if model is None or model.status != "queued":
-            return False
-        model.status = "processing"
-        model.updated_at = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc)
+        stale_cutoff = now - STALE_JOB_TIMEOUT
+        result = await self._session.execute(
+            update(GenerateJobModel)
+            .where(GenerateJobModel.id == job_id)
+            .where(
+                (GenerateJobModel.status == "queued")
+                | (
+                    (GenerateJobModel.status == "processing")
+                    & (GenerateJobModel.updated_at < stale_cutoff)
+                )
+            )
+            .values(status="processing", updated_at=now)
+        )
         await self._session.commit()
-        return True
+        return result.rowcount == 1
 
     async def complete(
         self,
@@ -434,18 +445,21 @@ class SqlAlchemyGenerateJobRepository(GenerateJobRepository):
         posts: dict[str, str],
         errors: dict[str, dict[str, object]],
     ) -> bool:
-        model = await self._session.get(GenerateJobModel, job_id)
-        if model is None:
-            return False
-        model.status = "completed"
-        model.posts = posts
-        model.errors = errors
-        model.error_code = None
-        model.error_detail = None
-        model.error_meta = None
-        model.updated_at = datetime.now(timezone.utc)
+        result = await self._session.execute(
+            update(GenerateJobModel)
+            .where(GenerateJobModel.id == job_id)
+            .values(
+                status="completed",
+                posts=posts,
+                errors=errors,
+                error_code=None,
+                error_detail=None,
+                error_meta=None,
+                updated_at=datetime.now(timezone.utc),
+            )
+        )
         await self._session.commit()
-        return True
+        return result.rowcount == 1
 
     async def fail(
         self,
@@ -455,16 +469,19 @@ class SqlAlchemyGenerateJobRepository(GenerateJobRepository):
         detail: str,
         meta: dict[str, object] | None = None,
     ) -> bool:
-        model = await self._session.get(GenerateJobModel, job_id)
-        if model is None:
-            return False
-        model.status = "failed"
-        model.error_code = code
-        model.error_detail = detail
-        model.error_meta = meta
-        model.updated_at = datetime.now(timezone.utc)
+        result = await self._session.execute(
+            update(GenerateJobModel)
+            .where(GenerateJobModel.id == job_id)
+            .values(
+                status="failed",
+                error_code=code,
+                error_detail=detail,
+                error_meta=meta,
+                updated_at=datetime.now(timezone.utc),
+            )
+        )
         await self._session.commit()
-        return True
+        return result.rowcount == 1
 
     @staticmethod
     def _to_model(job: GenerateJob) -> GenerateJobModel:
