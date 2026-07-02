@@ -34,6 +34,20 @@ services:
       timeout: 5s
       retries: 10
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: flowforge
+      RABBITMQ_DEFAULT_PASS: flowforge
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   backend:
     build:
       context: .
@@ -59,12 +73,48 @@ services:
       OPENROUTER_TEMPERATURE: "${OPENROUTER_TEMPERATURE:-0.9}"
       OPENROUTER_SITE_URL: "${OPENROUTER_SITE_URL:-http://localhost:3000}"
       OPENROUTER_APP_NAME: "${OPENROUTER_APP_NAME:-FlowForge}"
+      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://flowforge:flowforge@rabbitmq:5672/}"
+      RABBITMQ_GENERATE_QUEUE: "${RABBITMQ_GENERATE_QUEUE:-generate_posts}"
+      RABBITMQ_PREFETCH_COUNT: "${RABBITMQ_PREFETCH_COUNT:-10}"
     ports:
       - "4000:4000"
     depends_on:
       postgres:
         condition: service_healthy
       minio:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["python", "-m", "app.worker"]
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://flowforge:flowforge@postgres:5432/flowforge
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: flowforge
+      MINIO_SECRET_KEY: flowforge-secret
+      MINIO_BUCKET: flowforge-uploads
+      MINIO_SECURE: "false"
+      MINIO_PUBLIC_ENDPOINT: http://localhost:9000
+      OPENROUTER_API_KEY: "${OPENROUTER_API_KEY:-}"
+      OPENROUTER_MODEL: "${OPENROUTER_MODEL:-openai/gpt-oss-120b:free}"
+      OPENROUTER_MAX_TOKENS: "${OPENROUTER_MAX_TOKENS:-8192}"
+      OPENROUTER_TEMPERATURE: "${OPENROUTER_TEMPERATURE:-0.9}"
+      OPENROUTER_SITE_URL: "${OPENROUTER_SITE_URL:-http://localhost:3000}"
+      OPENROUTER_APP_NAME: "${OPENROUTER_APP_NAME:-FlowForge}"
+      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://flowforge:flowforge@rabbitmq:5672/}"
+      RABBITMQ_GENERATE_QUEUE: "${RABBITMQ_GENERATE_QUEUE:-generate_posts}"
+      RABBITMQ_PREFETCH_COUNT: "${RABBITMQ_PREFETCH_COUNT:-10}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
 volumes:

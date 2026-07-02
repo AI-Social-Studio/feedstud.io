@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import BinaryIO
 from uuid import UUID
 
-from app.domain.entities import AiExecution, Draft, GeneratedPostResult, UploadedFile
+from app.domain.entities import AiExecution, Draft, GenerateJob, GeneratedPostResult, UploadedFile
 from app.domain.value_objects import Platform, RefineAction
 
 
@@ -98,6 +98,41 @@ class AiExecutionRepository(ABC):
 
     @abstractmethod
     async def delete_older_than(self, cutoff: datetime) -> int: ...
+
+
+class GenerateJobRepository(ABC):
+    @abstractmethod
+    async def add(self, job: GenerateJob) -> None: ...
+
+    @abstractmethod
+    async def get(self, job_id: UUID) -> GenerateJob | None: ...
+
+    @abstractmethod
+    async def mark_processing(self, job_id: UUID) -> bool: ...
+
+    @abstractmethod
+    async def complete(
+        self,
+        job_id: UUID,
+        *,
+        posts: dict[str, str],
+        errors: dict[str, dict[str, object]],
+    ) -> bool: ...
+
+    @abstractmethod
+    async def fail(
+        self,
+        job_id: UUID,
+        *,
+        code: str,
+        detail: str,
+        meta: dict[str, object] | None = None,
+    ) -> bool: ...
+
+
+class GenerateJobQueue(ABC):
+    @abstractmethod
+    async def publish(self, job_id: UUID) -> None: ...
 
 
 class DraftRepository(ABC):

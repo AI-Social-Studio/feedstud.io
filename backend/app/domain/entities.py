@@ -91,6 +91,23 @@ class GeneratedPostResult:
 
 
 @dataclass
+class GenerateJob:
+    raw_text: str
+    selected_platforms: list[Platform]
+    file_ids: list[UUID]
+    actor_user_id: str | None = None
+    status: str = "queued"
+    posts: dict[str, str] = field(default_factory=dict)
+    errors: dict[str, dict[str, Any]] = field(default_factory=dict)
+    error_code: str | None = None
+    error_detail: str | None = None
+    error_meta: dict[str, Any] | None = None
+    id: UUID = field(default_factory=uuid4)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
 class Draft:
     raw_text: str
     selected_platforms: list[Platform]

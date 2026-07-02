@@ -9,6 +9,8 @@ from app.application.ports import (
     ContentGenerator,
     DraftRepository,
     FileRepository,
+    GenerateJobQueue,
+    GenerateJobRepository,
     ObjectStorage,
 )
 from app.application.use_cases.drafts import GetDraftUseCase, ListDraftsUseCase, SaveDraftUseCase
@@ -17,6 +19,7 @@ from app.application.use_cases.admin_ai_usage import (
     GetAiUsageSummaryUseCase,
     ListAiExecutionsUseCase,
 )
+from app.application.use_cases.generate_jobs import GetGenerateJobUseCase, SubmitGenerateJobUseCase
 from app.application.use_cases.generate_posts import (
     GeneratePostsUseCase,
     RefinePostUseCase,
@@ -34,7 +37,9 @@ from app.infrastructure.db.repositories import (
     SqlAlchemyAiExecutionRepository,
     SqlAlchemyDraftRepository,
     SqlAlchemyFileRepository,
+    SqlAlchemyGenerateJobRepository,
 )
+from app.infrastructure.messaging.rabbitmq import RabbitMqGenerateJobQueue
 from app.infrastructure.db.session import Database
 from app.infrastructure.storage.minio_storage import MinioObjectStorage
 from app.interface.errors import api_error
@@ -83,6 +88,12 @@ def get_ai_execution_repository(
     session: AsyncSession = Depends(get_session),
 ) -> AiExecutionRepository:
     return SqlAlchemyAiExecutionRepository(session)
+
+
+def get_generate_job_repository(
+    session: AsyncSession = Depends(get_session),
+) -> GenerateJobRepository:
+    return SqlAlchemyGenerateJobRepository(session)
 
 
 def get_ai_usage_summary_use_case(
@@ -174,6 +185,16 @@ def get_content_generator() -> ContentGenerator:
     return _content_generator()
 
 
+@lru_cache
+def _generate_job_queue() -> GenerateJobQueue:
+    settings = get_settings()
+    return RabbitMqGenerateJobQueue(settings.rabbitmq_url, settings.rabbitmq_generate_queue)
+
+
+def get_generate_job_queue() -> GenerateJobQueue:
+    return _generate_job_queue()
+
+
 def get_generate_posts_use_case(
     generator: ContentGenerator = Depends(get_content_generator),
     files: FileRepository = Depends(get_file_repository),
@@ -186,6 +207,20 @@ def get_generate_posts_use_case(
         storage=storage,
         executions=executions,
     )
+
+
+def get_submit_generate_job_use_case(
+    jobs: GenerateJobRepository = Depends(get_generate_job_repository),
+    queue: GenerateJobQueue = Depends(get_generate_job_queue),
+    files: FileRepository = Depends(get_file_repository),
+) -> SubmitGenerateJobUseCase:
+    return SubmitGenerateJobUseCase(jobs=jobs, queue=queue, files=files)
+
+
+def get_get_generate_job_use_case(
+    jobs: GenerateJobRepository = Depends(get_generate_job_repository),
+) -> GetGenerateJobUseCase:
+    return GetGenerateJobUseCase(jobs=jobs)
 
 
 def get_refine_post_use_case(

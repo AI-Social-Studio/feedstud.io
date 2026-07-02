@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     openrouter_site_url: str = "http://localhost:3000"
     openrouter_app_name: str = "FlowForge"
 
+    rabbitmq_url: str = "amqp://guest:guest@localhost:5672/"
+    rabbitmq_generate_queue: str = "generate_posts"
+    rabbitmq_prefetch_count: int = Field(default=10, ge=1, le=100)
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
