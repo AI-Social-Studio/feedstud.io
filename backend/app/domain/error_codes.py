@@ -2,6 +2,8 @@ from enum import StrEnum
 
 
 class ErrorCode(StrEnum):
+    NOT_FOUND = "not_found"
+    METHOD_NOT_ALLOWED = "method_not_allowed"
     TOO_MANY_FILES = "too_many_files"
     FILE_TOO_LARGE = "file_too_large"
     UNSUPPORTED_FILE_TYPE = "unsupported_file_type"

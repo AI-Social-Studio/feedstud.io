@@ -65,12 +65,12 @@ class GeneratePostsUseCase:
 
         posts: dict[str, str] = {}
         errors: dict[str, ErrorView] = {}
-        for platform, result in zip(payload.platforms, results):
+        for platform, result in zip(payload.platforms, results, strict=True):
             if isinstance(result, Exception):
-                if isinstance(result, ContentGenerationError) and result.trace is not None:
-                    result.trace.user_id = payload.actor_user_id
-                    await self._executions.add(result.trace)
                 if isinstance(result, ContentGenerationError):
+                    if result.trace is not None:
+                        result.trace.user_id = payload.actor_user_id
+                        await self._executions.add(result.trace)
                     errors[platform.value] = ErrorView(
                         code=result.code,
                         detail=result.public_message,

@@ -28,10 +28,8 @@ class ErrorResponse(BaseModel):
     meta: dict[str, Any] | None = None
 
 
-class PlatformErrorResponse(BaseModel):
-    detail: str
-    code: str
-    meta: dict[str, Any] | None = None
+class PlatformErrorResponse(ErrorResponse):
+    pass
 
 
 class GenerateRequest(BaseModel):
