@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CaretRight, House, Megaphone } from "@phosphor-icons/react/dist/ssr";
+import { CaretRight, House, Megaphone, Shield } from "@phosphor-icons/react/dist/ssr";
 import { useDictionary } from "@/lib/i18n";
 
 export function TopHeader() {
@@ -22,6 +22,11 @@ export function TopHeader() {
           <span className="flex items-center gap-1.5 font-medium text-gray-900 dark:text-gray-100">
             <House size={16} weight="fill" />
             <span>{dict.nav.home}</span>
+          </span>
+        ) : isAdmin ? (
+          <span className="flex items-center gap-1.5 font-medium text-gray-900 dark:text-gray-100">
+            <Shield size={16} weight="fill" />
+            <span>{dict.nav.admin}</span>
           </span>
         ) : isUnderMyCampaigns ? (
           isMyCampaigns ? (
@@ -48,12 +53,7 @@ export function TopHeader() {
           </Link>
         )}
 
-        {isAdmin ? (
-          <>
-            <CaretRight size={12} className="text-gray-300 dark:text-gray-700" />
-            <span className="font-medium text-gray-900 dark:text-gray-100">{dict.nav.admin}</span>
-          </>
-        ) : isNewCampaign ? (
+        {isNewCampaign ? (
           <>
             <CaretRight size={12} className="text-gray-300 dark:text-gray-700" />
             <span className="font-medium text-gray-900 dark:text-gray-100">
