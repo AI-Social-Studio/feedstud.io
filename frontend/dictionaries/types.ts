@@ -95,6 +95,84 @@ export type Dictionary = {
     version: string;
     versions: string;
   };
+  adminTelemetry: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    viewingAs: string;
+    filters: {
+      kind: string;
+      status: string;
+      platform: string;
+      model: string;
+      userId: string;
+      limit: string;
+      apply: string;
+      reset: string;
+      all: string;
+      placeholders: {
+        model: string;
+        userId: string;
+        limit: string;
+      };
+      options: {
+        kind: {
+          generate: string;
+          refine: string;
+        };
+        status: {
+          success: string;
+          error: string;
+        };
+        platform: {
+          linkedin: string;
+          instagram: string;
+          x: string;
+        };
+      };
+    };
+    kpis: {
+      totalCost: string;
+      totalTokens: string;
+      errorRate: string;
+      averageCostPerRequest: string;
+      requests: string;
+      tokenHint: string;
+      errorHint: string;
+      reasoningTokens: string;
+    };
+    table: {
+      title: string;
+      time: string;
+      kind: string;
+      user: string;
+      model: string;
+      tokens: string;
+      cost: string;
+      status: string;
+      noResults: string;
+      anonymous: string;
+    };
+    detail: {
+      empty: string;
+      title: string;
+      user: string;
+      model: string;
+      cost: string;
+      tokens: string;
+      systemPrompt: string;
+      userPrompt: string;
+      responseText: string;
+      reasoning: string;
+      messages: string;
+      usage: string;
+      providerResponses: string;
+      rawCompletionResponse: string;
+      rawGenerationResponse: string;
+      rawError: string;
+      anonymous: string;
+    };
+  };
   studio: {
     defaultTitle: string;
     subtitle: string;

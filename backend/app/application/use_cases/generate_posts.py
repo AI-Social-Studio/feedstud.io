@@ -17,6 +17,7 @@ class GeneratePostsInput:
     raw_text: str
     platforms: list[Platform]
     file_ids: list[UUID]
+    actor_user_id: str | None = None
 
 
 @dataclass
@@ -24,6 +25,7 @@ class RefinePostInput:
     platform: Platform
     text: str
     action: RefineAction
+    actor_user_id: str | None = None
 
 
 class GeneratePostsUseCase:
@@ -65,6 +67,7 @@ class GeneratePostsUseCase:
         for platform, result in zip(payload.platforms, results):
             if isinstance(result, Exception):
                 if isinstance(result, ContentGenerationError) and result.trace is not None:
+                    result.trace.user_id = payload.actor_user_id
                     await self._executions.add(result.trace)
                 reason = (
                     result.reason
@@ -73,6 +76,7 @@ class GeneratePostsUseCase:
                 )
                 errors[platform.value] = reason
                 continue
+            result.trace.user_id = payload.actor_user_id
             await self._executions.add(result.trace)
             posts[platform.value] = result.post.text
 
@@ -95,7 +99,9 @@ class RefinePostUseCase:
             )
         except RefineError as exc:
             if exc.trace is not None:
+                exc.trace.user_id = payload.actor_user_id
                 await self._executions.add(exc.trace)
             raise
+        result.trace.user_id = payload.actor_user_id
         await self._executions.add(result.trace)
         return result.post.text

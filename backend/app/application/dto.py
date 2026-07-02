@@ -89,6 +89,7 @@ class AiExecutionListItemView:
     created_at: datetime
     kind: str
     status: str
+    user_id: str | None
     platform: str | None
     action: str | None
     provider: str
@@ -113,6 +114,7 @@ class AiExecutionDetailView:
     created_at: datetime
     kind: str
     status: str
+    user_id: str | None
     platform: str | None
     action: str | None
     provider: str

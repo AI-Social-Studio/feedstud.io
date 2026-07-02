@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Header, status
 
 from app.application.use_cases.generate_posts import (
     GeneratePostsInput,
@@ -29,6 +29,7 @@ router = APIRouter(tags=["generate"])
 )
 async def generate_posts(
     payload: GenerateRequest,
+    actor_user_id: str | None = Header(default=None, alias="X-Actor-Id"),
     use_case: GeneratePostsUseCase = Depends(get_generate_posts_use_case),
 ) -> GenerateResponse:
     result = await use_case.execute(
@@ -36,6 +37,7 @@ async def generate_posts(
             raw_text=payload.raw,
             platforms=[Platform(p) for p in payload.platforms],
             file_ids=payload.file_ids,
+            actor_user_id=actor_user_id,
         )
     )
     return GenerateResponse(posts=result.posts, errors=result.errors)
@@ -49,6 +51,7 @@ async def generate_posts(
 )
 async def refine_post(
     payload: RefineRequest,
+    actor_user_id: str | None = Header(default=None, alias="X-Actor-Id"),
     use_case: RefinePostUseCase = Depends(get_refine_post_use_case),
 ) -> RefineResponse:
     text = await use_case.execute(
@@ -56,6 +59,7 @@ async def refine_post(
             platform=Platform(payload.platform),
             text=payload.text,
             action=RefineAction(payload.action),
+            actor_user_id=actor_user_id,
         )
     )
     return RefineResponse(text=text)

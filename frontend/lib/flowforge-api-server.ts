@@ -1,17 +1,65 @@
-import type { Draft, DraftSummary } from "@/lib/flowforge-api";
-import { env } from "@/env";
-
-const backendBaseUrl = `${env.BACKEND_URL}/api/v1`;
+import type {
+  AiExecutionDetail,
+  AiExecutionListItem,
+  AiUsageSummary,
+  Draft,
+  DraftSummary,
+} from "@/lib/flowforge-api";
+import { backendJson } from "@/lib/flowforge-backend";
 
 export async function fetchDraftServer(draftId: string): Promise<Draft | null> {
-  const response = await fetch(`${backendBaseUrl}/drafts/${draftId}`, { cache: "no-store" });
-  if (response.status === 404) return null;
-  if (!response.ok) throw new Error(`Failed to load draft ${draftId}`);
-  return (await response.json()) as Draft;
+  try {
+    return await backendJson<Draft>(`/drafts/${draftId}`);
+  } catch {
+    return null;
+  }
 }
 
 export async function listDraftsServer(limit = 50): Promise<DraftSummary[]> {
-  const response = await fetch(`${backendBaseUrl}/drafts?limit=${limit}`, { cache: "no-store" });
-  if (!response.ok) throw new Error("Failed to load drafts");
-  return (await response.json()) as DraftSummary[];
+  return backendJson<DraftSummary[]>(`/drafts?limit=${limit}`);
+}
+
+type AiUsageFilters = {
+  limit?: number;
+  offset?: number;
+  kind?: string;
+  status?: string;
+  platform?: string;
+  action?: string;
+  model?: string;
+  userId?: string;
+  from?: string;
+  to?: string;
+};
+
+export async function fetchAiUsageSummaryServer(filters: AiUsageFilters = {}): Promise<AiUsageSummary> {
+  return backendJson<AiUsageSummary>(`/admin/ai-usage/summary${toQueryString(filters)}`);
+}
+
+export async function listAiExecutionsServer(filters: AiUsageFilters = {}): Promise<AiExecutionListItem[]> {
+  return backendJson<AiExecutionListItem[]>(`/admin/ai-usage/executions${toQueryString(filters)}`);
+}
+
+export async function fetchAiExecutionServer(executionId: string): Promise<AiExecutionDetail | null> {
+  try {
+    return await backendJson<AiExecutionDetail>(`/admin/ai-usage/executions/${executionId}`);
+  } catch {
+    return null;
+  }
+}
+
+function toQueryString(filters: AiUsageFilters): string {
+  const params = new URLSearchParams();
+  if (filters.limit !== undefined) params.set("limit", String(filters.limit));
+  if (filters.offset !== undefined) params.set("offset", String(filters.offset));
+  if (filters.kind) params.set("kind", filters.kind);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.platform) params.set("platform", filters.platform);
+  if (filters.action) params.set("action", filters.action);
+  if (filters.model) params.set("model", filters.model);
+  if (filters.userId) params.set("user_id", filters.userId);
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
+  const query = params.toString();
+  return query ? `?${query}` : "";
 }
