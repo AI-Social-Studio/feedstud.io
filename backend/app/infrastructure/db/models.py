@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import BigInteger, DateTime, Float, Index, JSON, String, Text
+from sqlalchemy import BigInteger, CheckConstraint, DateTime, Float, Index, JSON, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -105,6 +105,10 @@ class GenerateJobModel(Base):
     __table_args__ = (
         Index("ix_generate_jobs_status", "status"),
         Index("ix_generate_jobs_created_at", "created_at"),
+        CheckConstraint(
+            "status IN ('queued', 'processing', 'completed', 'failed')",
+            name="ck_generate_jobs_status",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
