@@ -445,10 +445,20 @@ function copyToClipboard(
   value: string,
   setCopiedBlock: (value: string | null) => void,
 ): void {
-  void navigator.clipboard.writeText(value).then(() => {
-    setCopiedBlock(key);
-    setTimeout(() => setCopiedBlock(null), 1500);
-  });
+  if (typeof navigator === "undefined" || typeof navigator.clipboard?.writeText !== "function") {
+    console.error("Clipboard API is unavailable in this context");
+    return;
+  }
+
+  void navigator.clipboard
+    .writeText(value)
+    .then(() => {
+      setCopiedBlock(key);
+      setTimeout(() => setCopiedBlock(null), 1500);
+    })
+    .catch((error: unknown) => {
+      console.error("Failed to copy execution details", error);
+    });
 }
 
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
