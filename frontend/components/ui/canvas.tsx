@@ -21,11 +21,18 @@ const CONFIG = {
   tension: 0.99,
 };
 
-function createLine(spring: number, pos: { x: number; y: number }): TrailLine {
+type RuntimeConfig = typeof CONFIG & {
+  lineWidth: number;
+  compositeOperation: GlobalCompositeOperation;
+  pixelRatio: number;
+  strokeColor: string;
+};
+
+function createLine(spring: number, pos: { x: number; y: number }, config: typeof CONFIG): TrailLine {
   return {
     spring: spring + 0.1 * Math.random() - 0.05,
     friction: CONFIG.friction + 0.01 * Math.random() - 0.005,
-    nodes: Array.from({ length: CONFIG.size }, () => ({
+    nodes: Array.from({ length: config.size }, () => ({
       x: pos.x,
       y: pos.y,
       vx: 0,
@@ -91,15 +98,44 @@ export function renderCanvas() {
   let frameId = 0;
   const pos = { x: 0, y: 0 };
   let lines: TrailLine[] = [];
+  let canvasRect = canvas.getBoundingClientRect();
+  const isFirefox = typeof navigator !== "undefined" && navigator.userAgent.includes("Firefox");
+  const runtimeConfig: RuntimeConfig = isFirefox
+      ? {
+        ...CONFIG,
+        trails: 52,
+        size: 38,
+        lineWidth: 8.5,
+        compositeOperation: "source-over",
+        pixelRatio: 1,
+        strokeColor: "hsla(220, 93%, 50%, 0.05)",
+      }
+    : {
+        ...CONFIG,
+        lineWidth: 10,
+        compositeOperation: "lighter",
+        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        strokeColor: TRAIL_COLOR,
+      };
 
   function resize() {
-    canvas.width = window.innerWidth - 20;
-    canvas.height = window.innerHeight;
+    const width = window.innerWidth - 20;
+    const height = window.innerHeight;
+    canvas.width = Math.floor(width * runtimeConfig.pixelRatio);
+    canvas.height = Math.floor(height * runtimeConfig.pixelRatio);
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    ctx.setTransform(runtimeConfig.pixelRatio, 0, 0, runtimeConfig.pixelRatio, 0, 0);
+    canvasRect = canvas.getBoundingClientRect();
+  }
+
+  function syncCanvasRect() {
+    canvasRect = canvas.getBoundingClientRect();
   }
 
   function initLines() {
-    lines = Array.from({ length: CONFIG.trails }, (_, i) =>
-      createLine(0.45 + (i / CONFIG.trails) * 0.025, pos)
+    lines = Array.from({ length: runtimeConfig.trails }, (_, i) =>
+      createLine(0.45 + (i / runtimeConfig.trails) * 0.025, pos, runtimeConfig)
     );
   }
 
@@ -107,9 +143,9 @@ export function renderCanvas() {
     if (!running) return;
     ctx.globalCompositeOperation = "source-over";
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.globalCompositeOperation = "lighter";
-    ctx.strokeStyle = TRAIL_COLOR;
-    ctx.lineWidth = 10;
+    ctx.globalCompositeOperation = runtimeConfig.compositeOperation;
+    ctx.strokeStyle = runtimeConfig.strokeColor;
+    ctx.lineWidth = runtimeConfig.lineWidth;
     for (const line of lines) {
       updateLine(line, pos);
       drawLine(line, ctx);
@@ -118,8 +154,7 @@ export function renderCanvas() {
   }
 
   function getCanvasPos(clientX: number, clientY: number) {
-    const rect = canvas.getBoundingClientRect();
-    return { x: clientX - rect.left, y: clientY - rect.top };
+    return { x: clientX - canvasRect.left, y: clientY - canvasRect.top };
   }
 
   function handlePointer(e: MouseEvent | TouchEvent) {
@@ -132,7 +167,7 @@ export function renderCanvas() {
       pos.x = p.x;
       pos.y = p.y;
     }
-    e.preventDefault();
+    if ("touches" in e) e.preventDefault();
   }
 
   function handleTouchStart(e: TouchEvent) {
@@ -172,6 +207,7 @@ export function renderCanvas() {
   document.addEventListener("mousemove", onFirstInteraction as EventListener);
   document.addEventListener("touchstart", onFirstInteraction as EventListener);
   window.addEventListener("resize", resize);
+  window.addEventListener("scroll", syncCanvasRect, { passive: true });
   window.addEventListener("focus", handleFocus);
   window.addEventListener("blur", handleBlur);
 
@@ -186,6 +222,7 @@ export function renderCanvas() {
     document.removeEventListener("touchmove", handlePointer as EventListener);
     document.removeEventListener("touchstart", handleTouchStart as EventListener);
     window.removeEventListener("resize", resize);
+    window.removeEventListener("scroll", syncCanvasRect);
     window.removeEventListener("focus", handleFocus);
     window.removeEventListener("blur", handleBlur);
   };
