@@ -29,7 +29,7 @@ export function NewCampaignButton({ label }: { label: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:bg-gray-800 hover:-translate-y-px active:translate-y-0 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
+        className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:-translate-y-px hover:bg-gray-800 active:translate-y-0 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
       >
         <Plus size={16} weight="bold" />
         {label}
@@ -37,9 +37,9 @@ export function NewCampaignButton({ label }: { label: string }) {
 
       {open && typeof document !== "undefined"
         ? createPortal(
-            <div className="fixed inset-0 z-[999] animate-page-in bg-gray-950/60 backdrop-blur-md">
+            <div className="animate-page-in fixed inset-0 z-[999] bg-gray-950/60 backdrop-blur-md">
               <div className="flex min-h-screen items-center justify-center p-4">
-                <div className="w-full max-w-md animate-page-in rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-800 dark:bg-gray-950">
+                <div className="animate-page-in w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-800 dark:bg-gray-950">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
                     {dict.common.campaignNamePromptTitle}
                   </h2>
@@ -48,7 +48,10 @@ export function NewCampaignButton({ label }: { label: string }) {
                   </p>
 
                   <div className="mt-5">
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="new-campaign-title">
+                    <label
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      htmlFor="new-campaign-title"
+                    >
                       {dict.common.campaignNameLabel}
                     </label>
                     <input
@@ -61,7 +64,7 @@ export function NewCampaignButton({ label }: { label: string }) {
                         if (event.key === "Escape") close();
                       }}
                       placeholder={dict.common.campaignNamePlaceholder}
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none transition-colors focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:bg-gray-900"
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 transition-colors outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:bg-gray-900"
                     />
                   </div>
 

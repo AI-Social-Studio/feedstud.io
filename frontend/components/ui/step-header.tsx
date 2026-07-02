@@ -7,12 +7,7 @@ type StepHeaderProps = {
   right?: ReactNode;
 };
 
-export function StepHeader({
-  marker,
-  markerVariant = "default",
-  title,
-  right,
-}: StepHeaderProps) {
+export function StepHeader({ marker, markerVariant = "default", title, right }: StepHeaderProps) {
   const markerClasses =
     markerVariant === "brand"
       ? "flex size-6 items-center justify-center rounded-md border border-blue-200 bg-blue-100 text-xs text-blue-600 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400"
@@ -20,8 +15,8 @@ export function StepHeader({
 
   if (right) {
     return (
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2 dark:text-gray-100">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-gray-100">
           <span className={markerClasses}>{marker}</span>
           {title}
         </h2>
@@ -31,7 +26,7 @@ export function StepHeader({
   }
 
   return (
-    <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2 dark:text-gray-100">
+    <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-gray-100">
       <span className={markerClasses}>{marker}</span>
       {title}
     </h2>

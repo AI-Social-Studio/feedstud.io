@@ -5,11 +5,7 @@ import { AiExecutionsTable } from "@/components/admin/ai-executions-table";
 import { AiUsageFilters } from "@/components/admin/ai-usage-filters";
 import { AiUsageKpis } from "@/components/admin/ai-usage-kpis";
 import { useDictionary } from "@/lib/i18n";
-import type {
-  AiExecutionDetail,
-  AiExecutionListItem,
-  AiUsageSummary,
-} from "@/lib/flowforge-api";
+import type { AiExecutionDetail, AiExecutionListItem, AiUsageSummary } from "@/lib/flowforge-api";
 
 type FilterValues = {
   kind?: string;
@@ -42,7 +38,7 @@ export function AdminTelemetryView({
   return (
     <section className="space-y-6">
       <div className="rounded-3xl border border-violet-200 bg-violet-50 p-8 dark:border-violet-900/60 dark:bg-violet-950/20">
-        <div className="mb-3 inline-flex rounded-full border border-violet-300 bg-white px-3 py-1 text-xs font-medium uppercase tracking-wider text-violet-700 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300">
+        <div className="mb-3 inline-flex rounded-full border border-violet-300 bg-white px-3 py-1 text-xs font-medium tracking-wider text-violet-700 uppercase dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300">
           {dict.adminTelemetry.badge}
         </div>
         <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">

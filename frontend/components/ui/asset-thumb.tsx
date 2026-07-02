@@ -20,21 +20,20 @@ type MemeThumb = {
 export function AssetThumb(props: ImageThumb | MemeThumb) {
   if (props.kind === "meme") {
     return (
-      <div className="relative rounded-md overflow-hidden border border-gray-200 bg-yellow-100 flex items-center justify-center aspect-video dark:border-gray-700 dark:bg-yellow-500/20">
+      <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-yellow-100 dark:border-gray-700 dark:bg-yellow-500/20">
         <SmileyWink size={28} weight="fill" className="text-yellow-500" />
-        <span className="absolute bottom-1 left-1 bg-white/80 text-[9px] font-medium px-1.5 rounded text-gray-700 dark:bg-gray-900/80 dark:text-gray-300">
+        <span className="absolute bottom-1 left-1 rounded bg-white/80 px-1.5 text-[9px] font-medium text-gray-700 dark:bg-gray-900/80 dark:text-gray-300">
           {props.label}
         </span>
       </div>
     );
   }
 
-  const positionClass =
-    props.objectPosition === "top" ? "object-cover object-top" : "object-cover";
+  const positionClass = props.objectPosition === "top" ? "object-cover object-top" : "object-cover";
 
   if (props.src.startsWith("blob:") || props.src.startsWith("http://localhost")) {
     return (
-      <div className="relative rounded-md overflow-hidden border border-gray-200 aspect-video dark:border-gray-700">
+      <div className="relative aspect-video overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
         {props.onRemove ? (
           <RemoveButton
             onClick={props.onRemove}
@@ -50,7 +49,7 @@ export function AssetThumb(props: ImageThumb | MemeThumb) {
   }
 
   return (
-    <div className="relative rounded-md overflow-hidden border border-gray-200 aspect-video dark:border-gray-700">
+    <div className="relative aspect-video overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
       {props.onRemove ? (
         <RemoveButton
           onClick={props.onRemove}
@@ -83,7 +82,7 @@ function RemoveButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="absolute right-2 top-2 z-10 inline-flex size-7 items-center justify-center rounded-full bg-black/70 text-white transition-colors hover:bg-black/85 disabled:pointer-events-none disabled:opacity-50"
+      className="absolute top-2 right-2 z-10 inline-flex size-7 items-center justify-center rounded-full bg-black/70 text-white transition-colors hover:bg-black/85 disabled:pointer-events-none disabled:opacity-50"
       aria-label={label ?? "Usuń plik"}
       title={label ?? "Usuń plik"}
     >

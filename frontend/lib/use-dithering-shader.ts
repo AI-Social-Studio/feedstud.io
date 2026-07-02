@@ -8,11 +8,7 @@ type DitheringShaderHookArgs = {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   colorBack: string;
   colorFront: string;
-  createProgram: (
-    gl: WebGL2RenderingContext,
-    vs: string,
-    fs: string,
-  ) => WebGLProgram | null;
+  createProgram: (gl: WebGL2RenderingContext, vs: string, fs: string) => WebGLProgram | null;
   fragmentShaderSource: string;
   glRef: RefObject<WebGL2RenderingContext | null>;
   height: number;
@@ -75,7 +71,11 @@ export function useDitheringShader({
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+      gl.STATIC_DRAW,
+    );
     gl.enableVertexAttribArray(posLoc);
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
 
@@ -113,5 +113,22 @@ export function useDitheringShader({
       gl.deleteBuffer(buf);
       if (glRef.current && programRef.current) glRef.current.deleteProgram(programRef.current);
     };
-  }, [animationRef, canvasRef, colorBack, colorFront, createProgram, fragmentShaderSource, glRef, height, hexToRgba, programRef, pxSize, speed, startTimeRef, uniformsRef, vertexShaderSource, width]);
+  }, [
+    animationRef,
+    canvasRef,
+    colorBack,
+    colorFront,
+    createProgram,
+    fragmentShaderSource,
+    glRef,
+    height,
+    hexToRgba,
+    programRef,
+    pxSize,
+    speed,
+    startTimeRef,
+    uniformsRef,
+    vertexShaderSource,
+    width,
+  ]);
 }

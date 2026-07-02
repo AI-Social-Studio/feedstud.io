@@ -27,13 +27,20 @@ export function Sidebar({
   const [showExpandedContent, setShowExpandedContent] = useState(!collapsed);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => setShowExpandedContent(!collapsed), collapsed ? 0 : 140);
+    const timeout = window.setTimeout(
+      () => setShowExpandedContent(!collapsed),
+      collapsed ? 0 : 140,
+    );
     return () => window.clearTimeout(timeout);
   }, [collapsed]);
 
   return (
-    <aside className={`relative z-10 flex h-full flex-shrink-0 flex-col border-r border-gray-200 bg-white/95 backdrop-blur-sm transition-all duration-200 dark:border-gray-800 dark:bg-gray-950/95 ${collapsed ? "w-16" : "w-64"}`}>
-      <div className={`flex h-16 items-center border-b border-gray-200 dark:border-gray-800 ${collapsed ? "justify-center px-0" : "justify-between px-8"}`}>
+    <aside
+      className={`relative z-10 flex h-full flex-shrink-0 flex-col border-r border-gray-200 bg-white/95 backdrop-blur-sm transition-all duration-200 dark:border-gray-800 dark:bg-gray-950/95 ${collapsed ? "w-16" : "w-64"}`}
+    >
+      <div
+        className={`flex h-16 items-center border-b border-gray-200 dark:border-gray-800 ${collapsed ? "justify-center px-0" : "justify-between px-8"}`}
+      >
         {!collapsed && showExpandedContent ? (
           <Link href="/">
             <Image
@@ -69,13 +76,17 @@ export function Sidebar({
             href="/dashboard/history"
             icon={<Megaphone size={18} />}
             label={dict.nav.myCampaigns}
-            active={pathname === "/dashboard/history" || pathname.startsWith("/dashboard/drafts/") || pathname === "/dashboard/new"}
+            active={
+              pathname === "/dashboard/history" ||
+              pathname.startsWith("/dashboard/drafts/") ||
+              pathname === "/dashboard/new"
+            }
             collapsed
           />
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto p-4 transition-opacity duration-150">
-          <div className="mb-3 px-3 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">
+          <div className="mb-3 px-3 text-xs font-medium tracking-wider whitespace-nowrap text-gray-400 uppercase dark:text-gray-500">
             {dict.nav.mainMenu}
           </div>
           <nav className="mb-8 space-y-1">
@@ -89,13 +100,17 @@ export function Sidebar({
               href="/dashboard/history"
               icon={<Megaphone size={18} />}
               label={dict.nav.myCampaigns}
-              active={pathname === "/dashboard/history" || pathname.startsWith("/dashboard/drafts/") || pathname === "/dashboard/new"}
+              active={
+                pathname === "/dashboard/history" ||
+                pathname.startsWith("/dashboard/drafts/") ||
+                pathname === "/dashboard/new"
+              }
             />
           </nav>
 
           {isAdmin ? (
             <>
-              <div className="mb-3 px-3 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">
+              <div className="mb-3 px-3 text-xs font-medium tracking-wider whitespace-nowrap text-gray-400 uppercase dark:text-gray-500">
                 {dict.nav.adminSection}
               </div>
               <nav className="space-y-1">
@@ -103,7 +118,9 @@ export function Sidebar({
                   href="/dashboard/admin"
                   icon={<span className="size-2.5 rounded-full bg-violet-500" />}
                   label={dict.nav.admin}
-                  active={pathname === "/dashboard/admin" || pathname.startsWith("/dashboard/admin/")}
+                  active={
+                    pathname === "/dashboard/admin" || pathname.startsWith("/dashboard/admin/")
+                  }
                 />
               </nav>
             </>
@@ -111,7 +128,9 @@ export function Sidebar({
         </div>
       )}
 
-      <div className={`border-t border-gray-200 p-4 dark:border-gray-800 ${collapsed ? "flex justify-center px-0" : "flex items-center justify-between"}`}>
+      <div
+        className={`border-t border-gray-200 p-4 dark:border-gray-800 ${collapsed ? "flex justify-center px-0" : "flex items-center justify-between"}`}
+      >
         {collapsed ? (
           <UserButton />
         ) : (

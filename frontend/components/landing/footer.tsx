@@ -21,12 +21,14 @@ export function Footer() {
               height={32}
               className="dark:brightness-0 dark:invert"
             />
-            <p className="mt-4 max-w-xs text-sm text-gray-500 dark:text-gray-400">{dict.footer.tagline}</p>
+            <p className="mt-4 max-w-xs text-sm text-gray-500 dark:text-gray-400">
+              {dict.footer.tagline}
+            </p>
           </div>
 
           {dict.footer.columns.map((column) => (
             <div key={column.title}>
-              <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+              <div className="text-xs font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500">
                 {column.title}
               </div>
               <ul className="mt-4 space-y-3">
@@ -45,7 +47,7 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-200 pt-6 text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500 sm:flex-row">
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-gray-200 pt-6 text-xs text-gray-400 sm:flex-row dark:border-gray-800 dark:text-gray-500">
           <p className="font-mono">
             © {CURRENT_YEAR} {dict.footer.copyrightSuffix}
           </p>

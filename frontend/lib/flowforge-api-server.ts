@@ -16,7 +16,9 @@ export async function fetchDraftServer(draftId: string): Promise<Draft | null> {
   }
 }
 
-export async function fetchAiUsageSummaryServer(filters: AiUsageFilters = {}): Promise<AiUsageSummary> {
+export async function fetchAiUsageSummaryServer(
+  filters: AiUsageFilters = {},
+): Promise<AiUsageSummary> {
   try {
     return await backendJson<AiUsageSummary>(`/admin/ai-usage/summary${toQueryString(filters)}`);
   } catch {
@@ -24,15 +26,21 @@ export async function fetchAiUsageSummaryServer(filters: AiUsageFilters = {}): P
   }
 }
 
-export async function listAiExecutionsServer(filters: AiUsageFilters = {}): Promise<AiExecutionListItem[]> {
+export async function listAiExecutionsServer(
+  filters: AiUsageFilters = {},
+): Promise<AiExecutionListItem[]> {
   try {
-    return await backendJson<AiExecutionListItem[]>(`/admin/ai-usage/executions${toQueryString(filters)}`);
+    return await backendJson<AiExecutionListItem[]>(
+      `/admin/ai-usage/executions${toQueryString(filters)}`,
+    );
   } catch {
     return [];
   }
 }
 
-export async function fetchAiExecutionServer(executionId: string): Promise<AiExecutionDetail | null> {
+export async function fetchAiExecutionServer(
+  executionId: string,
+): Promise<AiExecutionDetail | null> {
   try {
     return await backendJson<AiExecutionDetail>(
       `/admin/ai-usage/executions/${encodeURIComponent(executionId)}`,

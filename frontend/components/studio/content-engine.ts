@@ -11,13 +11,7 @@ export type PlatformMeta = {
   limit: number;
 };
 
-export type RefineAction =
-  | "hook"
-  | "shorten"
-  | "formal"
-  | "casual"
-  | "cta"
-  | "hashtags";
+export type RefineAction = "hook" | "shorten" | "formal" | "casual" | "cta" | "hashtags";
 
 export const PLATFORM_ORDER: Platform[] = ["linkedin", "instagram", "x"];
 
@@ -53,11 +47,7 @@ const LINKEDIN_HOOKS = [
   "Najtrudniejsza noc tego tygodnia dała najwięcej:",
 ];
 
-const INSTAGRAM_HOOKS = [
-  "Nocny grind 🌙",
-  "Kulisy budowania 👇",
-  "Tak wygląda prawdziwa praca 💻",
-];
+const INSTAGRAM_HOOKS = ["Nocny grind 🌙", "Kulisy budowania 👇", "Tak wygląda prawdziwa praca 💻"];
 
 const X_HOOKS = [
   "szczerze? najwięcej uczy najtrudniejszy sprint.",
@@ -65,8 +55,7 @@ const X_HOOKS = [
   "mały próg, duża lekcja:",
 ];
 
-const EMOJI =
-  /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/gu;
+const EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/gu;
 
 function capitalize(value: string): string {
   const trimmed = value.trim();
@@ -113,9 +102,7 @@ export function extractCore(raw: string): CoreIdea {
     return { thesis: "Krótki update z tego, nad czym pracuję", points: [] };
   }
 
-  const ranked = [...fragments].sort(
-    (a, b) => scoreFragment(b) - scoreFragment(a),
-  );
+  const ranked = [...fragments].sort((a, b) => scoreFragment(b) - scoreFragment(a));
 
   return {
     thesis: capitalize(ranked[0]),
@@ -156,11 +143,7 @@ export function composePost(platform: Platform, core: CoreIdea): string {
   return clamp([X_HOOKS[0], "", `${core.thesis}.`].join("\n"), PLATFORM_META.x.limit);
 }
 
-export function refine(
-  platform: Platform,
-  text: string,
-  action: RefineAction,
-): string {
+export function refine(platform: Platform, text: string, action: RefineAction): string {
   const blocks = text.split("\n\n");
 
   if (action === "hook") {
@@ -210,8 +193,6 @@ export function refine(
       : platform === "instagram"
         ? "#codinglife #nightowl #devvibe #buildinpublic"
         : "#buildinpublic";
-  const withoutTags = blocks
-    .filter((block) => !block.trim().startsWith("#"))
-    .join("\n\n");
+  const withoutTags = blocks.filter((block) => !block.trim().startsWith("#")).join("\n\n");
   return `${withoutTags}\n\n${extra}`;
 }

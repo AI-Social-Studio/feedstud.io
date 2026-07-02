@@ -15,12 +15,12 @@ Files:
 
 Variables:
 
-| Variable | Scope | Required | Default | Purpose |
-| --- | --- | --- | --- | --- |
-| `BACKEND_URL` | server | yes | `http://localhost:4000` | Target for Next.js rewrites and server-side fetches |
-| `CLERK_WEBHOOK_SIGNING_SECRET` | server | for webhooks | none | Verifies Clerk webhook calls used to default new users to role `user` |
-| `NEXT_PUBLIC_BACKEND_URL` | client | no | `/api/backend` | Browser API base URL; keep rewrite path unless frontend calls backend directly |
-| `NODE_ENV` | shared | no | `development` | Next.js runtime mode |
+| Variable                       | Scope  | Required     | Default                 | Purpose                                                                        |
+| ------------------------------ | ------ | ------------ | ----------------------- | ------------------------------------------------------------------------------ |
+| `BACKEND_URL`                  | server | yes          | `http://localhost:4000` | Target for Next.js rewrites and server-side fetches                            |
+| `CLERK_WEBHOOK_SIGNING_SECRET` | server | for webhooks | none                    | Verifies Clerk webhook calls used to default new users to role `user`          |
+| `NEXT_PUBLIC_BACKEND_URL`      | client | no           | `/api/backend`          | Browser API base URL; keep rewrite path unless frontend calls backend directly |
+| `NODE_ENV`                     | shared | no           | `development`           | Next.js runtime mode                                                           |
 
 ## Roles
 

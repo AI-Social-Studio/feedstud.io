@@ -9,7 +9,10 @@ export function AiUsageKpis({ summary }: { summary: AiUsageSummary }) {
     {
       label: dict.adminTelemetry.kpis.totalCost,
       value: formatCurrency(summary.total_cost, locale),
-      hint: dict.adminTelemetry.kpis.requests.replace("{count}", formatNumber(summary.total_requests, locale)),
+      hint: dict.adminTelemetry.kpis.requests.replace(
+        "{count}",
+        formatNumber(summary.total_requests, locale),
+      ),
     },
     {
       label: dict.adminTelemetry.kpis.totalTokens,
@@ -38,11 +41,16 @@ export function AiUsageKpis({ summary }: { summary: AiUsageSummary }) {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => (
-        <section key={card.label} className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-950">
-          <div className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+        <section
+          key={card.label}
+          className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-950"
+        >
+          <div className="text-xs font-medium tracking-wider text-gray-400 uppercase dark:text-gray-500">
             {card.label}
           </div>
-          <div className="mt-3 text-2xl font-semibold text-gray-900 dark:text-gray-50">{card.value}</div>
+          <div className="mt-3 text-2xl font-semibold text-gray-900 dark:text-gray-50">
+            {card.value}
+          </div>
           <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">{card.hint}</div>
         </section>
       ))}

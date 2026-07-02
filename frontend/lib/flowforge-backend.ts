@@ -52,10 +52,7 @@ export async function backendFetch(
   }
 }
 
-export async function backendJson<T>(
-  path: string,
-  options?: BackendRequestOptions,
-): Promise<T> {
+export async function backendJson<T>(path: string, options?: BackendRequestOptions): Promise<T> {
   const response = await backendFetch(path, options);
   if (!response.ok) {
     throw new BackendRequestError(await readBackendError(response, path), response.status);

@@ -13,7 +13,10 @@ export async function createAuthedBackendProxy(request: NextRequest, path: strin
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ detail: "Invalid JSON payload", code: "invalid_payload" }, { status: 400 });
+    return NextResponse.json(
+      { detail: "Invalid JSON payload", code: "invalid_payload" },
+      { status: 400 },
+    );
   }
 
   let response: Response;

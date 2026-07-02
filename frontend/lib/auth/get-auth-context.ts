@@ -54,9 +54,7 @@ export async function requireAdminContext(): Promise<AuthContext> {
   return context;
 }
 
-function getPrimaryEmailAddress(
-  user: Awaited<ReturnType<typeof currentUser>>,
-): string | null {
+function getPrimaryEmailAddress(user: Awaited<ReturnType<typeof currentUser>>): string | null {
   if (!user) return null;
 
   const primary = user.emailAddresses.find((email) => email.id === user.primaryEmailAddressId);

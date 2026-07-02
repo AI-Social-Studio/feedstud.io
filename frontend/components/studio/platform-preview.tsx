@@ -33,7 +33,11 @@ function Avatar({ size }: { size: number }) {
 }
 
 function FeedImage({ src, ratio }: { src: string; ratio: string }) {
-  if (src.startsWith("blob:") || src.startsWith("http://localhost") || src.startsWith("https://localhost")) {
+  if (
+    src.startsWith("blob:") ||
+    src.startsWith("http://localhost") ||
+    src.startsWith("https://localhost")
+  ) {
     return (
       <div className={`relative w-full ${ratio} bg-gray-100`}>
         {/* Blob and localhost previews bypass next/image optimization intentionally. */}
@@ -67,7 +71,7 @@ function MediaCarousel({ images, ratio }: { images: string[]; ratio: string }) {
           <button
             type="button"
             onClick={() => setActiveIndex((index) => (index === 0 ? lastIndex : index - 1))}
-            className="absolute left-3 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/75"
+            className="absolute top-1/2 left-3 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/75"
             aria-label="Poprzednie zdjęcie"
           >
             <CaretLeft size={18} weight="bold" />
@@ -75,7 +79,7 @@ function MediaCarousel({ images, ratio }: { images: string[]; ratio: string }) {
           <button
             type="button"
             onClick={() => setActiveIndex((index) => (index === lastIndex ? 0 : index + 1))}
-            className="absolute right-3 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/75"
+            className="absolute top-1/2 right-3 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/75"
             aria-label="Następne zdjęcie"
           >
             <CaretRight size={18} weight="bold" />
@@ -93,7 +97,7 @@ function MediaCarousel({ images, ratio }: { images: string[]; ratio: string }) {
               />
             ))}
           </div>
-          <div className="absolute right-3 top-3 rounded-full bg-black/60 px-2 py-1 text-[11px] font-medium text-white">
+          <div className="absolute top-3 right-3 rounded-full bg-black/60 px-2 py-1 text-[11px] font-medium text-white">
             {currentIndex + 1}/{images.length}
           </div>
         </>
@@ -104,21 +108,21 @@ function MediaCarousel({ images, ratio }: { images: string[]; ratio: string }) {
 
 function LinkedInPreview({ text, images }: { text: string; images: string[] }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden max-w-[480px] w-full">
+    <div className="w-full max-w-[480px] overflow-hidden rounded-xl border border-gray-200 bg-white">
       <div className="flex items-start gap-3 p-4">
         <Avatar size={48} />
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold text-gray-900 leading-tight">Your Name</div>
-          <div className="text-xs text-gray-500 leading-tight">Senior Engineer · 1st</div>
-          <div className="text-xs text-gray-400 leading-tight mt-0.5">2h · 🌐</div>
+          <div className="text-sm leading-tight font-semibold text-gray-900">Your Name</div>
+          <div className="text-xs leading-tight text-gray-500">Senior Engineer · 1st</div>
+          <div className="mt-0.5 text-xs leading-tight text-gray-400">2h · 🌐</div>
         </div>
-        <DotsThree size={20} className="text-gray-400 shrink-0" />
+        <DotsThree size={20} className="shrink-0 text-gray-400" />
       </div>
-      <div className="px-4 pb-3 text-sm text-gray-800 whitespace-pre-line leading-relaxed">
+      <div className="px-4 pb-3 text-sm leading-relaxed whitespace-pre-line text-gray-800">
         {text}
       </div>
       <MediaCarousel images={images} ratio="aspect-video" />
-      <div className="px-4 py-2 text-xs text-gray-500 border-t border-gray-100">
+      <div className="border-t border-gray-100 px-4 py-2 text-xs text-gray-500">
         👍 ❤️ 128 · 14 komentarzy
       </div>
       <div className="grid grid-cols-4 border-t border-gray-100 text-gray-500">
@@ -133,14 +137,14 @@ function LinkedInPreview({ text, images }: { text: string; images: string[] }) {
 
 function InstagramPreview({ text, images }: { text: string; images: string[] }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden max-w-[400px] w-full">
+    <div className="w-full max-w-[400px] overflow-hidden rounded-xl border border-gray-200 bg-white">
       <div className="flex items-center gap-3 p-3">
         <div className="rounded-full bg-linear-to-tr from-yellow-400 via-pink-500 to-purple-500 p-[2px]">
           <div className="rounded-full bg-white p-[2px]">
             <Avatar size={32} />
           </div>
         </div>
-        <span className="text-sm font-semibold text-gray-900 flex-1">yourname</span>
+        <span className="flex-1 text-sm font-semibold text-gray-900">yourname</span>
         <DotsThree size={20} className="text-gray-500" />
       </div>
       <MediaCarousel images={images} ratio="aspect-square" />
@@ -151,7 +155,7 @@ function InstagramPreview({ text, images }: { text: string; images: string[] }) 
         <BookmarkSimple size={24} className="ml-auto" />
       </div>
       <div className="px-3 pt-2 text-sm font-semibold text-gray-900">1 248 polubień</div>
-      <div className="px-3 pb-3 pt-1 text-sm text-gray-800 whitespace-pre-line leading-relaxed">
+      <div className="px-3 pt-1 pb-3 text-sm leading-relaxed whitespace-pre-line text-gray-800">
         <span className="font-semibold">yourname</span> {text}
       </div>
     </div>
@@ -160,7 +164,7 @@ function InstagramPreview({ text, images }: { text: string; images: string[] }) 
 
 function XPreview({ text, images }: { text: string; images: string[] }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 max-w-[480px] w-full">
+    <div className="w-full max-w-[480px] rounded-xl border border-gray-200 bg-white p-4">
       <div className="flex items-start gap-3">
         <Avatar size={44} />
         <div className="min-w-0 flex-1">
@@ -168,7 +172,7 @@ function XPreview({ text, images }: { text: string; images: string[] }) {
             <span className="font-bold text-gray-900">Your Name</span>
             <span className="text-gray-500">@yourname · 1h</span>
           </div>
-          <div className="mt-1 text-[15px] text-gray-900 whitespace-pre-line leading-relaxed">
+          <div className="mt-1 text-[15px] leading-relaxed whitespace-pre-line text-gray-900">
             {text}
           </div>
           {images.length > 0 ? (
@@ -176,7 +180,7 @@ function XPreview({ text, images }: { text: string; images: string[] }) {
               <MediaCarousel images={images} ratio="aspect-video" />
             </div>
           ) : null}
-          <div className="mt-3 flex items-center justify-between text-gray-500 max-w-[320px]">
+          <div className="mt-3 flex max-w-[320px] items-center justify-between text-gray-500">
             <Stat icon={<ChatCircle size={18} />} value="24" />
             <Stat icon={<ArrowsClockwise size={18} />} value="18" />
             <Stat icon={<Heart size={18} />} value="142" />
@@ -184,21 +188,15 @@ function XPreview({ text, images }: { text: string; images: string[] }) {
             <PaperPlaneTilt size={18} />
           </div>
         </div>
-        <XLogo size={18} weight="bold" className="text-gray-900 shrink-0" />
+        <XLogo size={18} weight="bold" className="shrink-0 text-gray-900" />
       </div>
     </div>
   );
 }
 
-function ActionButton({
-  icon,
-  label,
-}: {
-  icon: React.ReactNode;
-  label: string;
-}) {
+function ActionButton({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <div className="flex items-center justify-center gap-2 py-2.5 text-xs font-medium hover:bg-gray-50 transition-colors">
+    <div className="flex items-center justify-center gap-2 py-2.5 text-xs font-medium transition-colors hover:bg-gray-50">
       {icon}
       <span className="hidden sm:inline">{label}</span>
     </div>
