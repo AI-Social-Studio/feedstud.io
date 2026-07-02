@@ -60,7 +60,11 @@ export function AdminTelemetryView({
         selectedExecutionId={selectedExecutionId}
         queryString={queryString}
       />
-      <AiExecutionDetailPanel execution={selectedExecution} closeHref={closeHref} />
+      <AiExecutionDetailPanel
+        key={selectedExecution?.id ?? "empty"}
+        execution={selectedExecution}
+        closeHref={closeHref}
+      />
     </section>
   );
 }
