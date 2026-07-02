@@ -238,8 +238,8 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
       setResults(response.posts);
       setPristineResults(response.posts);
       const generatedCount = Object.keys(response.posts).length;
+      const hasErrors = Object.keys(response.errors).length > 0;
       if (generatedCount > 0) {
-        const hasErrors = Object.keys(response.errors).length > 0;
         pushToast(
           "success",
           hasErrors
@@ -247,15 +247,15 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
             : dict.studio.toasts.generated(generatedCount),
         );
       }
-      for (const [platform, message] of Object.entries(response.errors)) {
-        if (message) {
+      for (const [platform, errorInfo] of Object.entries(response.errors)) {
+        if (errorInfo) {
           pushToast(
             "error",
-            `${PLATFORM_META[platform as Platform].name}: ${formatGenerationError(message)}`,
+            `${PLATFORM_META[platform as Platform].name}: ${formatGenerationError(errorInfo)}`,
           );
         }
       }
-      if (generatedCount === 0 && Object.keys(response.errors).length === 0) {
+      if (generatedCount === 0 && !hasErrors) {
         pushToast("error", dict.studio.toasts.noBackendContent);
       }
     } catch (error) {
