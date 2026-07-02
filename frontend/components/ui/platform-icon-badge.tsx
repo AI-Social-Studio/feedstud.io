@@ -16,7 +16,7 @@ const iconSize: Record<Size, number> = {
 const background: Record<Platform, string> = {
   linkedin: "bg-blue-600",
   instagram: "bg-linear-to-tr from-yellow-400 via-pink-500 to-purple-500",
-  x: "bg-gray-900",
+  x: "bg-gray-900 dark:bg-gray-600",
 };
 
 export function PlatformIconBadge({

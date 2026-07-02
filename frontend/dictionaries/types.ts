@@ -194,6 +194,7 @@ export type Dictionary = {
     step1Title: string;
     step2Title: string;
     step3Title: string;
+    step4Title: string;
     rawThoughts: string;
     rawMediaAssets: string;
     upload: string;
@@ -222,6 +223,17 @@ export type Dictionary = {
     copied: string;
     createPost: string;
     creatingPost: string;
+    publish: string;
+    publishNow: string;
+    schedulePublication: string;
+    scheduleNow: string;
+    scheduleDatePlaceholder: string;
+    scheduleTimeLabel: string;
+    scheduleForAll: string;
+    schedulePerPost: string;
+    scheduleDateTime: string;
+    scheduleHelp: string;
+    scheduleEmpty: string;
     removeFile: string;
     removeFileLocked: string;
     confirmDeleteFile: string;
@@ -243,6 +255,11 @@ export type Dictionary = {
       waitForLock: string;
       fileDeleted: string;
       postCopied: string;
+      publishQueued: string;
+      scheduleMissingAll: string;
+      scheduleMissingPerPost: string;
+      scheduleReadyAll: string;
+      scheduleReadyPerPost: string;
     };
     platforms: {
       linkedin: { subtitle: string; audience: string };

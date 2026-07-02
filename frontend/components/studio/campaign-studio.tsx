@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   CaretLeft,
@@ -18,6 +18,7 @@ import {
   TextAa,
 } from "@phosphor-icons/react/dist/ssr";
 import { AssetThumb } from "@/components/ui/asset-thumb";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { PlatformIconBadge } from "@/components/ui/platform-icon-badge";
 import { StepHeader } from "@/components/ui/step-header";
 import type { Dictionary } from "@/dictionaries";
@@ -72,6 +73,11 @@ type Props = {
   initialTitle?: string;
 };
 
+type PostingSettings = {
+  publishMode: "now" | "schedule";
+  schedulePerPlatform: Partial<Record<Platform, string>>;
+};
+
 const INITIAL_ASSETS: AssetPreview[] = [
   {
     kind: "image",
@@ -105,6 +111,12 @@ function buildRefineActions(
   ];
 }
 
+function nowDatetimeLocal(): string {
+  const now = new Date();
+  now.setSeconds(0, 0);
+  return now.toISOString().slice(0, 16);
+}
+
 export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const dict = useDictionary();
   const refineActions = buildRefineActions(dict.studio.refineActions);
@@ -121,6 +133,8 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
     initialSelected,
     initialResults,
     initialFiles.map((file) => file.id),
+    "now",
+    {},
   );
 
   const [draftId, setDraftId] = useState(initialDraft?.id ?? null);
@@ -132,6 +146,8 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const [results, setResults] = useState<Partial<Record<Platform, string>>>(initialResults);
   const [pristineResults, setPristineResults] =
     useState<Partial<Record<Platform, string>>>(initialResults);
+  const [publishMode, setPublishMode] = useState<"now" | "schedule">("now");
+  const [schedulePerPlatform, setSchedulePerPlatform] = useState<Partial<Record<Platform, string>>>({});
   const [savedSnapshot, setSavedSnapshot] = useState(initialSnapshot);
   const [copied, setCopied] = useState<Platform | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(initialFiles);
@@ -143,6 +159,8 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const [refining, setRefining] = useState<Partial<Record<Platform, boolean>>>({});
   const [regenerating, setRegenerating] = useState<Partial<Record<Platform, boolean>>>({});
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const anySelected = PLATFORM_ORDER.some((platform) => selected[platform]);
   const activePlatforms = PLATFORM_ORDER.filter((platform) => selected[platform]);
@@ -160,6 +178,8 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
       selected,
       results,
       uploadedFiles.map((file) => file.id),
+      publishMode,
+      schedulePerPlatform,
     ) !== savedSnapshot;
   const focusedPlatform = activePlatforms.includes(activePlatform)
     ? activePlatform
@@ -307,6 +327,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
       const savedDraft = draftId ? await updateDraft(draftId, payload) : await createDraft(payload);
       setDraftId(savedDraft.id);
       setDraftTitle(savedDraft.title);
+      savePostingSettings(savedDraft.id, { publishMode, schedulePerPlatform });
       setSavedSnapshot(
         buildSnapshot(
           savedDraft.title,
@@ -314,6 +335,8 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
           selected,
           results,
           uploadedFiles.map((file) => file.id),
+          publishMode,
+          schedulePerPlatform,
         ),
       );
       setPristineResults(results);
@@ -381,6 +404,38 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   function discardPlatformChanges(platform: Platform) {
     const nextText = pristineResults[platform] ?? "";
     setResults((prev) => ({ ...prev, [platform]: nextText }));
+  }
+
+  useEffect(() => {
+    if (!draftId) return;
+    const stored = loadPostingSettings(draftId);
+    if (!stored) return;
+    setPublishMode(stored.publishMode);
+    setSchedulePerPlatform(stored.schedulePerPlatform);
+    setSavedSnapshot(
+      buildSnapshot(
+        draftTitle,
+        raw,
+        selected,
+        results,
+        uploadedFiles.map((file) => file.id),
+        stored.publishMode,
+        stored.schedulePerPlatform,
+      ),
+    );
+  }, [draftId]);
+
+  function handlePublishNow() {
+    pushToast("success", dict.studio.toasts.publishQueued);
+  }
+
+  function handleSchedulePublication() {
+    const missingPlatform = activePlatforms.some((platform) => !schedulePerPlatform[platform]);
+    if (missingPlatform) {
+      pushToast("info", dict.studio.toasts.scheduleMissingPerPost);
+      return;
+    }
+    pushToast("success", dict.studio.toasts.scheduleReadyPerPost);
   }
 
   return (
@@ -723,7 +778,99 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
         </div>
       ) : null}
 
-      {typeof document !== "undefined"
+      {anySelected ? (
+        <div>
+          <StepHeader marker="4" title={dict.studio.step4Title} />
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPublishMode("now")}
+                className={`inline-flex items-center rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                  publishMode === "now"
+                    ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-blue-700 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
+                }`}
+              >
+                {dict.studio.publishNow}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const now = nowDatetimeLocal();
+                  setSchedulePerPlatform(
+                    Object.fromEntries(activePlatforms.map((p) => [p, now])),
+                  );
+                  setPublishMode("schedule");
+                }}
+                className={`inline-flex items-center rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                  publishMode === "schedule"
+                    ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-blue-700 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
+                }`}
+              >
+                {dict.studio.schedulePublication}
+              </button>
+            </div>
+
+            {publishMode === "schedule" ? (
+              <div className="mt-5 flex flex-col gap-3">
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {dict.studio.scheduleDateTime}
+                </div>
+                <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                  {activePlatforms.map((platform) => {
+                    return (
+                      <div
+                        key={`schedule-${platform}`}
+                        className="rounded-xl border border-gray-200 bg-gray-50/70 p-3 dark:border-gray-700 dark:bg-gray-800/40"
+                      >
+                        <div className="mb-2 flex items-center gap-3">
+                          <PlatformIconBadge platform={platform} size="sm" weight="bold" />
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {PLATFORM_META[platform].name}
+                          </div>
+                        </div>
+                        <DateTimePicker
+                          value={schedulePerPlatform[platform] ?? ""}
+                          onChange={(v) =>
+                            setSchedulePerPlatform((prev) => ({ ...prev, [platform]: v }))
+                          }
+                          placeholder={dict.studio.scheduleDatePlaceholder}
+                          timeLabel={dict.studio.scheduleTimeLabel}
+                          fullWidth
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={publishMode === "schedule" ? handleSchedulePublication : handlePublishNow}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:-translate-y-px hover:bg-blue-700"
+              >
+                {publishMode === "schedule" ? (
+                  <>
+                    <Megaphone size={15} weight="bold" />
+                    {dict.studio.schedulePublication}
+                  </>
+                ) : (
+                  <>
+                    <Megaphone size={15} weight="bold" />
+                    {dict.studio.publish}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {mounted
         ? createPortal(
             <div className="fixed right-4 bottom-4 z-50 flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2">
               {toasts.map((toast) => (
@@ -778,6 +925,8 @@ function buildSnapshot(
   selected: Record<Platform, boolean>,
   results: Partial<Record<Platform, string>>,
   fileIds: string[],
+  publishMode: "now" | "schedule",
+  schedulePerPlatform: Partial<Record<Platform, string>>,
 ): string {
   return JSON.stringify({
     title,
@@ -785,5 +934,31 @@ function buildSnapshot(
     fileIds,
     selected: PLATFORM_ORDER.map((platform) => [platform, selected[platform]]),
     results: PLATFORM_ORDER.map((platform) => [platform, results[platform] ?? ""]),
+    publishMode,
+    schedulePerPlatform: PLATFORM_ORDER.map((platform) => [platform, schedulePerPlatform[platform] ?? ""]),
   });
+}
+
+const POSTING_SETTINGS_KEY_PREFIX = "draft-posting-settings:";
+
+function postingSettingsKey(draftId: string) {
+  return `${POSTING_SETTINGS_KEY_PREFIX}${draftId}`;
+}
+
+function savePostingSettings(draftId: string, settings: PostingSettings) {
+  window.localStorage.setItem(postingSettingsKey(draftId), JSON.stringify(settings));
+}
+
+function loadPostingSettings(draftId: string): PostingSettings | null {
+  const raw = window.localStorage.getItem(postingSettingsKey(draftId));
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as PostingSettings;
+    return {
+      publishMode: parsed.publishMode === "schedule" ? "schedule" : "now",
+      schedulePerPlatform: parsed.schedulePerPlatform ?? {},
+    };
+  } catch {
+    return null;
+  }
 }
