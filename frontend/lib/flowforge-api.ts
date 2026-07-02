@@ -7,6 +7,10 @@ const api = axios.create({
   timeout: 60000,
 });
 
+const trustedApi = axios.create({
+  timeout: 60000,
+});
+
 export type GenerateRequest = {
   raw: string;
   platforms: Platform[];
@@ -26,6 +30,88 @@ export type RefineRequest = {
 
 export type RefineResponse = {
   text: string;
+};
+
+export type AiUsageSummary = {
+  total_requests: number;
+  success_requests: number;
+  error_requests: number;
+  total_cost: number;
+  total_prompt_tokens: number;
+  total_completion_tokens: number;
+  total_tokens: number;
+  total_cached_tokens: number;
+  total_reasoning_tokens: number;
+  average_cost_per_request: number;
+};
+
+export type AiExecutionListItem = {
+  id: string;
+  created_at: string;
+  kind: string;
+  status: string;
+  user_id: string | null;
+  platform: string | null;
+  action: string | null;
+  provider: string;
+  requested_model: string;
+  resolved_model: string | null;
+  resolved_provider: string | null;
+  generation_id: string | null;
+  request_id: string | null;
+  finish_reason: string | null;
+  native_finish_reason: string | null;
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  total_tokens: number | null;
+  cost: number | null;
+  latency_ms: number | null;
+  error_message: string | null;
+};
+
+export type AiUsage = {
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  total_tokens: number | null;
+  cost: number | null;
+  cached_tokens: number | null;
+  reasoning_tokens: number | null;
+  prompt_cost: number | null;
+  completion_cost: number | null;
+  total_upstream_cost: number | null;
+};
+
+export type AiExecutionDetail = {
+  id: string;
+  created_at: string;
+  kind: string;
+  status: string;
+  user_id: string | null;
+  platform: string | null;
+  action: string | null;
+  provider: string;
+  requested_model: string;
+  resolved_model: string | null;
+  resolved_provider: string | null;
+  generation_id: string | null;
+  request_id: string | null;
+  upstream_id: string | null;
+  finish_reason: string | null;
+  native_finish_reason: string | null;
+  system_prompt: string;
+  user_prompt: string;
+  messages: Array<Record<string, unknown>>;
+  response_text: string | null;
+  response_reasoning: string | null;
+  response_reasoning_details: Array<Record<string, unknown>> | null;
+  usage: AiUsage;
+  latency_ms: number | null;
+  generation_time_ms: number | null;
+  provider_responses: Array<Record<string, unknown>> | null;
+  raw_completion_response: Record<string, unknown> | null;
+  raw_generation_response: Record<string, unknown> | null;
+  error_message: string | null;
+  error_json: Record<string, unknown> | null;
 };
 
 export type UploadedFile = {
@@ -77,12 +163,12 @@ type ApiErrorPayload = {
 };
 
 export async function generatePosts(payload: GenerateRequest): Promise<GenerateResponse> {
-  const response = await api.post<GenerateResponse>("/generate", payload);
+  const response = await trustedApi.post<GenerateResponse>("/api/generate", payload);
   return response.data;
 }
 
 export async function refinePost(payload: RefineRequest): Promise<RefineResponse> {
-  const response = await api.post<RefineResponse>("/refine", payload);
+  const response = await trustedApi.post<RefineResponse>("/api/refine", payload);
   return response.data;
 }
 

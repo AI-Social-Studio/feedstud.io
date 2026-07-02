@@ -1,4 +1,6 @@
+import logging
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,8 +17,11 @@ from app.domain.exceptions import (
     UnsupportedFileTypeError,
 )
 from app.infrastructure.db.models import Base
+from app.infrastructure.db.repositories import SqlAlchemyAiExecutionRepository
 from app.interface.api.v1.router import api_router
 from app.interface.dependencies import _database, _storage
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -26,6 +31,19 @@ async def lifespan(_: FastAPI):
     if settings.db_reset_on_start:
         await db.drop_all(Base.metadata)
     await db.create_all(Base.metadata)
+    retention_cutoff = datetime.now(timezone.utc) - timedelta(days=settings.ai_execution_retention_days)
+    session_stream = db.session()
+    try:
+        try:
+            session = await anext(session_stream)
+            await SqlAlchemyAiExecutionRepository(session).delete_older_than(retention_cutoff)
+        except Exception:
+            logger.exception(
+                "Failed to prune AI executions during startup",
+                extra={"retention_cutoff": retention_cutoff.isoformat()},
+            )
+    finally:
+        await session_stream.aclose()
     await _storage().ensure_bucket()
     yield
     await db.dispose()

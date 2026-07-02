@@ -3,10 +3,11 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from app.application.dto import GenerateResultView
-from app.application.ports import ContentGenerator, FileRepository, ObjectStorage
+from app.application.ports import AiExecutionRepository, ContentGenerator, FileRepository, ObjectStorage
 from app.domain.exceptions import (
     ContentGenerationError,
     InvalidGenerateInputError,
+    RefineError,
 )
 from app.domain.value_objects import Platform, RefineAction
 
@@ -16,6 +17,7 @@ class GeneratePostsInput:
     raw_text: str
     platforms: list[Platform]
     file_ids: list[UUID]
+    actor_user_id: str | None = None
 
 
 @dataclass
@@ -23,6 +25,7 @@ class RefinePostInput:
     platform: Platform
     text: str
     action: RefineAction
+    actor_user_id: str | None = None
 
 
 class GeneratePostsUseCase:
@@ -31,10 +34,12 @@ class GeneratePostsUseCase:
         generator: ContentGenerator,
         files: FileRepository,
         storage: ObjectStorage,
+        executions: AiExecutionRepository,
     ) -> None:
         self._generator = generator
         self._files = files
         self._storage = storage
+        self._executions = executions
 
     async def execute(self, payload: GeneratePostsInput) -> GenerateResultView:
         if not payload.platforms:
@@ -61,6 +66,9 @@ class GeneratePostsUseCase:
         errors: dict[str, str] = {}
         for platform, result in zip(payload.platforms, results):
             if isinstance(result, Exception):
+                if isinstance(result, ContentGenerationError) and result.trace is not None:
+                    result.trace.user_id = payload.actor_user_id
+                    await self._executions.add(result.trace)
                 reason = (
                     result.reason
                     if isinstance(result, ContentGenerationError)
@@ -68,21 +76,32 @@ class GeneratePostsUseCase:
                 )
                 errors[platform.value] = reason
                 continue
-            posts[platform.value] = result.text
+            result.trace.user_id = payload.actor_user_id
+            await self._executions.add(result.trace)
+            posts[platform.value] = result.post.text
 
         return GenerateResultView(posts=posts, errors=errors)
 
 
 class RefinePostUseCase:
-    def __init__(self, generator: ContentGenerator) -> None:
+    def __init__(self, generator: ContentGenerator, executions: AiExecutionRepository) -> None:
         self._generator = generator
+        self._executions = executions
 
     async def execute(self, payload: RefinePostInput) -> str:
         if not payload.text.strip():
             raise InvalidGenerateInputError("Brak tekstu do refine")
-        result = await self._generator.refine(
-            platform=payload.platform,
-            text=payload.text,
-            action=payload.action,
-        )
-        return result.text
+        try:
+            result = await self._generator.refine(
+                platform=payload.platform,
+                text=payload.text,
+                action=payload.action,
+            )
+        except RefineError as exc:
+            if exc.trace is not None:
+                exc.trace.user_id = payload.actor_user_id
+                await self._executions.add(exc.trace)
+            raise
+        result.trace.user_id = payload.actor_user_id
+        await self._executions.add(result.trace)
+        return result.post.text

@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,16 +24,12 @@ class Settings(BaseSettings):
     upload_max_file_bytes: int = Field(default=10 * 1024 * 1024, ge=1)
 
     db_reset_on_start: bool = False
+    ai_execution_retention_days: int = Field(default=30, ge=1, le=365)
 
-    ai_provider: Literal["anthropic", "openrouter"] = "anthropic"
-
-    anthropic_api_key: str = ""
-    anthropic_model: str = "claude-sonnet-4-6"
-    anthropic_max_tokens: int = 8192
-    anthropic_temperature: float = 0.9
+    backend_internal_api_key: str = ""
 
     openrouter_api_key: str = ""
-    openrouter_model: str = "anthropic/claude-sonnet-4.5"
+    openrouter_model: str = "openai/gpt-oss-120b:free"
     openrouter_max_tokens: int = 8192
     openrouter_temperature: float = 0.9
     openrouter_site_url: str = "http://localhost:3000"

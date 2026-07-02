@@ -4,13 +4,15 @@ import { checkSessionRole } from "@/lib/auth/roles";
 
 const isAdminRoute = createRouteMatcher(["/dashboard/admin(.*)"]);
 const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
-const isPublicRoute = createRouteMatcher([
+const isMiddlewarePublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/privacy",
   "/terms",
   "/contact",
+  "/api/generate",
+  "/api/refine",
   "/api/webhooks/clerk",
 ]);
 
@@ -21,7 +23,7 @@ export default clerkMiddleware(async (auth, request) => {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  if (!isPublicRoute(request)) {
+  if (!isMiddlewarePublicRoute(request)) {
     await auth.protect();
   }
 

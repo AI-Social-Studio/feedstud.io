@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import BinaryIO
 from uuid import UUID
 
-from app.domain.entities import Draft, GeneratedPost, UploadedFile
+from app.domain.entities import AiExecution, Draft, GeneratedPostResult, UploadedFile
 from app.domain.value_objects import Platform, RefineAction
 
 
@@ -44,7 +45,7 @@ class ContentGenerator(ABC):
         platform: Platform,
         raw_text: str,
         image_urls: list[str],
-    ) -> GeneratedPost: ...
+    ) -> GeneratedPostResult: ...
 
     @abstractmethod
     async def refine(
@@ -52,7 +53,51 @@ class ContentGenerator(ABC):
         platform: Platform,
         text: str,
         action: RefineAction,
-    ) -> GeneratedPost: ...
+    ) -> GeneratedPostResult: ...
+
+
+class AiExecutionRepository(ABC):
+    @abstractmethod
+    async def add(self, execution: AiExecution) -> None: ...
+
+    @abstractmethod
+    async def update_enrichment(self, execution_id: UUID, enrichment: AiExecution) -> bool: ...
+
+    @abstractmethod
+    async def get(self, execution_id: UUID) -> AiExecution | None: ...
+
+    @abstractmethod
+    async def list_recent(
+        self,
+        limit: int = 50,
+        *,
+        kind: str | None = None,
+        status: str | None = None,
+        platform: str | None = None,
+        action: str | None = None,
+        model: str | None = None,
+        user_id: str | None = None,
+        offset: int = 0,
+        created_after: datetime | None = None,
+        created_before: datetime | None = None,
+    ) -> list[AiExecution]: ...
+
+    @abstractmethod
+    async def get_summary(
+        self,
+        *,
+        kind: str | None = None,
+        status: str | None = None,
+        platform: str | None = None,
+        action: str | None = None,
+        model: str | None = None,
+        user_id: str | None = None,
+        created_after: datetime | None = None,
+        created_before: datetime | None = None,
+    ) -> dict[str, float | int]: ...
+
+    @abstractmethod
+    async def delete_older_than(self, cutoff: datetime) -> int: ...
 
 
 class DraftRepository(ABC):

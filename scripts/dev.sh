@@ -23,7 +23,7 @@ fi
 if [ ! -f "$BACKEND_DIR/.env" ]; then
   cp "$BACKEND_DIR/.env.example" "$BACKEND_DIR/.env"
   echo "created backend/.env from backend/.env.example"
-  echo "set ANTHROPIC_API_KEY in backend/.env before using real AI generation"
+  echo "set OPENROUTER_API_KEY in backend/.env before using real AI generation"
 fi
 
 cleanup() {
