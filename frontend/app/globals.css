@@ -177,10 +177,11 @@ button:disabled,
 
 @keyframes grid-scroll {
   from {
-    background-position: 0 0;
+    transform: translate3d(0, 0, 0);
   }
   to {
-    background-position: 64px 64px;
+    /* one full tile of background-size below, so the loop is seamless */
+    transform: translate3d(-28px, -28px, 0);
   }
 }
 
@@ -188,6 +189,7 @@ button:disabled,
   background-image: radial-gradient(circle, rgba(99, 102, 110, 0.28) 2px, transparent 1px);
   background-size: 28px 28px;
   animation: grid-scroll 60s linear infinite;
+  will-change: transform;
 }
 
 [data-theme="dark"] .hero-grid {

@@ -23,7 +23,9 @@ export function Hero() {
       id="home"
       className="relative flex h-screen flex-col overflow-hidden bg-white dark:bg-gray-950"
     >
-      <div className="hero-grid pointer-events-none absolute inset-0" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="hero-grid absolute -inset-8" />
+      </div>
       <nav className="relative z-10 flex h-16 items-center justify-between border-b border-gray-100 bg-white/80 px-8 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-950/80">
         <Image
           src="/feedstudio.png"

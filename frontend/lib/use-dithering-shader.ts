@@ -84,6 +84,11 @@ export function useDitheringShader({
     gl.viewport(0, 0, width, height);
     startTimeRef.current = performance.now();
 
+    // This shader keeps drawing a full-size WebGL frame every tick forever, so
+    // pause it whenever the canvas scrolls out of view instead of burning GPU
+    // time on a section the user isn't looking at (e.g. the CTA near the footer).
+    let isVisible = false;
+
     const render = () => {
       const t = (performance.now() - startTimeRef.current) * 0.001 * speed;
       const ctx = glRef.current;
@@ -103,12 +108,22 @@ export function useDitheringShader({
       if (u.u_pxSize) ctx.uniform1f(u.u_pxSize, pxSize);
 
       ctx.drawArrays(ctx.TRIANGLES, 0, 6);
-      animationRef.current = requestAnimationFrame(render);
+      animationRef.current = isVisible ? requestAnimationFrame(render) : 0;
     };
 
-    animationRef.current = requestAnimationFrame(render);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+        if (isVisible && !animationRef.current) {
+          animationRef.current = requestAnimationFrame(render);
+        }
+      },
+      { threshold: 0 },
+    );
+    observer.observe(canvas);
 
     return () => {
+      observer.disconnect();
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       gl.deleteBuffer(buf);
       if (glRef.current && programRef.current) glRef.current.deleteProgram(programRef.current);

@@ -15,8 +15,8 @@ interface TrailLine {
 
 const CONFIG = {
   friction: 0.5,
-  trails: 80,
-  size: 50,
+  trails: 50,
+  size: 40,
   dampening: 0.025,
   tension: 0.99,
 };
@@ -103,24 +103,16 @@ export function renderCanvas() {
   const pos = { x: 0, y: 0 };
   let lines: TrailLine[] = [];
   let canvasRect = canvas.getBoundingClientRect();
-  const isFirefox = typeof navigator !== "undefined" && navigator.userAgent.includes("Firefox");
-  const runtimeConfig: RuntimeConfig = isFirefox
-    ? {
-        ...CONFIG,
-        trails: 52,
-        size: 38,
-        lineWidth: 8.5,
-        compositeOperation: "source-over",
-        pixelRatio: 1,
-        strokeColor: "hsla(220, 93%, 50%, 0.05)",
-      }
-    : {
-        ...CONFIG,
-        lineWidth: 10,
-        compositeOperation: "lighter",
-        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
-        strokeColor: TRAIL_COLOR,
-      };
+  // Capped at 1x on purpose: this canvas only draws a soft, blurred glow trail,
+  // so retina sharpness is imperceptible while a higher DPR quadruples the pixels
+  // the browser has to rasterize every animation frame (the main source of jank).
+  const runtimeConfig: RuntimeConfig = {
+    ...CONFIG,
+    lineWidth: 9,
+    compositeOperation: "lighter",
+    pixelRatio: 1,
+    strokeColor: TRAIL_COLOR,
+  };
 
   function resize() {
     const width = window.innerWidth - 20;
@@ -215,11 +207,23 @@ export function renderCanvas() {
   window.addEventListener("focus", handleFocus);
   window.addEventListener("blur", handleBlur);
 
+  // Hero is only h-screen tall: once the user scrolls past it, stop drawing
+  // instead of animating an off-screen canvas forever.
+  const visibilityObserver = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) handleFocus();
+      else handleBlur();
+    },
+    { threshold: 0 },
+  );
+  visibilityObserver.observe(canvas);
+
   resize();
 
   return () => {
     running = false;
     if (frameId) cancelAnimationFrame(frameId);
+    visibilityObserver.disconnect();
     document.removeEventListener("mousemove", onFirstInteraction as EventListener);
     document.removeEventListener("touchstart", onFirstInteraction as EventListener);
     document.removeEventListener("mousemove", handlePointer as EventListener);
