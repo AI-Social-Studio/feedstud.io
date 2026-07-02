@@ -230,8 +230,11 @@ export type Dictionary = {
       generateFirst: string;
       refined: string;
       generated: (count: number) => string;
+      generationPartial: (count: number) => string;
       noBackendContent: string;
       noBackendContentPlatform: string;
+      invalidModelOutput: string;
+      contentGenerationFailed: string;
       regenerated: (platformName: string) => string;
       addContentFirst: string;
       draftUpdated: string;

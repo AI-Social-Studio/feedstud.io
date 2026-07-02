@@ -384,8 +384,17 @@ export const pl: Dictionary = {
           return `Wygenerowano ${count} posty.`;
         return `Wygenerowano ${count} postów.`;
       },
+      generationPartial: (count) => {
+        if (count === 1) return "Wygenerowano 1 post. Niektóre platformy wymagają ponowienia próby.";
+        if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) {
+          return `Wygenerowano ${count} posty. Niektóre platformy wymagają ponowienia próby.`;
+        }
+        return `Wygenerowano ${count} postów. Niektóre platformy wymagają ponowienia próby.`;
+      },
       noBackendContent: "Backend nie zwrócił żadnej treści.",
       noBackendContentPlatform: "Backend nie zwrócił treści dla tej platformy.",
+      invalidModelOutput: "Model zwrócił nieprawidłowy format odpowiedzi. Spróbuj ponownie.",
+      contentGenerationFailed: "Nie udało się wygenerować treści. Spróbuj ponownie.",
       regenerated: (platformName) => `${platformName}: wygenerowano nową wersję.`,
       addContentFirst: "Najpierw dodaj treść lub pliki do szkicu.",
       draftUpdated: "Szkic zaktualizowany.",
