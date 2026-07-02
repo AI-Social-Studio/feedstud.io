@@ -254,8 +254,13 @@ async function waitForGenerateJob(jobId: string): Promise<GenerateResponse> {
   let transientFailures = 0;
 
   while (Date.now() < deadline) {
+    const remainingMs = deadline - Date.now();
+    if (remainingMs <= 0) break;
+
     try {
-      const response = await trustedApi.get<GenerateJobResponse>(`/api/generate/${jobId}`);
+      const response = await trustedApi.get<GenerateJobResponse>(`/api/generate/${jobId}`, {
+        timeout: remainingMs,
+      });
       transientFailures = 0;
       if (response.data.status === "completed") {
         return {
@@ -267,12 +272,15 @@ async function waitForGenerateJob(jobId: string): Promise<GenerateResponse> {
         throw new Error(response.data.error?.detail ?? "Generowanie nie powiodło się");
       }
     } catch (error) {
-      if (!isTransientGeneratePollError(error) || transientFailures >= 3 || Date.now() + delayMs >= deadline) {
+      const retryDelayMs = Math.min(delayMs, Math.max(deadline - Date.now(), 0));
+      if (!isTransientGeneratePollError(error) || transientFailures >= 3 || retryDelayMs <= 0) {
         throw error;
       }
       transientFailures += 1;
     }
-    await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+    const sleepMs = Math.min(delayMs, Math.max(deadline - Date.now(), 0));
+    if (sleepMs <= 0) break;
+    await new Promise((resolve) => window.setTimeout(resolve, sleepMs));
     delayMs = Math.min(delayMs + 1000, 5000);
   }
 
