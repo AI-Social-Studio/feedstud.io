@@ -28,7 +28,6 @@ from app.application.use_cases.upload_files import (
     UploadLimits,
 )
 from app.core.config import Settings, get_settings
-from app.infrastructure.ai.anthropic_client import AnthropicContentGenerator
 from app.infrastructure.ai.openrouter_client import OpenRouterContentGenerator
 from app.infrastructure.db.repositories import (
     SqlAlchemyAiExecutionRepository,
@@ -157,20 +156,13 @@ def get_delete_use_case(
 @lru_cache
 def _content_generator() -> ContentGenerator:
     s = get_settings()
-    if s.ai_provider == "openrouter":
-        return OpenRouterContentGenerator(
-            api_key=s.openrouter_api_key,
-            model=s.openrouter_model,
-            max_tokens=s.openrouter_max_tokens,
-            temperature=s.openrouter_temperature,
-            site_url=s.openrouter_site_url,
-            app_name=s.openrouter_app_name,
-        )
-    return AnthropicContentGenerator(
-        api_key=s.anthropic_api_key,
-        model=s.anthropic_model,
-        max_tokens=s.anthropic_max_tokens,
-        temperature=s.anthropic_temperature,
+    return OpenRouterContentGenerator(
+        api_key=s.openrouter_api_key,
+        model=s.openrouter_model,
+        max_tokens=s.openrouter_max_tokens,
+        temperature=s.openrouter_temperature,
+        site_url=s.openrouter_site_url,
+        app_name=s.openrouter_app_name,
     )
 
 
