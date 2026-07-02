@@ -442,12 +442,16 @@ class SqlAlchemyGenerateJobRepository(GenerateJobRepository):
         self,
         job_id: UUID,
         *,
+        from_status: str,
         posts: dict[str, str],
         errors: dict[str, dict[str, object]],
     ) -> bool:
         result = await self._session.execute(
             update(GenerateJobModel)
-            .where(GenerateJobModel.id == job_id)
+            .where(
+                GenerateJobModel.id == job_id,
+                GenerateJobModel.status == from_status,
+            )
             .values(
                 status="completed",
                 posts=posts,
@@ -465,13 +469,17 @@ class SqlAlchemyGenerateJobRepository(GenerateJobRepository):
         self,
         job_id: UUID,
         *,
+        from_status: str,
         code: str,
         detail: str,
         meta: dict[str, object] | None = None,
     ) -> bool:
         result = await self._session.execute(
             update(GenerateJobModel)
-            .where(GenerateJobModel.id == job_id)
+            .where(
+                GenerateJobModel.id == job_id,
+                GenerateJobModel.status == from_status,
+            )
             .values(
                 status="failed",
                 error_code=code,
