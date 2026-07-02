@@ -92,11 +92,15 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router)
     return app
+
+
 def _framework_http_error_payload(exc: StarletteHTTPException) -> dict[str, str]:
     if exc.status_code == 404:
         return error_payload(ErrorCode.NOT_FOUND, "Not found")
     if exc.status_code == 405:
         return error_payload(ErrorCode.METHOD_NOT_ALLOWED, "Method not allowed")
+    if 400 <= exc.status_code < 500:
+        return error_payload(ErrorCode.CLIENT_ERROR, str(exc.detail))
     return error_payload(ErrorCode.INTERNAL_SERVER_ERROR, str(exc.detail))
 
 
