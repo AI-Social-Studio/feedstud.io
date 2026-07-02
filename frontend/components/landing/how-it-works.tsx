@@ -5,9 +5,9 @@ import { Reveal } from "@/components/ui/reveal";
 import { useDictionary } from "@/lib/i18n";
 
 const ICONS = [
-  <Note key="note" size={28} weight="fill" />,
-  <Target key="target" size={28} weight="fill" />,
-  <ClipboardText key="clipboard" size={28} weight="fill" />,
+  <Note key="note" size={36} weight="fill" />,
+  <Target key="target" size={36} weight="fill" />,
+  <ClipboardText key="clipboard" size={36} weight="fill" />,
 ];
 const NUMBERS = ["01", "02", "03"];
 
@@ -27,7 +27,7 @@ export function HowItWorks() {
         </Reveal>
 
         <div className="relative grid grid-cols-1 gap-8 md:grid-cols-3">
-          <div className="absolute top-10 right-[calc(16.5%+1rem)] left-[calc(16.5%+1rem)] hidden h-px bg-gray-200 md:block dark:bg-gray-800" />
+          <div className="absolute top-14 right-[calc(16.5%+1rem)] left-[calc(16.5%+1rem)] hidden h-px bg-gray-200 md:block dark:bg-gray-800" />
 
           {dict.howItWorks.steps.map((step, index) => (
             <Reveal
@@ -36,10 +36,10 @@ export function HowItWorks() {
               className="flex flex-col items-center text-center"
             >
               <div className="relative mb-6">
-                <div className="flex size-20 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-transform duration-300 hover:scale-105 dark:bg-blue-500/10 dark:text-blue-400">
+                <div className="flex size-24 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-transform duration-300 hover:scale-105 sm:size-28 dark:bg-blue-500/10 dark:text-blue-400">
                   {ICONS[index]}
                 </div>
-                <span className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-blue-100 font-mono text-xs font-bold text-blue-600 dark:bg-blue-500/20 dark:text-blue-300">
+                <span className="absolute -top-2 -right-2 flex size-7 items-center justify-center rounded-full bg-blue-100 font-mono text-xs font-bold text-blue-600 dark:bg-blue-500/20 dark:text-blue-300">
                   {NUMBERS[index]}
                 </span>
               </div>

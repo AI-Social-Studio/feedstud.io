@@ -26,34 +26,41 @@ export function Hero() {
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="hero-grid absolute -inset-8" />
       </div>
-      <nav className="relative z-10 flex h-16 items-center justify-between border-b border-gray-100 bg-white/80 px-8 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-950/80">
-        <Image
-          src="/feedstudio.png"
-          alt="feedstud.io"
-          width={112}
-          height={36}
-          priority
-          className="dark:brightness-0 dark:invert"
-        />
+      <nav className="relative z-10 flex flex-col gap-3 border-b border-gray-100 bg-white/80 px-4 py-3 backdrop-blur-sm sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:gap-0 sm:px-8 sm:py-0 dark:border-gray-800 dark:bg-gray-950/80">
+        <div className="flex items-center justify-between">
+          <Image
+            src="/feedstudio.png"
+            alt="feedstud.io"
+            width={112}
+            height={36}
+            priority
+            className="dark:brightness-0 dark:invert"
+          />
+          <div className="sm:hidden">
+            <LanguageToggle direction="down" />
+          </div>
+        </div>
 
-        <div className="flex items-center gap-3">
-          <LanguageToggle direction="down" />
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hidden sm:block">
+            <LanguageToggle direction="down" />
+          </div>
           <Show when="signed-out">
             <SignInButton fallbackRedirectUrl="/dashboard" forceRedirectUrl="/dashboard">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="flex-1 sm:flex-none">
                 {dict.common.signIn}
               </Button>
             </SignInButton>
             <SignUpButton fallbackRedirectUrl="/dashboard" forceRedirectUrl="/dashboard">
-              <Button size="sm">
+              <Button size="sm" className="flex-1 sm:flex-none">
                 {dict.common.tryItFree}
                 <ArrowRight size={14} className="ml-1.5" />
               </Button>
             </SignUpButton>
           </Show>
           <Show when="signed-in">
-            <Link href="/dashboard">
-              <Button size="sm">
+            <Link href="/dashboard" className="flex-1 sm:flex-none">
+              <Button size="sm" className="w-full sm:w-auto">
                 {dict.common.goToDashboard}
                 <ArrowRight size={14} className="ml-1.5" />
               </Button>

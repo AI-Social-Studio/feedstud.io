@@ -527,7 +527,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                   onChange={(event) => handleUpload(event.target.files)}
                 />
               </div>
-              <div className="grid flex-1 grid-cols-2 gap-3 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+              <div className="grid flex-1 grid-cols-2 gap-3 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 p-4 sm:grid-cols-3 dark:border-gray-700 dark:bg-gray-800/50">
                 {assets.length > 0 ? (
                   assets.map((asset, index) => (
                     <AssetThumb
@@ -564,7 +564,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                     ),
                   )
                 ) : (
-                  <div className="col-span-2 flex min-h-[132px] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white/70 px-4 text-center dark:border-gray-700 dark:bg-gray-900/70">
+                  <div className="col-span-2 flex min-h-[132px] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white/70 px-4 text-center sm:col-span-3 dark:border-gray-700 dark:bg-gray-900/70">
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       {dict.studio.noFilesYet}
                     </p>
@@ -631,7 +631,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
             <div
               key={`editor-${focusedPlatform}`}
-              className="animate-page-in flex h-[720px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900"
+              className="animate-page-in flex h-[70svh] min-h-[420px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:h-[600px] xl:h-[720px] dark:border-gray-800 dark:bg-gray-900"
             >
               <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50/50 p-4 dark:border-gray-800 dark:bg-gray-800/40">
                 {activePlatforms.length > 1 ? (
@@ -757,7 +757,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
 
             <div
               key={`preview-${focusedPlatform}`}
-              className="animate-page-in flex h-[720px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900"
+              className="animate-page-in flex h-[70svh] min-h-[420px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:h-[600px] xl:h-[720px] dark:border-gray-800 dark:bg-gray-900"
             >
               <div className="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <div className="text-xs font-medium tracking-wider text-gray-400 uppercase dark:text-gray-500">

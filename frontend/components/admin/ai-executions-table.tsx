@@ -35,8 +35,8 @@ export function AiExecutionsTable({
               <th className="px-4 py-3">{dict.adminTelemetry.table.time}</th>
               <th className="px-4 py-3">{dict.adminTelemetry.table.kind}</th>
               <th className="px-4 py-3">{dict.adminTelemetry.table.user}</th>
-              <th className="px-4 py-3">{dict.adminTelemetry.table.model}</th>
-              <th className="px-4 py-3">{dict.adminTelemetry.table.tokens}</th>
+              <th className="hidden px-4 py-3 md:table-cell">{dict.adminTelemetry.table.model}</th>
+              <th className="hidden px-4 py-3 md:table-cell">{dict.adminTelemetry.table.tokens}</th>
               <th className="px-4 py-3">{dict.adminTelemetry.table.cost}</th>
               <th className="px-4 py-3">{dict.adminTelemetry.table.status}</th>
               <th className="px-4 py-3 text-right">{dict.adminTelemetry.table.details}</th>
@@ -72,10 +72,10 @@ export function AiExecutionsTable({
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                     {row.user_id ?? dict.adminTelemetry.table.anonymous}
                   </td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                  <td className="hidden px-4 py-3 text-gray-600 md:table-cell dark:text-gray-300">
                     {row.resolved_model ?? row.requested_model}
                   </td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                  <td className="hidden px-4 py-3 text-gray-600 md:table-cell dark:text-gray-300">
                     {formatNumber(row.total_tokens ?? 0, locale)}
                   </td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
