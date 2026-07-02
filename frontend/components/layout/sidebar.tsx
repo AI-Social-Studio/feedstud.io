@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { UserButton } from "@clerk/nextjs";
 import { House, List, Megaphone, X } from "@phosphor-icons/react/dist/ssr";
 import Image from "next/image";
@@ -23,11 +24,22 @@ export function Sidebar({
   const pathname = usePathname();
   const dict = useDictionary();
   const isAdmin = role === "admin";
+  const [showExpandedContent, setShowExpandedContent] = useState(!collapsed);
+
+  useEffect(() => {
+    if (collapsed) {
+      setShowExpandedContent(false);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => setShowExpandedContent(true), 140);
+    return () => window.clearTimeout(timeout);
+  }, [collapsed]);
 
   return (
     <aside className={`relative z-10 flex h-full flex-shrink-0 flex-col border-r border-gray-200 bg-white/95 backdrop-blur-sm transition-all duration-200 dark:border-gray-800 dark:bg-gray-950/95 ${collapsed ? "w-16" : "w-64"}`}>
       <div className={`flex h-16 items-center border-b border-gray-200 dark:border-gray-800 ${collapsed ? "justify-center px-0" : "justify-between px-8"}`}>
-        {collapsed ? null : (
+        {!collapsed && showExpandedContent ? (
           <Link href="/">
             <Image
               src="/socialstudio.png"
@@ -38,7 +50,7 @@ export function Sidebar({
               className="dark:brightness-0 dark:invert"
             />
           </Link>
-        )}
+        ) : null}
         <button
           type="button"
           onClick={onToggle}
@@ -49,7 +61,7 @@ export function Sidebar({
         </button>
       </div>
 
-      {collapsed ? (
+      {collapsed || !showExpandedContent ? (
         <div className="flex flex-1 flex-col items-center gap-3 px-0 py-4">
           <SidebarNavItem
             href="/dashboard"
@@ -67,8 +79,8 @@ export function Sidebar({
           />
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="mb-3 px-3 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+        <div className="flex-1 overflow-y-auto p-4 animate-page-in">
+          <div className="mb-3 px-3 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">
             {dict.nav.mainMenu}
           </div>
           <nav className="mb-8 space-y-1">
@@ -88,7 +100,7 @@ export function Sidebar({
 
           {isAdmin ? (
             <>
-              <div className="mb-3 px-3 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+              <div className="mb-3 px-3 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">
                 {dict.nav.adminSection}
               </div>
               <nav className="space-y-1">

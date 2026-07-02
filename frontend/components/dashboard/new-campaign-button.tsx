@@ -37,9 +37,9 @@ export function NewCampaignButton({ label }: { label: string }) {
 
       {open && typeof document !== "undefined"
         ? createPortal(
-            <div className="fixed inset-0 z-[999] bg-gray-950/60 backdrop-blur-md">
+            <div className="fixed inset-0 z-[999] animate-page-in bg-gray-950/60 backdrop-blur-md">
               <div className="flex min-h-screen items-center justify-center p-4">
-                <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-800 dark:bg-gray-950">
+                <div className="w-full max-w-md animate-page-in rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-800 dark:bg-gray-950">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
                     {dict.common.campaignNamePromptTitle}
                   </h2>

@@ -173,8 +173,8 @@ button:disabled,
 }
 
 .hero-grid {
-  background-image: radial-gradient(circle, rgb(0 0 0 / 0.12) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background-image: radial-gradient(circle, rgba(99, 102, 110, 0.28) 2px, transparent 1px);
+  background-size: 28px 28px;
   animation: grid-scroll 60s linear infinite;
 }
 
