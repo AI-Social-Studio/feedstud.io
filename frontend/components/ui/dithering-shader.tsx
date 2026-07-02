@@ -178,7 +178,11 @@ function hexToRgba(hex: string): [number, number, number, number] {
   ];
 }
 
-function createShader(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader | null {
+function createShader(
+  gl: WebGL2RenderingContext,
+  type: number,
+  source: string,
+): WebGLShader | null {
   const shader = gl.createShader(type);
   if (!shader) return null;
   gl.shaderSource(shader, source);
@@ -254,14 +258,8 @@ export function DitheringShader({
   });
 
   return (
-    <div
-      className={className}
-      style={{ position: "relative", width, height, ...style }}
-    >
-      <canvas
-        ref={canvasRef}
-        style={{ display: "block", width: "100%", height: "100%" }}
-      />
+    <div className={className} style={{ position: "relative", width, height, ...style }}>
+      <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%" }} />
     </div>
   );
 }

@@ -36,7 +36,9 @@ export function MyCampaignsView({ drafts, role }: { drafts: DraftSummary[]; role
     <DashboardShell role={role}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-50">{dict.myCampaigns.title}</h1>
+          <h1 className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-50">
+            {dict.myCampaigns.title}
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">{dict.myCampaigns.subtitle}</p>
         </div>
         <NewCampaignButton label={dict.myCampaigns.newCampaign} />
@@ -48,13 +50,13 @@ export function MyCampaignsView({ drafts, role }: { drafts: DraftSummary[]; role
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={dict.myCampaigns.searchPlaceholder}
-          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100"
+          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 transition-colors outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100"
         />
         <div className="relative">
           <select
             value={sortOrder}
             onChange={(event) => setSortOrder(event.target.value as "newest" | "oldest")}
-            className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-3 pr-12 text-sm text-gray-900 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100"
+            className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-3 pr-12 text-sm text-gray-900 transition-colors outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100"
           >
             <option value="newest">{dict.myCampaigns.sortNewest}</option>
             <option value="oldest">{dict.myCampaigns.sortOldest}</option>
@@ -79,11 +81,13 @@ export function MyCampaignsView({ drafts, role }: { drafts: DraftSummary[]; role
             <Link
               key={draft.id}
               href={`/dashboard/drafts/${draft.id}`}
-              className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50/30 hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-800 dark:hover:bg-blue-500/5"
+              className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50/30 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-800 dark:hover:bg-blue-500/5"
             >
               <div className="mb-3 flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{draft.title}</h2>
+                  <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                    {draft.title}
+                  </h2>
                   <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     {draft.raw_text_preview || dict.myCampaigns.noDescription}
                   </p>
@@ -104,7 +108,8 @@ export function MyCampaignsView({ drafts, role }: { drafts: DraftSummary[]; role
                   </div>
                 ))}
                 <span className="ml-auto text-xs font-medium text-gray-500 dark:text-gray-400">
-                  {draft.posts_count} {draft.posts_count === 1 ? dict.myCampaigns.version : dict.myCampaigns.versions}
+                  {draft.posts_count}{" "}
+                  {draft.posts_count === 1 ? dict.myCampaigns.version : dict.myCampaigns.versions}
                 </span>
               </div>
             </Link>

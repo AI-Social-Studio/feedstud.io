@@ -1,10 +1,7 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
-const publicBackendUrlSchema = z.union([
-  z.string().startsWith("/"),
-  z.string().url(),
-]);
+const publicBackendUrlSchema = z.union([z.string().startsWith("/"), z.string().url()]);
 
 export const env = createEnv({
   server: {

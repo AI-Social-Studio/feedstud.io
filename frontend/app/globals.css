@@ -47,7 +47,7 @@
   @apply mx-auto w-full;
 }
 
-[data-theme=dark] {
+[data-theme="dark"] {
   --color-app: #0a0a0f;
   --color-surface: #111318;
   --color-surface-muted: #191b22;
@@ -72,14 +72,16 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 html[data-locale-ready="false"] body {
   visibility: hidden;
 }
 
-[data-theme=dark] body {
+[data-theme="dark"] body {
   color: #e5e7eb;
 }
 
@@ -163,7 +165,9 @@ button:disabled,
 .reveal {
   opacity: 0;
   transform: translateY(12px);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out;
 }
 
 .reveal.is-visible {
@@ -172,8 +176,12 @@ button:disabled,
 }
 
 @keyframes grid-scroll {
-  from { background-position: 0 0; }
-  to { background-position: 64px 64px; }
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 64px 64px;
+  }
 }
 
 .hero-grid {
@@ -182,7 +190,7 @@ button:disabled,
   animation: grid-scroll 60s linear infinite;
 }
 
-[data-theme=dark] .hero-grid {
+[data-theme="dark"] .hero-grid {
   background-image: radial-gradient(circle, rgb(255 255 255 / 0.08) 2px, transparent 1px);
 }
 

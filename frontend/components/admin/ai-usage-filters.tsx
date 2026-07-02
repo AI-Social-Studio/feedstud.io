@@ -65,7 +65,7 @@ export function AiUsageFilters({ values }: { values: FilterValues }) {
         value={String(values.limit)}
         placeholder={dict.adminTelemetry.filters.placeholders.limit}
       />
-      <div className="md:col-span-3 xl:col-span-6 flex gap-3">
+      <div className="flex gap-3 md:col-span-3 xl:col-span-6">
         <button
           type="submit"
           className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-gray-900"
@@ -96,14 +96,14 @@ function FilterInput({
 }) {
   return (
     <label className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-      <span className="block text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+      <span className="block text-xs font-medium tracking-wider text-gray-400 uppercase dark:text-gray-500">
         {label}
       </span>
       <input
         name={name}
         defaultValue={value}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none ring-0 placeholder:text-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 ring-0 outline-none placeholder:text-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
       />
     </label>
   );
@@ -124,13 +124,13 @@ function FilterSelect({
 }) {
   return (
     <label className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-      <span className="block text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+      <span className="block text-xs font-medium tracking-wider text-gray-400 uppercase dark:text-gray-500">
         {label}
       </span>
       <select
         name={name}
         defaultValue={value ?? ""}
-        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none ring-0 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 ring-0 outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
       >
         <option value="">{allLabel}</option>
         {options.map((option) => (

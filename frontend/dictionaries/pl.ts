@@ -74,18 +74,29 @@ export const pl: Dictionary = {
   platforms: {
     eyebrow: "obsługiwane platformy",
     title: "Jeden pomysł. Trzy odbiorców. Zero dodatkowej pracy.",
-    subtitle: "Każda platforma ma swoją gramatykę. SocialStudio.ai mówi płynnie we wszystkich trzech.",
+    subtitle:
+      "Każda platforma ma swoją gramatykę. SocialStudio.ai mówi płynnie we wszystkich trzech.",
     exampleLabel: "przykładowy wynik",
     items: [
       {
         tagline: "Profesjonalnie · B2B · Przywództwo myślowe",
-        traits: ["Hooki oparte na wartości", "Podział na akapity", "Bez spamu hashtagami", "Autorytet w pierwszej osobie"],
+        traits: [
+          "Hooki oparte na wartości",
+          "Podział na akapity",
+          "Bez spamu hashtagami",
+          "Autorytet w pierwszej osobie",
+        ],
         example:
           "Większość zespołów traci 3 godziny tygodniowo na przeformatowywanie treści. Oto jak skróciliśmy to do 30 sekund…",
       },
       {
         tagline: "Wizualnie · Lifestyle · Społeczność",
-        traits: ["Dużo emoji", "Krótkie, mocne zdania", "Blok hashtagów", "Bliski, autentyczny ton"],
+        traits: [
+          "Dużo emoji",
+          "Krótkie, mocne zdania",
+          "Blok hashtagów",
+          "Bliski, autentyczny ton",
+        ],
         example:
           "Wyobraź sobie, że 30 sekund zajmuje to, co kiedyś trwało godzinami ✨ To zmieniło wszystko w naszym zespole →",
       },
@@ -103,7 +114,8 @@ export const pl: Dictionary = {
     button: "Zacznij tworzyć",
   },
   footer: {
-    tagline: "Zautomatyzowane dopasowanie treści przez AI. Wklej swoje pomysły, wybierz platformę, otrzymaj gotowy post.",
+    tagline:
+      "Zautomatyzowane dopasowanie treści przez AI. Wklej swoje pomysły, wybierz platformę, otrzymaj gotowy post.",
     columns: [
       {
         title: "Produkt",
@@ -298,7 +310,8 @@ export const pl: Dictionary = {
       anonymous: "Anonimowy",
     },
     detail: {
-      empty: "Wybierz wykonanie, aby sprawdzić prompt, odpowiedź, usage i surowe payloady OpenRoutera.",
+      empty:
+        "Wybierz wykonanie, aby sprawdzić prompt, odpowiedź, usage i surowe payloady OpenRoutera.",
       title: "Szczegóły wykonania",
       user: "Użytkownik",
       model: "Model",
@@ -319,7 +332,8 @@ export const pl: Dictionary = {
   },
   studio: {
     defaultTitle: "Nowa kampania AI",
-    subtitle: "Wrzuć surowe myśli i materiały. AI samo wyciąga rdzeń przekazu i pisze pod każdą wybraną platformę.",
+    subtitle:
+      "Wrzuć surowe myśli i materiały. AI samo wyciąga rdzeń przekazu i pisze pod każdą wybraną platformę.",
     unsavedChanges: "Masz niezapisane zmiany",
     allSaved: "Wszystkie zmiany zapisane",
     saving: "Zapisuję...",
@@ -334,7 +348,8 @@ export const pl: Dictionary = {
     uploading: "Wysyłam",
     noFilesYet: "Nie masz jeszcze wrzuconych plików",
     noFilesHint: "Dodaj obrazki, żeby AI mogło wykorzystać je przy generowaniu posta.",
-    demoAssetsHint: "Powyżej widzisz przykładowe assety. Po pierwszym uploadzie znikną z tego widoku.",
+    demoAssetsHint:
+      "Powyżej widzisz przykładowe assety. Po pierwszym uploadzie znikną z tego widoku.",
     target: "Cel",
     editableCopy: "Edytowalna treść",
     unsavedEdit: "Niezapisana zmiana",
@@ -365,7 +380,8 @@ export const pl: Dictionary = {
       refined: "Treść została dopracowana.",
       generated: (count) => {
         if (count === 1) return "Wygenerowano 1 post.";
-        if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return `Wygenerowano ${count} posty.`;
+        if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20))
+          return `Wygenerowano ${count} posty.`;
         return `Wygenerowano ${count} postów.`;
       },
       noBackendContent: "Backend nie zwrócił żadnej treści.",
@@ -376,7 +392,8 @@ export const pl: Dictionary = {
       draftSaved: "Szkic zapisany.",
       filesAdded: (count) => {
         if (count === 1) return "Dodano 1 plik.";
-        if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) return `Dodano ${count} pliki.`;
+        if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20))
+          return `Dodano ${count} pliki.`;
         return `Dodano ${count} plików.`;
       },
       waitForLock: "Poczekaj aż zakończy się generowanie lub zapis.",
@@ -385,7 +402,10 @@ export const pl: Dictionary = {
     },
     platforms: {
       linkedin: { subtitle: "B2B, profesjonalnie, networking", audience: "Profesjonaliści tech" },
-      instagram: { subtitle: "Wizualnie, lifestyle, zaangażowanie", audience: "Lifestyle i klimat" },
+      instagram: {
+        subtitle: "Wizualnie, lifestyle, zaangażowanie",
+        audience: "Lifestyle i klimat",
+      },
       x: { subtitle: "Krótka forma, newsy, trendy", audience: "Szybki feed, przegląd na szybko" },
     },
   },

@@ -56,7 +56,9 @@ export function TopHeader() {
         ) : isNewCampaign ? (
           <>
             <CaretRight size={12} className="text-gray-300 dark:text-gray-700" />
-            <span className="font-medium text-gray-900 dark:text-gray-100">{dict.nav.newCampaign}</span>
+            <span className="font-medium text-gray-900 dark:text-gray-100">
+              {dict.nav.newCampaign}
+            </span>
           </>
         ) : isDraft ? (
           <>

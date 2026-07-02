@@ -12,7 +12,7 @@ export function ContactContent() {
     <div className="flex min-h-screen flex-col">
       <MarketingHeader />
       <main className="flex-1 bg-white px-4 py-16 dark:bg-gray-950">
-        <div className="container max-w-3xl animate-page-in">
+        <div className="animate-page-in container max-w-3xl">
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
             {dict.legal.contact.title}
           </h1>
@@ -22,7 +22,7 @@ export function ContactContent() {
 
           <a
             href="mailto:hello@socialstudio.ai"
-            className="mt-8 inline-flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-5 py-4 text-sm font-medium text-gray-900 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50/30 hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-blue-800 dark:hover:bg-blue-500/5"
+            className="mt-8 inline-flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-5 py-4 text-sm font-medium text-gray-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50/30 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:hover:border-blue-800 dark:hover:bg-blue-500/5"
           >
             <span className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
               <EnvelopeSimple size={20} weight="bold" />

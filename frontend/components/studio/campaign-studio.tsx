@@ -22,12 +22,7 @@ import { StepHeader } from "@/components/ui/step-header";
 import type { Dictionary } from "@/dictionaries";
 import { useDictionary } from "@/lib/i18n";
 import { PlatformPreview } from "./platform-preview";
-import {
-  PLATFORM_META,
-  PLATFORM_ORDER,
-  type Platform,
-  type RefineAction,
-} from "./content-engine";
+import { PLATFORM_META, PLATFORM_ORDER, type Platform, type RefineAction } from "./content-engine";
 import {
   createDraft,
   deleteUpload,
@@ -41,10 +36,8 @@ import {
 } from "@/lib/flowforge-api";
 
 const DEMO_IMAGE: Record<Platform, string | undefined> = {
-  linkedin:
-    "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=640&q=80",
-  instagram:
-    "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=640&q=80",
+  linkedin: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=640&q=80",
+  instagram: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=640&q=80",
   x: undefined,
 };
 
@@ -152,7 +145,8 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const anySelected = PLATFORM_ORDER.some((platform) => selected[platform]);
   const activePlatforms = PLATFORM_ORDER.filter((platform) => selected[platform]);
   const assets = uploadedFilesToAssets(uploadedFiles);
-  const isAssetMutationLocked = isGenerating || isUploading || isSaving || Object.values(regenerating).some(Boolean);
+  const isAssetMutationLocked =
+    isGenerating || isUploading || isSaving || Object.values(regenerating).some(Boolean);
   const hasAnyContent =
     raw.trim().length > 0 ||
     uploadedFiles.length > 0 ||
@@ -284,14 +278,23 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
         posts: results,
         file_ids: uploadedFiles.map((file) => file.id),
       };
-      const savedDraft = draftId
-        ? await updateDraft(draftId, payload)
-        : await createDraft(payload);
+      const savedDraft = draftId ? await updateDraft(draftId, payload) : await createDraft(payload);
       setDraftId(savedDraft.id);
       setDraftTitle(savedDraft.title);
-      setSavedSnapshot(buildSnapshot(savedDraft.title, raw, selected, results, uploadedFiles.map((file) => file.id)));
+      setSavedSnapshot(
+        buildSnapshot(
+          savedDraft.title,
+          raw,
+          selected,
+          results,
+          uploadedFiles.map((file) => file.id),
+        ),
+      );
       setPristineResults(results);
-      pushToast("success", draftId ? dict.studio.toasts.draftUpdated : dict.studio.toasts.draftSaved);
+      pushToast(
+        "success",
+        draftId ? dict.studio.toasts.draftUpdated : dict.studio.toasts.draftSaved,
+      );
     } catch (error) {
       pushToast("error", getApiErrorMessage(error));
     } finally {
@@ -378,7 +381,11 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
               className="group inline-flex items-center gap-2 text-left text-2xl font-bold text-gray-900 transition-colors hover:text-blue-600 dark:text-gray-50 dark:hover:text-blue-400"
             >
               <span>{draftTitle || dict.studio.defaultTitle}</span>
-              <PencilSimple size={18} weight="bold" className="text-gray-400 transition-colors group-hover:text-blue-500 dark:text-gray-500 dark:group-hover:text-blue-400" />
+              <PencilSimple
+                size={18}
+                weight="bold"
+                className="text-gray-400 transition-colors group-hover:text-blue-500 dark:text-gray-500 dark:group-hover:text-blue-400"
+              />
             </button>
           )}
         </div>
@@ -393,9 +400,13 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
             type="button"
             onClick={saveDraftState}
             disabled={isSaving || !hasAnyContent || !hasUnsavedChanges}
-            className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:bg-gray-800 hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:bg-gray-200 disabled:text-gray-500 disabled:hover:translate-y-0 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
+            className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:-translate-y-px hover:bg-gray-800 active:translate-y-0 disabled:pointer-events-none disabled:bg-gray-200 disabled:text-gray-500 disabled:hover:translate-y-0 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100 dark:disabled:bg-gray-800 dark:disabled:text-gray-500"
           >
-            {isSaving ? dict.studio.saving : draftId ? dict.studio.saveChanges : dict.studio.saveDraft}
+            {isSaving
+              ? dict.studio.saving
+              : draftId
+                ? dict.studio.saveChanges
+                : dict.studio.saveDraft}
           </button>
         </div>
       </div>
@@ -409,7 +420,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                 id="brain-dump-text"
                 value={raw}
                 onChange={(event) => setRaw(event.target.value)}
-                className="min-h-[220px] flex-1 resize-none rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                className="min-h-[220px] flex-1 resize-none rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               />
             </div>
 
@@ -436,46 +447,56 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                 />
               </div>
               <div className="grid flex-1 grid-cols-2 gap-3 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-                {assets.length > 0
-                  ? assets.map((asset, index) => (
+                {assets.length > 0 ? (
+                  assets.map((asset, index) => (
+                    <AssetThumb
+                      key={asset.fileId ?? `${asset.src}-${index}`}
+                      kind="image"
+                      src={asset.src}
+                      alt={asset.alt}
+                      objectPosition={asset.objectPosition}
+                      onRemove={asset.fileId ? () => removeUploadedFile(asset.fileId) : undefined}
+                      removeDisabled={
+                        asset.fileId
+                          ? removingFileIds.includes(asset.fileId) || isAssetMutationLocked
+                          : false
+                      }
+                      removeLabel={
+                        isAssetMutationLocked
+                          ? dict.studio.removeFileLocked
+                          : dict.studio.removeFile
+                      }
+                    />
+                  ))
+                ) : showDemoAssets ? (
+                  INITIAL_ASSETS.map((asset, index) =>
+                    asset.kind === "image" ? (
                       <AssetThumb
                         key={asset.fileId ?? `${asset.src}-${index}`}
                         kind="image"
                         src={asset.src}
                         alt={asset.alt}
                         objectPosition={asset.objectPosition}
-                        onRemove={asset.fileId ? () => removeUploadedFile(asset.fileId) : undefined}
-                        removeDisabled={
-                          asset.fileId ? removingFileIds.includes(asset.fileId) || isAssetMutationLocked : false
-                        }
-                        removeLabel={
-                          isAssetMutationLocked ? dict.studio.removeFileLocked : dict.studio.removeFile
-                        }
                       />
-                    ))
-                  : showDemoAssets
-                    ? INITIAL_ASSETS.map((asset, index) =>
-                        asset.kind === "image" ? (
-                          <AssetThumb
-                            key={asset.fileId ?? `${asset.src}-${index}`}
-                            kind="image"
-                            src={asset.src}
-                            alt={asset.alt}
-                            objectPosition={asset.objectPosition}
-                          />
-                        ) : (
-                          <AssetThumb key={`${asset.label}-${index}`} kind="meme" label={asset.label} />
-                        ),
-                      )
-                    : (
-                      <div className="col-span-2 flex min-h-[132px] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white/70 px-4 text-center dark:border-gray-700 dark:bg-gray-900/70">
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{dict.studio.noFilesYet}</p>
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{dict.studio.noFilesHint}</p>
-                      </div>
-                    )}
+                    ) : (
+                      <AssetThumb key={`${asset.label}-${index}`} kind="meme" label={asset.label} />
+                    ),
+                  )
+                ) : (
+                  <div className="col-span-2 flex min-h-[132px] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white/70 px-4 text-center dark:border-gray-700 dark:bg-gray-900/70">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {dict.studio.noFilesYet}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {dict.studio.noFilesHint}
+                    </p>
+                  </div>
+                )}
               </div>
               {showDemoAssets && uploadedFiles.length === 0 ? (
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{dict.studio.demoAssetsHint}</p>
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  {dict.studio.demoAssetsHint}
+                </p>
               ) : null}
             </div>
           </div>
@@ -491,7 +512,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
               type="button"
               onClick={createContent}
               disabled={isGenerating || !anySelected}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-blue-700 hover:-translate-y-px hover:shadow-md active:translate-y-0 disabled:pointer-events-none disabled:opacity-70 disabled:hover:translate-y-0"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:-translate-y-px hover:bg-blue-700 hover:shadow-md active:translate-y-0 disabled:pointer-events-none disabled:opacity-70 disabled:hover:translate-y-0"
             >
               <Sparkle size={16} weight="bold" />
               {isGenerating ? dict.studio.creatingPost : dict.studio.createPost}
@@ -544,12 +565,16 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                 ) : null}
                 <PlatformIconBadge platform={focusedPlatform} size="sm" weight="bold" />
                 <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{focusedMeta.name}</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    {focusedMeta.name}
+                  </h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {dict.studio.target}: {dict.studio.platforms[focusedPlatform].audience}
                   </p>
                 </div>
-                <span className={`text-xs font-medium ${focusedOver ? "text-red-500" : "text-gray-400 dark:text-gray-500"}`}>
+                <span
+                  className={`text-xs font-medium ${focusedOver ? "text-red-500" : "text-gray-400 dark:text-gray-500"}`}
+                >
                   {focusedLength} / {focusedMeta.limit}
                 </span>
                 {activePlatforms.length > 1 ? (
@@ -566,12 +591,14 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
 
               <div className="flex-1 border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <div className="mb-2 flex items-center justify-between">
-                  <div className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  <div className="text-xs font-medium tracking-wider text-gray-400 uppercase dark:text-gray-500">
                     {dict.studio.editableCopy}
                   </div>
                   <div
                     className={`text-xs font-medium ${
-                      hasFocusedManualChanges ? "text-amber-700 dark:text-amber-400" : "text-gray-400 dark:text-gray-500"
+                      hasFocusedManualChanges
+                        ? "text-amber-700 dark:text-amber-400"
+                        : "text-gray-400 dark:text-gray-500"
                     }`}
                   >
                     {hasFocusedManualChanges ? dict.studio.unsavedEdit : dict.studio.synced}
@@ -581,12 +608,12 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                   value={focusedText}
                   onChange={(event) => updateResult(focusedPlatform, event.target.value)}
                   placeholder={dict.studio.textareaPlaceholder}
-                  className="h-[calc(100%-1.75rem)] w-full resize-none overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                  className="h-[calc(100%-1.75rem)] w-full resize-none overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                 />
               </div>
 
               <div className="border-b border-gray-100 px-5 py-3 dark:border-gray-800">
-                <div className="mb-2 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                <div className="mb-2 text-xs font-medium tracking-wider text-gray-400 uppercase dark:text-gray-500">
                   {dict.studio.quickRefine}
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -595,7 +622,9 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                       key={action}
                       type="button"
                       onClick={() => applyRefine(focusedPlatform, action)}
-                      disabled={isGenerating || refining[focusedPlatform] || regenerating[focusedPlatform]}
+                      disabled={
+                        isGenerating || refining[focusedPlatform] || regenerating[focusedPlatform]
+                      }
                       className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-blue-700 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
                     >
                       {icon}
@@ -613,7 +642,9 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                     disabled={isGenerating || regenerating[focusedPlatform]}
                     className="rounded-lg border border-gray-200 px-3.5 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:border-blue-700 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
                   >
-                    {regenerating[focusedPlatform] ? dict.studio.regenerating : dict.studio.regenerate}
+                    {regenerating[focusedPlatform]
+                      ? dict.studio.regenerating
+                      : dict.studio.regenerate}
                   </button>
                   <button
                     type="button"
@@ -648,7 +679,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
               className="animate-page-in flex h-[720px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900"
             >
               <div className="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
-                <div className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                <div className="text-xs font-medium tracking-wider text-gray-400 uppercase dark:text-gray-500">
                   {focusedMeta.name} preview
                 </div>
               </div>
@@ -666,7 +697,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
         </div>
       ) : null}
 
-      <div className="fixed bottom-4 right-4 z-50 flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2">
+      <div className="fixed right-4 bottom-4 z-50 flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2">
         {toasts.map((toast) => (
           <div
             key={toast.id}

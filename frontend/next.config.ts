@@ -1,12 +1,12 @@
-import type { NextConfig } from 'next';
-import { env } from './env';
+import type { NextConfig } from "next";
+import { env } from "./env";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
   async rewrites() {
     return [
       {
-        source: '/api/backend/:path*',
+        source: "/api/backend/:path*",
         destination: `${env.BACKEND_URL}/api/v1/:path*`,
       },
     ];
@@ -14,9 +14,9 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
       },
     ],
   },

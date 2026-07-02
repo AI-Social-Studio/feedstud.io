@@ -28,7 +28,11 @@ type RuntimeConfig = typeof CONFIG & {
   strokeColor: string;
 };
 
-function createLine(spring: number, pos: { x: number; y: number }, config: typeof CONFIG): TrailLine {
+function createLine(
+  spring: number,
+  pos: { x: number; y: number },
+  config: typeof CONFIG,
+): TrailLine {
   return {
     spring: spring + 0.1 * Math.random() - 0.05,
     friction: CONFIG.friction + 0.01 * Math.random() - 0.005,
@@ -101,7 +105,7 @@ export function renderCanvas() {
   let canvasRect = canvas.getBoundingClientRect();
   const isFirefox = typeof navigator !== "undefined" && navigator.userAgent.includes("Firefox");
   const runtimeConfig: RuntimeConfig = isFirefox
-      ? {
+    ? {
         ...CONFIG,
         trails: 52,
         size: 38,
@@ -135,7 +139,7 @@ export function renderCanvas() {
 
   function initLines() {
     lines = Array.from({ length: runtimeConfig.trails }, (_, i) =>
-      createLine(0.45 + (i / runtimeConfig.trails) * 0.025, pos, runtimeConfig)
+      createLine(0.45 + (i / runtimeConfig.trails) * 0.025, pos, runtimeConfig),
     );
   }
 

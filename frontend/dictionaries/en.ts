@@ -79,7 +79,12 @@ export const en: Dictionary = {
     items: [
       {
         tagline: "Professional · B2B · Thought leadership",
-        traits: ["Value-driven hooks", "Paragraph breaks", "No hashtag spam", "First-person authority"],
+        traits: [
+          "Value-driven hooks",
+          "Paragraph breaks",
+          "No hashtag spam",
+          "First-person authority",
+        ],
         example:
           "Most teams waste 3 hours a week reformatting content. Here's how we cut that to 30 seconds…",
       },
@@ -103,7 +108,8 @@ export const en: Dictionary = {
     button: "Start Creating",
   },
   footer: {
-    tagline: "AI-powered content repurposing. Paste your raw ideas, pick a platform, get a finished post.",
+    tagline:
+      "AI-powered content repurposing. Paste your raw ideas, pick a platform, get a finished post.",
     columns: [
       {
         title: "Product",
@@ -364,14 +370,14 @@ export const en: Dictionary = {
       selectPlatform: "Select at least one platform.",
       generateFirst: "Generate the post content first.",
       refined: "Content has been refined.",
-      generated: (count) => count === 1 ? "Generated 1 post." : `Generated ${count} posts.`,
+      generated: (count) => (count === 1 ? "Generated 1 post." : `Generated ${count} posts.`),
       noBackendContent: "The backend didn't return any content.",
       noBackendContentPlatform: "The backend didn't return content for this platform.",
       regenerated: (platformName) => `${platformName}: a new version has been generated.`,
       addContentFirst: "Add content or files to the draft first.",
       draftUpdated: "Draft updated.",
       draftSaved: "Draft saved.",
-      filesAdded: (count) => count === 1 ? "Added 1 file." : `Added ${count} files.`,
+      filesAdded: (count) => (count === 1 ? "Added 1 file." : `Added ${count} files.`),
       waitForLock: "Wait for generation or saving to finish.",
       fileDeleted: "File deleted.",
       postCopied: "Post copied to clipboard.",

@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useContext, useEffect, useSyncExternalStore } from "react";
 import { dictionaries, type Dictionary, type Locale } from "@/dictionaries";
 import { DEFAULT_LOCALE, LanguageContext, LOCALE_COOKIE_NAME } from "@/lib/language-context";
 
@@ -26,7 +21,11 @@ function getSnapshot(): Locale {
   return stored === "pl" || stored === "en" ? stored : DEFAULT_LOCALE;
 }
 
-export function useLanguage(): { locale: Locale; setLocale: (locale: Locale) => void; dict: Dictionary } {
+export function useLanguage(): {
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+  dict: Dictionary;
+} {
   const initialLocale = useContext(LanguageContext);
   const locale = useSyncExternalStore(subscribe, getSnapshot, () => initialLocale);
 

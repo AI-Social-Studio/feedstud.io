@@ -12,7 +12,9 @@ export function normalizeAppRole(value: unknown): AppRole | null {
   return APP_ROLES.includes(value as AppRole) ? (value as AppRole) : null;
 }
 
-export function getRoleFromSessionClaims(sessionClaims: CustomJwtSessionClaims | null | undefined): AppRole | null {
+export function getRoleFromSessionClaims(
+  sessionClaims: CustomJwtSessionClaims | null | undefined,
+): AppRole | null {
   return normalizeAppRole(sessionClaims?.metadata?.role);
 }
 

@@ -24,7 +24,9 @@ export function HomeView({ role, last7Days, last30Days, total, recentDrafts }: P
     <DashboardShell role={role}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-50">{dict.home.title}</h1>
+          <h1 className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-50">
+            {dict.home.title}
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">{dict.home.subtitle}</p>
         </div>
         <NewCampaignButton label={dict.home.newCampaign} />
@@ -38,7 +40,9 @@ export function HomeView({ role, last7Days, last30Days, total, recentDrafts }: P
 
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{dict.home.recentCampaigns}</h2>
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+            {dict.home.recentCampaigns}
+          </h2>
           <Link
             href="/dashboard/history"
             className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
@@ -57,11 +61,13 @@ export function HomeView({ role, last7Days, last30Days, total, recentDrafts }: P
               <Link
                 key={draft.id}
                 href={`/dashboard/drafts/${draft.id}`}
-                className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50/30 hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-800 dark:hover:bg-blue-500/5"
+                className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50/30 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-800 dark:hover:bg-blue-500/5"
               >
                 <div className="mb-3 flex items-start justify-between gap-4">
                   <div>
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{draft.title}</h3>
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                      {draft.title}
+                    </h3>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       {draft.raw_text_preview || dict.home.noDescription}
                     </p>
@@ -94,7 +100,9 @@ export function HomeView({ role, last7Days, last30Days, total, recentDrafts }: P
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
-      <div className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">{label}</div>
+      <div className="text-xs font-medium tracking-wider text-gray-400 uppercase dark:text-gray-500">
+        {label}
+      </div>
       <div className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-50">{value}</div>
     </div>
   );

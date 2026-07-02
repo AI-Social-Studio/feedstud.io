@@ -24,12 +24,14 @@ export function AiExecutionsTable({
   return (
     <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
       <div className="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{dict.adminTelemetry.table.title}</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+          {dict.adminTelemetry.table.title}
+        </h2>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-800">
           <thead className="bg-gray-50 dark:bg-gray-900/60">
-            <tr className="text-left text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            <tr className="text-left text-xs tracking-wider text-gray-400 uppercase dark:text-gray-500">
               <th className="px-4 py-3">{dict.adminTelemetry.table.time}</th>
               <th className="px-4 py-3">{dict.adminTelemetry.table.kind}</th>
               <th className="px-4 py-3">{dict.adminTelemetry.table.user}</th>
@@ -46,22 +48,39 @@ export function AiExecutionsTable({
               return (
                 <tr
                   key={row.id}
-                  className={active ? "bg-violet-50/60 dark:bg-violet-950/20" : "bg-white dark:bg-gray-950"}
+                  className={
+                    active ? "bg-violet-50/60 dark:bg-violet-950/20" : "bg-white dark:bg-gray-950"
+                  }
                 >
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{formatTime(row.created_at, locale)}</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                    {formatTime(row.created_at, locale)}
+                  </td>
                   <td className="px-4 py-3 text-gray-900 dark:text-gray-100">
-                    <Link href={href} className="font-medium hover:text-violet-700 dark:hover:text-violet-300">
+                    <Link
+                      href={href}
+                      className="font-medium hover:text-violet-700 dark:hover:text-violet-300"
+                    >
                       {formatTelemetryKind(row.kind, dict)}
                       {row.platform ? ` / ${formatTelemetryPlatform(row.platform, dict)}` : ""}
                       {row.action ? ` / ${formatTelemetryAction(row.action, dict)}` : ""}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{row.user_id ?? dict.adminTelemetry.table.anonymous}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{row.resolved_model ?? row.requested_model}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{formatNumber(row.total_tokens ?? 0, locale)}</td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{formatCost(row.cost, locale)}</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                    {row.user_id ?? dict.adminTelemetry.table.anonymous}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                    {row.resolved_model ?? row.requested_model}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                    {formatNumber(row.total_tokens ?? 0, locale)}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                    {formatCost(row.cost, locale)}
+                  </td>
                   <td className="px-4 py-3">
-                    <span className={statusClassName(row.status)}>{formatTelemetryStatus(row.status, dict)}</span>
+                    <span className={statusClassName(row.status)}>
+                      {formatTelemetryStatus(row.status, dict)}
+                    </span>
                   </td>
                 </tr>
               );

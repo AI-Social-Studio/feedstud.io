@@ -9,11 +9,7 @@ import {
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 const MAX_EXECUTIONS_LIMIT = 200;
 
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function AdminPage({ searchParams }: { searchParams: SearchParams }) {
   const auth = await requireAdminContext();
   const params = await searchParams;
   const filters = parseFilters(params);
@@ -22,7 +18,9 @@ export default async function AdminPage({
   const [summary, executions, selectedExecution] = await Promise.all([
     fetchAiUsageSummaryServer(filters),
     listAiExecutionsServer(filters),
-    filters.executionId ? fetchAiExecutionServer(filters.executionId).catch(() => null) : Promise.resolve(null),
+    filters.executionId
+      ? fetchAiExecutionServer(filters.executionId).catch(() => null)
+      : Promise.resolve(null),
   ]);
 
   return (

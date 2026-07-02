@@ -13,7 +13,7 @@ export function LegalPage({ page }: { page: "privacy" | "terms" }) {
     <div className="flex min-h-screen flex-col">
       <MarketingHeader />
       <main className="flex-1 bg-white px-4 py-16 dark:bg-gray-950">
-        <div className="container max-w-3xl animate-page-in">
+        <div className="animate-page-in container max-w-3xl">
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
             {content.title}
           </h1>

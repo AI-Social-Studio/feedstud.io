@@ -25,13 +25,13 @@ export function DashboardShell({ children, role }: { children: ReactNode; role: 
   }
 
   return (
-    <div className="relative flex h-screen w-full overflow-hidden bg-app dark:bg-gray-950">
+    <div className="bg-app relative flex h-screen w-full overflow-hidden dark:bg-gray-950">
       <div className="hero-grid pointer-events-none absolute inset-0 opacity-50 dark:opacity-100" />
       <Sidebar role={role} collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
       <div className="relative z-10 flex h-full flex-1 flex-col overflow-hidden">
         <TopHeader />
         <main className="flex-1 overflow-y-auto p-8">
-          <div key={pathname} className="container max-w-6xl space-y-8 pb-12 animate-page-in">
+          <div key={pathname} className="animate-page-in container max-w-6xl space-y-8 pb-12">
             {children}
           </div>
         </main>

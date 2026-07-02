@@ -11,7 +11,7 @@ export function CtaSection() {
   const dict = useDictionary();
 
   return (
-    <section className="relative py-24 px-4 overflow-hidden bg-blue-700">
+    <section className="relative overflow-hidden bg-blue-700 px-4 py-24">
       <DitheringShader
         width={1920}
         height={400}
@@ -26,15 +26,13 @@ export function CtaSection() {
           height: "100%",
         }}
       />
-      <Reveal className="container relative z-10 max-w-3xl text-center">
-        <h2 className="text-4xl font-semibold tracking-tight text-white mb-4">
-          {dict.cta.title}
-        </h2>
-        <p className="text-blue-100 mb-10 text-lg">{dict.cta.subtitle}</p>
+      <Reveal className="relative z-10 container max-w-3xl text-center">
+        <h2 className="mb-4 text-4xl font-semibold tracking-tight text-white">{dict.cta.title}</h2>
+        <p className="mb-10 text-lg text-blue-100">{dict.cta.subtitle}</p>
         <Link href="/dashboard">
           <Button
             size="lg"
-            className="bg-white text-blue-600 hover:bg-blue-50 font-semibold transition-transform duration-200 hover:scale-105"
+            className="bg-white font-semibold text-blue-600 transition-transform duration-200 hover:scale-105 hover:bg-blue-50"
           >
             {dict.cta.button}
             <ArrowRight size={18} className="ml-2" />
