@@ -2,9 +2,10 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import get_settings
 from app.domain.error_codes import ErrorCode
@@ -13,7 +14,7 @@ from app.infrastructure.db.models import Base
 from app.infrastructure.db.repositories import SqlAlchemyAiExecutionRepository
 from app.interface.api.v1.router import api_router
 from app.interface.dependencies import _database, _storage
-from app.interface.errors import domain_error_response, error_payload
+from app.interface.errors import HTTP_STATUS_BY_ERROR_CODE, domain_error_response, error_payload
 
 logger = logging.getLogger(__name__)
 
@@ -61,15 +62,28 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(DomainError)
     async def _domain_error(_: Request, exc: DomainError) -> JSONResponse:
+        _log_handled_exception(exc, HTTP_STATUS_BY_ERROR_CODE.get(exc.code, 500))
         return domain_error_response(exc)
 
-    @app.exception_handler(HTTPException)
-    async def _http_error(_: Request, exc: HTTPException) -> JSONResponse:
+    @app.exception_handler(StarletteHTTPException)
+    async def _http_error(_: Request, exc: StarletteHTTPException) -> JSONResponse:
         if isinstance(exc.detail, dict) and "code" in exc.detail and "detail" in exc.detail:
+            _log_handled_exception(exc, exc.status_code)
             return JSONResponse(status_code=exc.status_code, content=exc.detail)
+
+        payload = _framework_http_error_payload(exc)
+        _log_handled_exception(exc, exc.status_code)
         return JSONResponse(
             status_code=exc.status_code,
-            content=error_payload(ErrorCode.INTERNAL_SERVER_ERROR, str(exc.detail)),
+            content=payload,
+        )
+
+    @app.exception_handler(Exception)
+    async def _unexpected_error(_: Request, exc: Exception) -> JSONResponse:
+        logger.error("Unhandled application exception", exc_info=(type(exc), exc, exc.__traceback__))
+        return JSONResponse(
+            status_code=500,
+            content=error_payload(ErrorCode.INTERNAL_SERVER_ERROR, "Internal server error"),
         )
 
     @app.get("/health", tags=["meta"])
@@ -78,6 +92,19 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router)
     return app
+def _framework_http_error_payload(exc: StarletteHTTPException) -> dict[str, str]:
+    if exc.status_code == 404:
+        return error_payload(ErrorCode.NOT_FOUND, "Not found")
+    if exc.status_code == 405:
+        return error_payload(ErrorCode.METHOD_NOT_ALLOWED, "Method not allowed")
+    return error_payload(ErrorCode.INTERNAL_SERVER_ERROR, str(exc.detail))
+
+
+def _log_handled_exception(exc: Exception, status_code: int) -> None:
+    if status_code >= 500:
+        logger.error("Handled server-side exception", exc_info=(type(exc), exc, exc.__traceback__))
+        return
+    logger.warning("Handled client-facing exception", extra={"status_code": status_code, "detail": str(exc)})
 
 
 app = create_app()

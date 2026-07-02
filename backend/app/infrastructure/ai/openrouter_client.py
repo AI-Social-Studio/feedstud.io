@@ -18,7 +18,7 @@ from app.infrastructure.ai.openrouter_types import (
     OpenRouterGenerationResponse,
     OpenRouterRequestMessage,
 )
-from app.infrastructure.ai.output import clamp_platform_text, parse_post_output
+from app.infrastructure.ai.output import InvalidModelOutputError, clamp_platform_text, parse_post_output
 
 
 class OpenRouterContentGenerator(ContentGenerator):
@@ -327,11 +327,8 @@ class OpenRouterContentGenerator(ContentGenerator):
 
 
 def _error_code_for_exception(exc: Exception, kind: str) -> ErrorCode:
-    message = str(exc)
-    if message == "Model returned invalid JSON output":
+    if isinstance(exc, InvalidModelOutputError):
         return ErrorCode.INVALID_MODEL_OUTPUT
-    if message == "Model returned empty text":
-        return ErrorCode.MODEL_EMPTY_OUTPUT
     return ErrorCode.CONTENT_GENERATION_FAILED if kind == "generate" else ErrorCode.REFINE_FAILED
 
 

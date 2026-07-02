@@ -1,12 +1,16 @@
 import json
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from app.domain.value_objects import Platform
 
 
 class PostOutput(BaseModel):
     text: str
+
+
+class InvalidModelOutputError(ValueError):
+    pass
 
 
 def parse_post_output(raw: str) -> PostOutput:
@@ -18,12 +22,12 @@ def parse_post_output(raw: str) -> PostOutput:
     start = cleaned.find("{")
     end = cleaned.rfind("}")
     if start == -1 or end == -1:
-        raise ValueError("Model returned invalid JSON output")
+        raise InvalidModelOutputError("Model returned invalid JSON output")
     try:
         payload = json.loads(cleaned[start : end + 1])
-    except json.JSONDecodeError as exc:
-        raise ValueError("Model returned invalid JSON output") from exc
-    return PostOutput.model_validate(payload)
+        return PostOutput.model_validate(payload)
+    except (json.JSONDecodeError, ValidationError) as exc:
+        raise InvalidModelOutputError("Model returned invalid JSON output") from exc
 
 
 def clamp_platform_text(platform: Platform, text: str) -> str:
