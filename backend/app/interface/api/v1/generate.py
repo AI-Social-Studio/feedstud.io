@@ -14,6 +14,7 @@ from app.interface.dependencies import (
 )
 from app.interface.schemas import (
     GenerateRequest,
+    PlatformErrorResponse,
     GenerateResponse,
     RefineRequest,
     RefineResponse,
@@ -41,7 +42,17 @@ async def generate_posts(
             actor_user_id=actor_user_id,
         )
     )
-    return GenerateResponse(posts=result.posts, errors=result.errors)
+    return GenerateResponse(
+        posts=result.posts,
+        errors={
+            platform: PlatformErrorResponse(
+                code=error.code.value,
+                detail=error.detail,
+                meta=error.meta,
+            )
+            for platform, error in result.errors.items()
+        },
+    )
 
 
 @router.post(

@@ -1,14 +1,16 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.application.use_cases.drafts import GetDraftUseCase, ListDraftsUseCase, SaveDraftInput, SaveDraftUseCase
+from app.domain.error_codes import ErrorCode
 from app.domain.value_objects import Platform
 from app.interface.dependencies import (
     get_get_draft_use_case,
     get_list_drafts_use_case,
     get_save_draft_use_case,
 )
+from app.interface.errors import api_error
 from app.interface.schemas import DraftResponse, DraftSummaryResponse, SaveDraftRequest, UploadedFileResponse
 
 router = APIRouter(prefix="/drafts", tags=["drafts"])
@@ -53,7 +55,12 @@ async def get_draft(
 ) -> DraftResponse:
     draft = await use_case.execute(draft_id)
     if draft is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Draft not found")
+        raise api_error(
+            status.HTTP_404_NOT_FOUND,
+            ErrorCode.DRAFT_NOT_FOUND,
+            "Draft not found",
+            {"draft_id": str(draft_id)},
+        )
     return _to_response(draft)
 
 

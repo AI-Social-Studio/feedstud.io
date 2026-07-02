@@ -2,7 +2,8 @@ import asyncio
 from dataclasses import dataclass
 from uuid import UUID
 
-from app.application.dto import GenerateResultView
+from app.application.dto import ErrorView, GenerateResultView
+from app.domain.error_codes import ErrorCode
 from app.application.ports import AiExecutionRepository, ContentGenerator, FileRepository, ObjectStorage
 from app.domain.exceptions import (
     ContentGenerationError,
@@ -63,18 +64,24 @@ class GeneratePostsUseCase:
         )
 
         posts: dict[str, str] = {}
-        errors: dict[str, str] = {}
+        errors: dict[str, ErrorView] = {}
         for platform, result in zip(payload.platforms, results):
             if isinstance(result, Exception):
                 if isinstance(result, ContentGenerationError) and result.trace is not None:
                     result.trace.user_id = payload.actor_user_id
                     await self._executions.add(result.trace)
-                reason = (
-                    result.reason
-                    if isinstance(result, ContentGenerationError)
-                    else str(result)
-                )
-                errors[platform.value] = reason
+                if isinstance(result, ContentGenerationError):
+                    errors[platform.value] = ErrorView(
+                        code=result.code,
+                        detail=result.public_message,
+                        meta=result.meta,
+                    )
+                else:
+                    errors[platform.value] = ErrorView(
+                        code=ErrorCode.CONTENT_GENERATION_FAILED,
+                        detail="Content generation failed.",
+                        meta={"platform": platform.value},
+                    )
                 continue
             result.trace.user_id = payload.actor_user_id
             await self._executions.add(result.trace)

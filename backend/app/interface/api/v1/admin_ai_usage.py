@@ -2,19 +2,21 @@ from datetime import datetime
 from dataclasses import dataclass
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.application.use_cases.admin_ai_usage import (
     GetAiExecutionDetailsUseCase,
     GetAiUsageSummaryUseCase,
     ListAiExecutionsUseCase,
 )
+from app.domain.error_codes import ErrorCode
 from app.interface.dependencies import (
     get_ai_execution_details_use_case,
     get_ai_usage_summary_use_case,
     get_list_ai_executions_use_case,
     require_internal_backend_request,
 )
+from app.interface.errors import api_error
 from app.interface.schemas import (
     AiExecutionDetailResponse,
     AiExecutionListItemResponse,
@@ -118,7 +120,12 @@ async def get_ai_execution_details(
 ) -> AiExecutionDetailResponse:
     execution = await use_case.execute(execution_id)
     if execution is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="AI execution not found")
+        raise api_error(
+            status.HTTP_404_NOT_FOUND,
+            ErrorCode.AI_EXECUTION_NOT_FOUND,
+            "AI execution not found",
+            {"execution_id": str(execution_id)},
+        )
     payload = execution.__dict__.copy()
     payload["usage"] = AiUsageResponse(**execution.usage.__dict__)
     return AiExecutionDetailResponse(**payload)

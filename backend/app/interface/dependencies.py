@@ -1,7 +1,7 @@
 from collections.abc import AsyncIterator
 from functools import lru_cache
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.ports import (
@@ -28,6 +28,7 @@ from app.application.use_cases.upload_files import (
     UploadLimits,
 )
 from app.core.config import Settings, get_settings
+from app.domain.error_codes import ErrorCode
 from app.infrastructure.ai.openrouter_client import OpenRouterContentGenerator
 from app.infrastructure.db.repositories import (
     SqlAlchemyAiExecutionRepository,
@@ -36,6 +37,7 @@ from app.infrastructure.db.repositories import (
 )
 from app.infrastructure.db.session import Database
 from app.infrastructure.storage.minio_storage import MinioObjectStorage
+from app.interface.errors import api_error
 
 
 @lru_cache
@@ -106,14 +108,16 @@ def require_internal_backend_request(
     settings: Settings = Depends(get_settings),
 ) -> None:
     if not settings.backend_internal_api_key:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Backend internal auth is not configured",
+        raise api_error(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            ErrorCode.BACKEND_AUTH_NOT_CONFIGURED,
+            "Backend internal auth is not configured",
         )
     if backend_token != settings.backend_internal_api_key:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Unauthorized",
+        raise api_error(
+            status.HTTP_401_UNAUTHORIZED,
+            ErrorCode.UNAUTHORIZED,
+            "Unauthorized",
         )
 
 
