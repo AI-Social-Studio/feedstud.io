@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { type AxiosError } from "axios";
 import type { Platform, RefineAction } from "@/components/studio/content-engine";
 import { env } from "@/env";
 
