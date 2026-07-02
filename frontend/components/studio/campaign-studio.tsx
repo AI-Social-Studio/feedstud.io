@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   CaretLeft,
   CaretRight,
@@ -697,22 +698,27 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
         </div>
       ) : null}
 
-      <div className="fixed right-4 bottom-4 z-50 flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={`rounded-lg border px-4 py-3 text-sm font-medium shadow-lg ${
-              toast.tone === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-950 dark:text-emerald-300"
-                : toast.tone === "error"
-                  ? "border-red-200 bg-red-50 text-red-800 dark:border-red-500/30 dark:bg-red-950 dark:text-red-300"
-                  : "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-500/30 dark:bg-blue-950 dark:text-blue-300"
-            }`}
-          >
-            {toast.message}
-          </div>
-        ))}
-      </div>
+      {typeof document !== "undefined"
+        ? createPortal(
+            <div className="fixed right-4 bottom-4 z-50 flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2">
+              {toasts.map((toast) => (
+                <div
+                  key={toast.id}
+                  className={`rounded-lg border px-4 py-3 text-sm font-medium shadow-lg ${
+                    toast.tone === "success"
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-950 dark:text-emerald-300"
+                      : toast.tone === "error"
+                        ? "border-red-200 bg-red-50 text-red-800 dark:border-red-500/30 dark:bg-red-950 dark:text-red-300"
+                        : "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-500/30 dark:bg-blue-950 dark:text-blue-300"
+                  }`}
+                >
+                  {toast.message}
+                </div>
+              ))}
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }
