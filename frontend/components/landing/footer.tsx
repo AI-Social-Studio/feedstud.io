@@ -6,6 +6,39 @@ import { useDictionary } from "@/lib/i18n";
 
 const CURRENT_YEAR = new Date().getFullYear();
 
+function FooterLink({
+  href,
+  children,
+  className,
+}: {
+  href: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const isAnchor = href.startsWith("/#");
+
+  if (isAnchor) {
+    const id = href.slice(2); // strip leading "/#"
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+        className={className}
+      >
+        {children}
+      </button>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  );
+}
+
 export function Footer() {
   const dict = useDictionary();
 
@@ -34,12 +67,12 @@ export function Footer() {
               <ul className="mt-4 space-y-3">
                 {column.links.map((link) => (
                   <li key={link.href}>
-                    <Link
+                    <FooterLink
                       href={link.href}
                       className="text-sm text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
                     >
                       {link.label}
-                    </Link>
+                    </FooterLink>
                   </li>
                 ))}
               </ul>

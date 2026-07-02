@@ -66,6 +66,10 @@ body {
   height: 100%;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--color-app);
   color: #111827;
@@ -195,6 +199,10 @@ button:disabled,
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   .animate-fade-in,
   .animate-page-in,
   .animate-icon-pop,
