@@ -1,8 +1,10 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus } from "@phosphor-icons/react/dist/ssr";
+import { CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { NewCampaignButton } from "@/components/dashboard/new-campaign-button";
 import { PlatformIconBadge } from "@/components/ui/platform-icon-badge";
 import type { AppRole } from "@/lib/auth/roles";
 import { useLanguage } from "@/lib/i18n";
@@ -11,6 +13,24 @@ import type { Platform } from "@/components/studio/content-engine";
 
 export function MyCampaignsView({ drafts, role }: { drafts: DraftSummary[]; role: AppRole }) {
   const { locale, dict } = useLanguage();
+  const [query, setQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const filteredDrafts = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    const nextDrafts = normalizedQuery
+      ? drafts.filter((draft) => {
+          const title = draft.title.toLowerCase();
+          const preview = draft.raw_text_preview.toLowerCase();
+          return title.includes(normalizedQuery) || preview.includes(normalizedQuery);
+        })
+      : drafts;
+
+    return [...nextDrafts].sort((a, b) => {
+      const aTime = new Date(a.updated_at).getTime();
+      const bTime = new Date(b.updated_at).getTime();
+      return sortOrder === "newest" ? bTime - aTime : aTime - bTime;
+    });
+  }, [drafts, query, sortOrder]);
 
   return (
     <DashboardShell role={role}>
@@ -19,13 +39,30 @@ export function MyCampaignsView({ drafts, role }: { drafts: DraftSummary[]; role
           <h1 className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-50">{dict.myCampaigns.title}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">{dict.myCampaigns.subtitle}</p>
         </div>
-        <Link
-          href="/dashboard/new"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:bg-gray-800 hover:-translate-y-px active:translate-y-0 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
-        >
-          <Plus size={16} weight="bold" />
-          {dict.myCampaigns.newCampaign}
-        </Link>
+        <NewCampaignButton label={dict.myCampaigns.newCampaign} />
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={dict.myCampaigns.searchPlaceholder}
+          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100"
+        />
+        <div className="relative">
+          <select
+            value={sortOrder}
+            onChange={(event) => setSortOrder(event.target.value as "newest" | "oldest")}
+            className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-3 pr-12 text-sm text-gray-900 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100"
+          >
+            <option value="newest">{dict.myCampaigns.sortNewest}</option>
+            <option value="oldest">{dict.myCampaigns.sortOldest}</option>
+          </select>
+          <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400 dark:text-gray-500">
+            <CaretDown size={14} weight="bold" />
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -33,8 +70,12 @@ export function MyCampaignsView({ drafts, role }: { drafts: DraftSummary[]; role
           <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
             {dict.myCampaigns.emptyState}
           </div>
+        ) : filteredDrafts.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+            {dict.myCampaigns.noResults}
+          </div>
         ) : (
-          drafts.map((draft) => (
+          filteredDrafts.map((draft) => (
             <Link
               key={draft.id}
               href={`/dashboard/drafts/${draft.id}`}
