@@ -1,8 +1,10 @@
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { CampaignStudio } from "@/components/studio/campaign-studio";
 import { fetchDraftServer } from "@/lib/flowforge-api-server";
 import { getSessionAppRole } from "@/lib/auth/roles";
+import { parseSidebarCollapsed, SIDEBAR_COLLAPSED_COOKIE_NAME } from "@/lib/sidebar-state";
 
 type Props = {
   params: Promise<{
@@ -11,13 +13,17 @@ type Props = {
 };
 
 export default async function DraftPage({ params }: Props) {
+  const cookieStore = await cookies();
+  const initialSidebarCollapsed = parseSidebarCollapsed(
+    cookieStore.get(SIDEBAR_COLLAPSED_COOKIE_NAME)?.value,
+  );
   const { draftId } = await params;
   const [draft, role] = await Promise.all([fetchDraftServer(draftId), getSessionAppRole()]);
 
   if (!draft) notFound();
 
   return (
-    <DashboardShell role={role ?? "user"}>
+    <DashboardShell role={role ?? "user"} initialCollapsed={initialSidebarCollapsed}>
       <CampaignStudio initialDraft={draft} />
     </DashboardShell>
   );

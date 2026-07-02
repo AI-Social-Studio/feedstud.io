@@ -6,6 +6,7 @@ import { Show, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { ArrowRight, Plus } from "@phosphor-icons/react/dist/ssr";
 import { renderCanvas } from "@/components/ui/canvas";
 import { Button } from "@/components/ui/button";
+import { LanguageToggle } from "@/components/ui/language-toggle";
 import { useDictionary } from "@/lib/i18n";
 import { useMountEffect } from "@/lib/use-mount-effect";
 import { useTypewriter } from "@/lib/use-typewriter";
@@ -25,15 +26,16 @@ export function Hero() {
       <div className="hero-grid pointer-events-none absolute inset-0" />
       <nav className="relative z-10 flex h-16 items-center justify-between border-b border-gray-100 bg-white/80 px-8 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-950/80">
         <Image
-          src="/socialstudio.png"
-          alt="socialstudio.ai"
-          width={99}
-          height={32}
+          src="/feedstudio.png"
+          alt="feedstud.io"
+          width={112}
+          height={36}
           priority
           className="dark:brightness-0 dark:invert"
         />
 
         <div className="flex items-center gap-3">
+          <LanguageToggle direction="down" />
           <Show when="signed-out">
             <SignInButton fallbackRedirectUrl="/dashboard" forceRedirectUrl="/dashboard">
               <Button variant="ghost" size="sm">

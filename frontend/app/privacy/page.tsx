@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalPage } from "@/components/layout/legal-page";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — socialstudio.ai",
+  title: "Privacy Policy — feedstud.io",
 };
 
 export default function PrivacyPage() {

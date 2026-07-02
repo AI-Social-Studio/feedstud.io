@@ -8,7 +8,7 @@ import { useLanguage } from "@/lib/i18n";
 const LABELS: Record<Locale, string> = { pl: "PL", en: "EN" };
 const OPTIONS: Locale[] = ["pl", "en"];
 
-export function LanguageToggle() {
+export function LanguageToggle({ direction = "up" }: { direction?: "up" | "down" }) {
   const { locale, setLocale } = useLanguage();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -44,7 +44,9 @@ export function LanguageToggle() {
       {open ? (
         <div
           role="listbox"
-          className="animate-page-in absolute bottom-full left-0 z-20 mb-2 w-24 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-800 dark:bg-gray-900"
+          className={`animate-page-in absolute left-0 z-20 w-24 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-800 dark:bg-gray-900 ${
+            direction === "down" ? "top-full mt-2" : "bottom-full mb-2"
+          }`}
         >
           {OPTIONS.map((option) => (
             <button

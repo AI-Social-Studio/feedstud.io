@@ -1,6 +1,8 @@
+import { cookies } from "next/headers";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { CampaignStudio } from "@/components/studio/campaign-studio";
 import { getSessionAppRole } from "@/lib/auth/roles";
+import { parseSidebarCollapsed, SIDEBAR_COLLAPSED_COOKIE_NAME } from "@/lib/sidebar-state";
 
 type Props = {
   searchParams: Promise<{
@@ -9,11 +11,15 @@ type Props = {
 };
 
 export default async function NewCampaignPage({ searchParams }: Props) {
+  const cookieStore = await cookies();
+  const initialSidebarCollapsed = parseSidebarCollapsed(
+    cookieStore.get(SIDEBAR_COLLAPSED_COOKIE_NAME)?.value,
+  );
   const role = (await getSessionAppRole()) ?? "user";
   const { title } = await searchParams;
 
   return (
-    <DashboardShell role={role}>
+    <DashboardShell role={role} initialCollapsed={initialSidebarCollapsed}>
       <CampaignStudio initialDraft={null} initialTitle={title?.trim() || undefined} />
     </DashboardShell>
   );

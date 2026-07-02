@@ -47,7 +47,7 @@ export const pl: Dictionary = {
     eyebrow: "funkcje",
     title: "Stworzone, by wyeliminować żmudną pracę.",
     subtitle:
-      "Osoby pracujące ze słowem toną w przeformatowywaniu treści. SocialStudio.ai robi za Ciebie tę mechaniczną robotę, żebyś mógł skupić się na pomysłach.",
+      "Osoby pracujące ze słowem toną w przeformatowywaniu treści. Feedstud.io robi za Ciebie tę mechaniczną robotę, żebyś mógł skupić się na pomysłach.",
     items: [
       {
         title: "AI świadome platformy",
@@ -62,7 +62,7 @@ export const pl: Dictionary = {
       {
         title: "Godziny oszczędności co tydzień",
         description:
-          "Zespoły contentowe spędzają 3–5 godzin tygodniowo na ręcznym przeformatowywaniu tych samych pomysłów na różne kanały. SocialStudio.ai skraca to do kilku sekund.",
+          "Zespoły contentowe spędzają 3–5 godzin tygodniowo na ręcznym przeformatowywaniu tych samych pomysłów na różne kanały. Feedstud.io skraca to do kilku sekund.",
       },
       {
         title: "Spójny głos marki",
@@ -75,7 +75,7 @@ export const pl: Dictionary = {
     eyebrow: "obsługiwane platformy",
     title: "Jeden pomysł. Trzy odbiorców. Zero dodatkowej pracy.",
     subtitle:
-      "Każda platforma ma swoją gramatykę. SocialStudio.ai mówi płynnie we wszystkich trzech.",
+      "Każda platforma ma swoją gramatykę. Feedstud.io mówi płynnie we wszystkich trzech.",
     exampleLabel: "przykładowy wynik",
     items: [
       {
@@ -110,7 +110,7 @@ export const pl: Dictionary = {
   cta: {
     title: "Przestań przeformatowywać. Zacznij publikować.",
     subtitle:
-      "Twoje pomysły są już dobre. SocialStudio.ai po prostu dopasowuje je tam, gdzie muszą trafić.",
+      "Twoje pomysły są już dobre. Feedstud.io po prostu dopasowuje je tam, gdzie muszą trafić.",
     button: "Zacznij tworzyć",
   },
   footer: {
@@ -134,7 +134,7 @@ export const pl: Dictionary = {
         ],
       },
     ],
-    copyrightSuffix: "socialstudio.ai — zautomatyzowane dopasowanie treści przez AI.",
+    copyrightSuffix: "feedstud.io — zautomatyzowane dopasowanie treści przez AI.",
   },
   legal: {
     lastUpdated: "Ostatnia aktualizacja",
@@ -145,7 +145,7 @@ export const pl: Dictionary = {
       title: "Polityka prywatności",
       updatedDate: "1 lipca 2026",
       intro:
-        'Niniejsza Polityka prywatności wyjaśnia, jakie informacje socialstudio.ai ("my") zbiera podczas korzystania z aplikacji oraz w jaki sposób są one wykorzystywane.',
+        'Niniejsza Polityka prywatności wyjaśnia, jakie informacje feedstud.io ("my") zbiera podczas korzystania z aplikacji oraz w jaki sposób są one wykorzystywane.',
       sections: [
         {
           heading: "Jakie informacje zbieramy",
@@ -182,11 +182,11 @@ export const pl: Dictionary = {
       title: "Regulamin",
       updatedDate: "1 lipca 2026",
       intro:
-        "Niniejszy Regulamin określa zasady korzystania z socialstudio.ai. Zakładając konto lub korzystając z aplikacji, akceptujesz ten regulamin.",
+        "Niniejszy Regulamin określa zasady korzystania z feedstud.io. Zakładając konto lub korzystając z aplikacji, akceptujesz ten regulamin.",
       sections: [
         {
           heading: "Korzystanie z usługi",
-          body: "Odpowiadasz za treści, które wklejasz, przesyłasz lub generujesz w aplikacji, oraz za bezpieczeństwo danych logowania do konta. Nie używaj socialstudio.ai do generowania treści, które są nielegalne, obraźliwe lub naruszają czyjeś prawa.",
+          body: "Odpowiadasz za treści, które wklejasz, przesyłasz lub generujesz w aplikacji, oraz za bezpieczeństwo danych logowania do konta. Nie używaj feedstud.io do generowania treści, które są nielegalne, obraźliwe lub naruszają czyjeś prawa.",
         },
         {
           heading: "Twoje treści",
@@ -202,7 +202,7 @@ export const pl: Dictionary = {
         },
         {
           heading: "Ograniczenie odpowiedzialności",
-          body: 'socialstudio.ai jest dostarczane w stanie "takim, jaki jest". W zakresie dozwolonym przez prawo nie ponosimy odpowiedzialności za szkody wynikające z korzystania z wygenerowanej treści lub usługi.',
+          body: 'feedstud.io jest dostarczane w stanie "takim, jaki jest". W zakresie dozwolonym przez prawo nie ponosimy odpowiedzialności za szkody wynikające z korzystania z wygenerowanej treści lub usługi.',
         },
         {
           heading: "Zmiany regulaminu",
@@ -227,7 +227,7 @@ export const pl: Dictionary = {
   },
   home: {
     title: "Główna",
-    subtitle: "Twój przegląd aktywności w socialstudio.ai.",
+    subtitle: "Twój przegląd aktywności w feedstud.io.",
     newCampaign: "Nowa kampania",
     statLast7: "Ostatnie 7 dni",
     statLast30: "Ostatnie 30 dni",

@@ -11,7 +11,15 @@ import { useLanguage } from "@/lib/i18n";
 import type { DraftSummary } from "@/lib/flowforge-api";
 import type { Platform } from "@/components/studio/content-engine";
 
-export function MyCampaignsView({ drafts, role }: { drafts: DraftSummary[]; role: AppRole }) {
+export function MyCampaignsView({
+  drafts,
+  role,
+  initialSidebarCollapsed,
+}: {
+  drafts: DraftSummary[];
+  role: AppRole;
+  initialSidebarCollapsed: boolean;
+}) {
   const { locale, dict } = useLanguage();
   const [query, setQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
@@ -33,7 +41,7 @@ export function MyCampaignsView({ drafts, role }: { drafts: DraftSummary[]; role
   }, [drafts, query, sortOrder]);
 
   return (
-    <DashboardShell role={role}>
+    <DashboardShell role={role} initialCollapsed={initialSidebarCollapsed}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-50">
