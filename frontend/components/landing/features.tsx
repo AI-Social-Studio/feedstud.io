@@ -16,7 +16,7 @@ export function Features() {
 
   return (
     <section id="features" className="bg-white px-4 py-24 dark:bg-gray-950">
-      <div className="container max-w-5xl">
+      <div className="container mx-auto max-w-5xl">
         <Reveal className="mb-16 text-center">
           <p className="mb-3 font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400">
             {dict.features.eyebrow}

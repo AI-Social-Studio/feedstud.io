@@ -26,7 +26,7 @@ export function Platforms() {
 
   return (
     <section id="platforms" className="bg-gray-50 px-4 py-24 dark:bg-gray-900">
-      <div className="container max-w-5xl">
+      <div className="container mx-auto max-w-5xl">
         <Reveal className="mb-16 text-center">
           <p className="mb-3 font-mono text-xs font-semibold tracking-widest text-blue-600 uppercase dark:text-blue-400">
             {dict.platforms.eyebrow}

@@ -26,7 +26,7 @@ export function CtaSection() {
           height: "100%",
         }}
       />
-      <Reveal className="relative z-10 container max-w-3xl text-center">
+      <Reveal className="relative z-10 container mx-auto max-w-3xl text-center">
         <h2 className="mb-4 text-4xl font-semibold tracking-tight text-white">{dict.cta.title}</h2>
         <p className="mb-10 text-lg text-blue-100">{dict.cta.subtitle}</p>
         <Link href="/dashboard">

@@ -47,7 +47,7 @@ export const en: Dictionary = {
     eyebrow: "features",
     title: "Built to eliminate the busywork.",
     subtitle:
-      "People who work with words drown in reformatting. SocialStudio.ai does the mechanical work so you can focus on the ideas.",
+      "People who work with words drown in reformatting. Feedstud.io does the mechanical work so you can focus on the ideas.",
     items: [
       {
         title: "Platform-aware AI",
@@ -62,7 +62,7 @@ export const en: Dictionary = {
       {
         title: "Hours saved every week",
         description:
-          "Content teams spend 3–5 hours per week manually reformatting the same ideas for different channels. SocialStudio.ai cuts that to seconds.",
+          "Content teams spend 3–5 hours per week manually reformatting the same ideas for different channels. Feedstud.io cuts that to seconds.",
       },
       {
         title: "Consistent brand voice",
@@ -74,7 +74,7 @@ export const en: Dictionary = {
   platforms: {
     eyebrow: "supported platforms",
     title: "One idea. Three audiences. Zero extra work.",
-    subtitle: "Each platform has its own grammar. SocialStudio.ai speaks all three fluently.",
+    subtitle: "Each platform has its own grammar. Feedstud.io speaks all three fluently.",
     exampleLabel: "example output",
     items: [
       {
@@ -104,7 +104,7 @@ export const en: Dictionary = {
   cta: {
     title: "Stop reformatting. Start publishing.",
     subtitle:
-      "Your ideas are already good. SocialStudio.ai just makes them fit wherever they need to go.",
+      "Your ideas are already good. Feedstud.io just makes them fit wherever they need to go.",
     button: "Start Creating",
   },
   footer: {
@@ -128,7 +128,7 @@ export const en: Dictionary = {
         ],
       },
     ],
-    copyrightSuffix: "socialstudio.ai — ai-powered content repurposing.",
+    copyrightSuffix: "feedstud.io — ai-powered content repurposing.",
   },
   legal: {
     lastUpdated: "Last updated",
@@ -139,7 +139,7 @@ export const en: Dictionary = {
       title: "Privacy Policy",
       updatedDate: "July 1, 2026",
       intro:
-        'This Privacy Policy explains what information socialstudio.ai ("we", "us") collects when you use the app, and how that information is used.',
+        'This Privacy Policy explains what information feedstud.io ("we", "us") collects when you use the app, and how that information is used.',
       sections: [
         {
           heading: "Information we collect",
@@ -176,11 +176,11 @@ export const en: Dictionary = {
       title: "Terms & Conditions",
       updatedDate: "July 1, 2026",
       intro:
-        "These Terms & Conditions govern your use of socialstudio.ai. By creating an account or using the app, you agree to these terms.",
+        "These Terms & Conditions govern your use of feedstud.io. By creating an account or using the app, you agree to these terms.",
       sections: [
         {
           heading: "Using the service",
-          body: "You're responsible for the content you paste, upload, or generate through the app, and for keeping your account credentials secure. Don't use socialstudio.ai to generate content that is illegal, abusive, or infringes on someone else's rights.",
+          body: "You're responsible for the content you paste, upload, or generate through the app, and for keeping your account credentials secure. Don't use feedstud.io to generate content that is illegal, abusive, or infringes on someone else's rights.",
         },
         {
           heading: "Your content",
@@ -196,7 +196,7 @@ export const en: Dictionary = {
         },
         {
           heading: "Limitation of liability",
-          body: 'socialstudio.ai is provided "as is". To the extent permitted by law, we\'re not liable for damages arising from your use of generated content or the service.',
+          body: 'feedstud.io is provided "as is". To the extent permitted by law, we\'re not liable for damages arising from your use of generated content or the service.',
         },
         {
           heading: "Changes to these terms",
@@ -221,7 +221,7 @@ export const en: Dictionary = {
   },
   home: {
     title: "Home",
-    subtitle: "Your activity overview on socialstudio.ai.",
+    subtitle: "Your activity overview on feedstud.io.",
     newCampaign: "New campaign",
     statLast7: "Last 7 days",
     statLast30: "Last 30 days",

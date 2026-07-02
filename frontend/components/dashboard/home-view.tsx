@@ -11,17 +11,25 @@ import type { Platform } from "@/components/studio/content-engine";
 
 type Props = {
   role: AppRole;
+  initialSidebarCollapsed: boolean;
   last7Days: number;
   last30Days: number;
   total: number;
   recentDrafts: DraftSummary[];
 };
 
-export function HomeView({ role, last7Days, last30Days, total, recentDrafts }: Props) {
+export function HomeView({
+  role,
+  initialSidebarCollapsed,
+  last7Days,
+  last30Days,
+  total,
+  recentDrafts,
+}: Props) {
   const { locale, dict } = useLanguage();
 
   return (
-    <DashboardShell role={role}>
+    <DashboardShell role={role} initialCollapsed={initialSidebarCollapsed}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-50">
