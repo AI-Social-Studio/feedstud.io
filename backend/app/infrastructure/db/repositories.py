@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import case, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.ports import AiExecutionRepository, DraftRepository, FileRepository
@@ -163,22 +163,123 @@ class SqlAlchemyAiExecutionRepository(AiExecutionRepository):
         *,
         kind: str | None = None,
         status: str | None = None,
+        platform: str | None = None,
+        action: str | None = None,
+        model: str | None = None,
+        user_id: str | None = None,
+        offset: int = 0,
         created_after: datetime | None = None,
         created_before: datetime | None = None,
     ) -> list[AiExecution]:
-        stmt = select(AiExecutionModel)
+        stmt = self._apply_filters(
+            select(AiExecutionModel),
+            kind=kind,
+            status=status,
+            platform=platform,
+            action=action,
+            model=model,
+            user_id=user_id,
+            created_after=created_after,
+            created_before=created_before,
+        )
+        result = await self._session.execute(
+            stmt.order_by(AiExecutionModel.created_at.desc()).offset(offset).limit(limit)
+        )
+        return [self._to_entity(model) for model in result.scalars().all()]
+
+    async def get_summary(
+        self,
+        *,
+        kind: str | None = None,
+        status: str | None = None,
+        platform: str | None = None,
+        action: str | None = None,
+        model: str | None = None,
+        user_id: str | None = None,
+        created_after: datetime | None = None,
+        created_before: datetime | None = None,
+    ) -> dict[str, float | int]:
+        stmt = self._apply_filters(
+            select(
+                func.count().label("total_requests"),
+                func.sum(case((AiExecutionModel.status == "success", 1), else_=0)).label(
+                    "success_requests"
+                ),
+                func.sum(case((AiExecutionModel.status == "error", 1), else_=0)).label(
+                    "error_requests"
+                ),
+                func.coalesce(func.sum(AiExecutionModel.usage_cost), 0.0).label("total_cost"),
+                func.coalesce(func.sum(AiExecutionModel.usage_prompt_tokens), 0).label(
+                    "total_prompt_tokens"
+                ),
+                func.coalesce(func.sum(AiExecutionModel.usage_completion_tokens), 0).label(
+                    "total_completion_tokens"
+                ),
+                func.coalesce(func.sum(AiExecutionModel.usage_total_tokens), 0).label(
+                    "total_tokens"
+                ),
+                func.coalesce(func.sum(AiExecutionModel.usage_cached_tokens), 0).label(
+                    "total_cached_tokens"
+                ),
+                func.coalesce(func.sum(AiExecutionModel.usage_reasoning_tokens), 0).label(
+                    "total_reasoning_tokens"
+                ),
+            ),
+            kind=kind,
+            status=status,
+            platform=platform,
+            action=action,
+            model=model,
+            user_id=user_id,
+            created_after=created_after,
+            created_before=created_before,
+        )
+        result = (await self._session.execute(stmt)).one()
+        total_requests = int(result.total_requests or 0)
+        total_cost = float(result.total_cost or 0.0)
+        return {
+            "total_requests": total_requests,
+            "success_requests": int(result.success_requests or 0),
+            "error_requests": int(result.error_requests or 0),
+            "total_cost": total_cost,
+            "total_prompt_tokens": int(result.total_prompt_tokens or 0),
+            "total_completion_tokens": int(result.total_completion_tokens or 0),
+            "total_tokens": int(result.total_tokens or 0),
+            "total_cached_tokens": int(result.total_cached_tokens or 0),
+            "total_reasoning_tokens": int(result.total_reasoning_tokens or 0),
+            "average_cost_per_request": total_cost / total_requests if total_requests else 0.0,
+        }
+
+    @staticmethod
+    def _apply_filters(
+        stmt,
+        *,
+        kind: str | None,
+        status: str | None,
+        platform: str | None,
+        action: str | None,
+        model: str | None,
+        user_id: str | None,
+        created_after: datetime | None,
+        created_before: datetime | None,
+    ):
         if kind is not None:
             stmt = stmt.where(AiExecutionModel.kind == kind)
         if status is not None:
             stmt = stmt.where(AiExecutionModel.status == status)
+        if platform is not None:
+            stmt = stmt.where(AiExecutionModel.platform == platform)
+        if action is not None:
+            stmt = stmt.where(AiExecutionModel.action == action)
+        if model is not None:
+            stmt = stmt.where(AiExecutionModel.requested_model == model)
+        if user_id is not None:
+            stmt = stmt.where(AiExecutionModel.user_id == user_id)
         if created_after is not None:
             stmt = stmt.where(AiExecutionModel.created_at >= created_after)
         if created_before is not None:
             stmt = stmt.where(AiExecutionModel.created_at <= created_before)
-        result = await self._session.execute(
-            stmt.order_by(AiExecutionModel.created_at.desc()).limit(limit)
-        )
-        return [self._to_entity(model) for model in result.scalars().all()]
+        return stmt
 
     @staticmethod
     def _to_model(execution: AiExecution) -> AiExecutionModel:

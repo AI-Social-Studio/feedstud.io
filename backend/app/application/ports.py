@@ -73,9 +73,28 @@ class AiExecutionRepository(ABC):
         *,
         kind: str | None = None,
         status: str | None = None,
+        platform: str | None = None,
+        action: str | None = None,
+        model: str | None = None,
+        user_id: str | None = None,
+        offset: int = 0,
         created_after: datetime | None = None,
         created_before: datetime | None = None,
     ) -> list[AiExecution]: ...
+
+    @abstractmethod
+    async def get_summary(
+        self,
+        *,
+        kind: str | None = None,
+        status: str | None = None,
+        platform: str | None = None,
+        action: str | None = None,
+        model: str | None = None,
+        user_id: str | None = None,
+        created_after: datetime | None = None,
+        created_before: datetime | None = None,
+    ) -> dict[str, float | int]: ...
 
 
 class DraftRepository(ABC):

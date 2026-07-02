@@ -12,6 +12,11 @@ from app.application.ports import (
     ObjectStorage,
 )
 from app.application.use_cases.drafts import GetDraftUseCase, ListDraftsUseCase, SaveDraftUseCase
+from app.application.use_cases.admin_ai_usage import (
+    GetAiExecutionDetailsUseCase,
+    GetAiUsageSummaryUseCase,
+    ListAiExecutionsUseCase,
+)
 from app.application.use_cases.generate_posts import (
     GeneratePostsUseCase,
     RefinePostUseCase,
@@ -79,6 +84,24 @@ def get_ai_execution_repository(
     return SqlAlchemyAiExecutionRepository(session)
 
 
+def get_ai_usage_summary_use_case(
+    executions: AiExecutionRepository = Depends(get_ai_execution_repository),
+) -> GetAiUsageSummaryUseCase:
+    return GetAiUsageSummaryUseCase(executions=executions)
+
+
+def get_list_ai_executions_use_case(
+    executions: AiExecutionRepository = Depends(get_ai_execution_repository),
+) -> ListAiExecutionsUseCase:
+    return ListAiExecutionsUseCase(executions=executions)
+
+
+def get_ai_execution_details_use_case(
+    executions: AiExecutionRepository = Depends(get_ai_execution_repository),
+) -> GetAiExecutionDetailsUseCase:
+    return GetAiExecutionDetailsUseCase(executions=executions)
+
+
 def get_upload_limits(settings: Settings = Depends(get_settings)) -> UploadLimits:
     return UploadLimits(
         max_files=settings.upload_max_files,
@@ -136,14 +159,21 @@ def get_generate_posts_use_case(
     generator: ContentGenerator = Depends(get_content_generator),
     files: FileRepository = Depends(get_file_repository),
     storage: ObjectStorage = Depends(get_object_storage),
+    executions: AiExecutionRepository = Depends(get_ai_execution_repository),
 ) -> GeneratePostsUseCase:
-    return GeneratePostsUseCase(generator=generator, files=files, storage=storage)
+    return GeneratePostsUseCase(
+        generator=generator,
+        files=files,
+        storage=storage,
+        executions=executions,
+    )
 
 
 def get_refine_post_use_case(
     generator: ContentGenerator = Depends(get_content_generator),
+    executions: AiExecutionRepository = Depends(get_ai_execution_repository),
 ) -> RefinePostUseCase:
-    return RefinePostUseCase(generator=generator)
+    return RefinePostUseCase(generator=generator, executions=executions)
 
 
 def get_save_draft_use_case(

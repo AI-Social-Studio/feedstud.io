@@ -58,7 +58,11 @@ class OpenRouterContentGenerator(ContentGenerator):
             user=user,
             platform=platform,
             action=None,
-            on_error=lambda reason: ContentGenerationError(platform=platform.value, reason=reason),
+            on_error=lambda reason, trace: ContentGenerationError(
+                platform=platform.value,
+                reason=reason,
+                trace=trace,
+            ),
         )
         text = parse_post_output(trace.completion.choices[0].message.content or "").text
         post = GeneratedPost(platform=platform, text=clamp_platform_text(platform, text.strip()))
@@ -79,8 +83,11 @@ class OpenRouterContentGenerator(ContentGenerator):
             user=user,
             platform=platform,
             action=action,
-            on_error=lambda reason: RefineError(
-                platform=platform.value, action=action.value, reason=reason
+            on_error=lambda reason, trace: RefineError(
+                platform=platform.value,
+                action=action.value,
+                reason=reason,
+                trace=trace,
             ),
         )
         parsed = parse_post_output(trace.completion.choices[0].message.content or "")
@@ -97,7 +104,7 @@ class OpenRouterContentGenerator(ContentGenerator):
         user: str,
         platform: Platform,
         action: RefineAction | None,
-        on_error: Callable[[str], Exception],
+        on_error: Callable[[str, AiExecution | None], Exception],
     ) -> OpenRouterCompletionTrace:
         messages = [
             OpenRouterRequestMessage(role="system", content=system),
@@ -111,18 +118,48 @@ class OpenRouterContentGenerator(ContentGenerator):
             "messages": [message.model_dump() for message in messages],
         }
 
+        raw_completion: dict | None = None
         try:
             response = await self._client.post("/chat/completions", json=payload)
             if response.is_error:
-                raise RuntimeError(f"OpenRouter {response.status_code}: {response.text[:500]}")
+                error_trace = self._build_error_execution(
+                    kind=kind,
+                    system=system,
+                    user=user,
+                    platform=platform,
+                    action=action,
+                    error_message=f"OpenRouter {response.status_code}: {response.text[:500]}",
+                    raw_error=self._safe_json(response),
+                )
+                raise on_error(error_trace.error_message or "OpenRouter request failed", error_trace)
             raw_completion = response.json()
             completion = OpenRouterCompletionResponse.model_validate(raw_completion)
             content = completion.choices[0].message.content or ""
             parsed = parse_post_output(content)
             if not parsed.text.strip():
-                raise ValueError("Model returned empty text")
+                error_trace = self._build_error_execution(
+                    kind=kind,
+                    system=system,
+                    user=user,
+                    platform=platform,
+                    action=action,
+                    error_message="Model returned empty text",
+                    raw_error=raw_completion,
+                )
+                raise on_error("Model returned empty text", error_trace)
         except Exception as exc:
-            raise on_error(str(exc)) from exc
+            if isinstance(exc, (ContentGenerationError, RefineError)):
+                raise
+            error_trace = self._build_error_execution(
+                kind=kind,
+                system=system,
+                user=user,
+                platform=platform,
+                action=action,
+                error_message=str(exc),
+                raw_error=raw_completion,
+            )
+            raise on_error(str(exc), error_trace) from exc
 
         generation = await self._fetch_generation_details(completion.id)
         return OpenRouterCompletionTrace(
@@ -241,3 +278,39 @@ class OpenRouterContentGenerator(ContentGenerator):
             raw_completion_response_json=trace.raw_completion,
             raw_generation_response_json=trace.raw_generation,
         )
+
+    def _build_error_execution(
+        self,
+        *,
+        kind: str,
+        system: str,
+        user: str,
+        platform: Platform,
+        action: RefineAction | None,
+        error_message: str,
+        raw_error: dict | None,
+    ) -> AiExecution:
+        return AiExecution(
+            provider="openrouter",
+            requested_model=self._model,
+            kind=kind,
+            status="error",
+            system_prompt=system,
+            user_prompt=user,
+            messages_json=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            platform=platform.value,
+            action=action.value if action else None,
+            error_message=error_message,
+            error_json=raw_error,
+        )
+
+    @staticmethod
+    def _safe_json(response: httpx.Response) -> dict | None:
+        try:
+            data = response.json()
+            return data if isinstance(data, dict) else {"data": data}
+        except Exception:
+            return {"raw": response.text[:2000]}

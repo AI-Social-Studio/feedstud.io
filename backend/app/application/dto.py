@@ -70,6 +70,77 @@ class GeneratedPostResultView:
 
 
 @dataclass
+class AiUsageSummaryView:
+    total_requests: int
+    success_requests: int
+    error_requests: int
+    total_cost: float
+    total_prompt_tokens: int
+    total_completion_tokens: int
+    total_tokens: int
+    total_cached_tokens: int
+    total_reasoning_tokens: int
+    average_cost_per_request: float
+
+
+@dataclass
+class AiExecutionListItemView:
+    id: UUID
+    created_at: datetime
+    kind: str
+    status: str
+    platform: str | None
+    action: str | None
+    provider: str
+    requested_model: str
+    resolved_model: str | None
+    resolved_provider: str | None
+    generation_id: str | None
+    request_id: str | None
+    finish_reason: str | None
+    native_finish_reason: str | None
+    prompt_tokens: int | None
+    completion_tokens: int | None
+    total_tokens: int | None
+    cost: float | None
+    latency_ms: int | None
+    error_message: str | None
+
+
+@dataclass
+class AiExecutionDetailView:
+    id: UUID
+    created_at: datetime
+    kind: str
+    status: str
+    platform: str | None
+    action: str | None
+    provider: str
+    requested_model: str
+    resolved_model: str | None
+    resolved_provider: str | None
+    generation_id: str | None
+    request_id: str | None
+    upstream_id: str | None
+    finish_reason: str | None
+    native_finish_reason: str | None
+    system_prompt: str
+    user_prompt: str
+    messages: list[dict[str, Any]]
+    response_text: str | None
+    response_reasoning: str | None
+    response_reasoning_details: list[dict[str, Any]] | None
+    usage: AiUsageView
+    latency_ms: int | None
+    generation_time_ms: int | None
+    provider_responses: list[dict[str, Any]] | None
+    raw_completion_response: dict[str, Any] | None
+    raw_generation_response: dict[str, Any] | None
+    error_message: str | None
+    error_json: dict[str, Any] | None
+
+
+@dataclass
 class DraftSummaryView:
     id: UUID
     title: str

@@ -1,3 +1,9 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.domain.entities import AiExecution
+
+
 class DomainError(Exception):
     pass
 
@@ -37,15 +43,23 @@ class InvalidGenerateInputError(DomainError):
 
 
 class ContentGenerationError(DomainError):
-    def __init__(self, platform: str, reason: str) -> None:
+    def __init__(self, platform: str, reason: str, trace: "AiExecution | None" = None) -> None:
         super().__init__(f"Generation failed for '{platform}': {reason}")
         self.platform = platform
         self.reason = reason
+        self.trace = trace
 
 
 class RefineError(DomainError):
-    def __init__(self, platform: str, action: str, reason: str) -> None:
+    def __init__(
+        self,
+        platform: str,
+        action: str,
+        reason: str,
+        trace: "AiExecution | None" = None,
+    ) -> None:
         super().__init__(f"Refine '{action}' failed for '{platform}': {reason}")
         self.platform = platform
         self.action = action
         self.reason = reason
+        self.trace = trace

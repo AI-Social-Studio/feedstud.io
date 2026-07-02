@@ -84,3 +84,83 @@ class DraftResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     files: list[UploadedFileResponse]
+
+
+class AiUsageResponse(BaseModel):
+    prompt_tokens: int | None
+    completion_tokens: int | None
+    total_tokens: int | None
+    cost: float | None
+    cached_tokens: int | None
+    reasoning_tokens: int | None
+    prompt_cost: float | None
+    completion_cost: float | None
+    total_upstream_cost: float | None
+
+
+class AiUsageSummaryResponse(BaseModel):
+    total_requests: int
+    success_requests: int
+    error_requests: int
+    total_cost: float
+    total_prompt_tokens: int
+    total_completion_tokens: int
+    total_tokens: int
+    total_cached_tokens: int
+    total_reasoning_tokens: int
+    average_cost_per_request: float
+
+
+class AiExecutionListItemResponse(BaseModel):
+    id: UUID
+    created_at: datetime
+    kind: str
+    status: str
+    platform: str | None
+    action: str | None
+    provider: str
+    requested_model: str
+    resolved_model: str | None
+    resolved_provider: str | None
+    generation_id: str | None
+    request_id: str | None
+    finish_reason: str | None
+    native_finish_reason: str | None
+    prompt_tokens: int | None
+    completion_tokens: int | None
+    total_tokens: int | None
+    cost: float | None
+    latency_ms: int | None
+    error_message: str | None
+
+
+class AiExecutionDetailResponse(BaseModel):
+    id: UUID
+    created_at: datetime
+    kind: str
+    status: str
+    platform: str | None
+    action: str | None
+    provider: str
+    requested_model: str
+    resolved_model: str | None
+    resolved_provider: str | None
+    generation_id: str | None
+    request_id: str | None
+    upstream_id: str | None
+    finish_reason: str | None
+    native_finish_reason: str | None
+    system_prompt: str
+    user_prompt: str
+    messages: list[dict]
+    response_text: str | None
+    response_reasoning: str | None
+    response_reasoning_details: list[dict] | None
+    usage: AiUsageResponse
+    latency_ms: int | None
+    generation_time_ms: int | None
+    provider_responses: list[dict] | None
+    raw_completion_response: dict | None
+    raw_generation_response: dict | None
+    error_message: str | None
+    error_json: dict | None
