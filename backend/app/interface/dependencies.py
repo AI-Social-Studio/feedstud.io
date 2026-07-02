@@ -4,7 +4,13 @@ from functools import lru_cache
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.application.ports import ContentGenerator, DraftRepository, FileRepository, ObjectStorage
+from app.application.ports import (
+    AiExecutionRepository,
+    ContentGenerator,
+    DraftRepository,
+    FileRepository,
+    ObjectStorage,
+)
 from app.application.use_cases.drafts import GetDraftUseCase, ListDraftsUseCase, SaveDraftUseCase
 from app.application.use_cases.generate_posts import (
     GeneratePostsUseCase,
@@ -19,7 +25,11 @@ from app.application.use_cases.upload_files import (
 from app.core.config import Settings, get_settings
 from app.infrastructure.ai.anthropic_client import AnthropicContentGenerator
 from app.infrastructure.ai.openrouter_client import OpenRouterContentGenerator
-from app.infrastructure.db.repositories import SqlAlchemyDraftRepository, SqlAlchemyFileRepository
+from app.infrastructure.db.repositories import (
+    SqlAlchemyAiExecutionRepository,
+    SqlAlchemyDraftRepository,
+    SqlAlchemyFileRepository,
+)
 from app.infrastructure.db.session import Database
 from app.infrastructure.storage.minio_storage import MinioObjectStorage
 
@@ -61,6 +71,12 @@ def get_file_repository(session: AsyncSession = Depends(get_session)) -> FileRep
 
 def get_draft_repository(session: AsyncSession = Depends(get_session)) -> DraftRepository:
     return SqlAlchemyDraftRepository(session)
+
+
+def get_ai_execution_repository(
+    session: AsyncSession = Depends(get_session),
+) -> AiExecutionRepository:
+    return SqlAlchemyAiExecutionRepository(session)
 
 
 def get_upload_limits(settings: Settings = Depends(get_settings)) -> UploadLimits:

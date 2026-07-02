@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import BigInteger, DateTime, JSON, String, Text
+from sqlalchemy import BigInteger, DateTime, Float, JSON, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -33,3 +33,59 @@ class DraftModel(Base):
     file_ids: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class AiExecutionModel(Base):
+    __tablename__ = "ai_executions"
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    provider: Mapped[str] = mapped_column(String(64), nullable=False)
+    requested_model: Mapped[str] = mapped_column(String(255), nullable=False)
+    kind: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    system_prompt: Mapped[str] = mapped_column(Text, nullable=False)
+    user_prompt: Mapped[str] = mapped_column(Text, nullable=False)
+    messages_json: Mapped[list[dict[str, object]]] = mapped_column(JSON, nullable=False, default=list)
+    user_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    draft_id: Mapped[UUID | None] = mapped_column(PgUUID(as_uuid=True), nullable=True)
+    platform: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    action: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    openrouter_generation_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    generation_request_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    generation_upstream_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    resolved_model: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    resolved_provider: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    response_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    response_reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
+    response_reasoning_details_json: Mapped[list[dict[str, object]] | None] = mapped_column(JSON, nullable=True)
+    finish_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    native_finish_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    usage_prompt_tokens: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    usage_completion_tokens: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    usage_total_tokens: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    usage_cost: Mapped[float | None] = mapped_column(Float, nullable=True)
+    usage_is_byok: Mapped[bool | None] = mapped_column(nullable=True)
+    usage_cached_tokens: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    usage_cache_write_tokens: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    usage_reasoning_tokens: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    usage_prompt_cost: Mapped[float | None] = mapped_column(Float, nullable=True)
+    usage_completion_cost: Mapped[float | None] = mapped_column(Float, nullable=True)
+    usage_total_upstream_cost: Mapped[float | None] = mapped_column(Float, nullable=True)
+    generation_latency_ms: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    generation_time_ms: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    generation_tokens_prompt: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    generation_tokens_completion: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    generation_native_tokens_prompt: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    generation_native_tokens_completion: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    generation_native_tokens_reasoning: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    generation_native_tokens_cached: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    generation_total_cost: Mapped[float | None] = mapped_column(Float, nullable=True)
+    generation_provider_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    generation_origin: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    generation_data_region: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    generation_provider_responses_json: Mapped[list[dict[str, object]] | None] = mapped_column(JSON, nullable=True)
+    raw_completion_response_json: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
+    raw_generation_response_json: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_json: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

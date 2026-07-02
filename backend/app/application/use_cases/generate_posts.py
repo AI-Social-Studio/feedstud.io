@@ -68,7 +68,7 @@ class GeneratePostsUseCase:
                 )
                 errors[platform.value] = reason
                 continue
-            posts[platform.value] = result.text
+            posts[platform.value] = result.post.text
 
         return GenerateResultView(posts=posts, errors=errors)
 
@@ -85,4 +85,4 @@ class RefinePostUseCase:
             text=payload.text,
             action=payload.action,
         )
-        return result.text
+        return result.post.text

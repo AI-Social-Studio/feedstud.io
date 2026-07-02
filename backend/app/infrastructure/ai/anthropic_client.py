@@ -6,7 +6,7 @@ from app.application.prompts.refine_prompts import (
     REFINE_SYSTEM_PROMPT,
     build_refine_prompt,
 )
-from app.domain.entities import GeneratedPost
+from app.domain.entities import AiExecution, GeneratedPost, GeneratedPostResult
 from app.domain.exceptions import ContentGenerationError, RefineError
 from app.domain.value_objects import Platform, RefineAction
 from app.infrastructure.ai.output import PostOutput, clamp_platform_text
@@ -32,28 +32,69 @@ class AnthropicContentGenerator(ContentGenerator):
         platform: Platform,
         raw_text: str,
         image_urls: list[str],
-    ) -> GeneratedPost:
+    ) -> GeneratedPostResult:
+        user = build_generate_prompt(raw_text, image_urls, platform)
         text = await self._call(
             system=SYSTEM_PROMPT,
-            user=build_generate_prompt(raw_text, image_urls, platform),
+            user=user,
             on_error=lambda reason: ContentGenerationError(platform=platform.value, reason=reason),
         )
-        return GeneratedPost(platform=platform, text=clamp_platform_text(platform, text))
+        post = GeneratedPost(platform=platform, text=clamp_platform_text(platform, text))
+        return GeneratedPostResult(
+            post=post,
+            trace=AiExecution(
+                provider="anthropic",
+                requested_model=self._model,
+                kind="generate",
+                status="success",
+                system_prompt=SYSTEM_PROMPT,
+                user_prompt=user,
+                messages_json=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user},
+                ],
+                platform=platform.value,
+                resolved_model=self._model,
+                resolved_provider="anthropic",
+                response_text=post.text,
+            ),
+        )
 
     async def refine(
         self,
         platform: Platform,
         text: str,
         action: RefineAction,
-    ) -> GeneratedPost:
+    ) -> GeneratedPostResult:
+        user = build_refine_prompt(platform, text, action)
         result = await self._call(
             system=REFINE_SYSTEM_PROMPT,
-            user=build_refine_prompt(platform, text, action),
+            user=user,
             on_error=lambda reason: RefineError(
                 platform=platform.value, action=action.value, reason=reason
             ),
         )
-        return GeneratedPost(platform=platform, text=clamp_platform_text(platform, result))
+        post = GeneratedPost(platform=platform, text=clamp_platform_text(platform, result))
+        return GeneratedPostResult(
+            post=post,
+            trace=AiExecution(
+                provider="anthropic",
+                requested_model=self._model,
+                kind="refine",
+                status="success",
+                system_prompt=REFINE_SYSTEM_PROMPT,
+                user_prompt=user,
+                messages_json=[
+                    {"role": "system", "content": REFINE_SYSTEM_PROMPT},
+                    {"role": "user", "content": user},
+                ],
+                platform=platform.value,
+                action=action.value,
+                resolved_model=self._model,
+                resolved_provider="anthropic",
+                response_text=post.text,
+            ),
+        )
 
     async def _call(self, system: str, user: str, on_error) -> str:
         try:

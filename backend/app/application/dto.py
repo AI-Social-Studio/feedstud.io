@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import BinaryIO
+from typing import Any, BinaryIO
 from uuid import UUID
 
 
@@ -26,6 +26,47 @@ class UploadedFileView:
 class GenerateResultView:
     posts: dict[str, str]
     errors: dict[str, str]
+
+
+@dataclass
+class AiUsageView:
+    prompt_tokens: int | None
+    completion_tokens: int | None
+    total_tokens: int | None
+    cost: float | None
+    cached_tokens: int | None
+    reasoning_tokens: int | None
+    prompt_cost: float | None
+    completion_cost: float | None
+    total_upstream_cost: float | None
+
+
+@dataclass
+class AiExecutionTraceView:
+    execution_id: UUID
+    provider: str
+    requested_model: str
+    resolved_model: str | None
+    resolved_provider: str | None
+    generation_id: str | None
+    request_id: str | None
+    upstream_id: str | None
+    finish_reason: str | None
+    native_finish_reason: str | None
+    response_text: str | None
+    response_reasoning: str | None
+    response_reasoning_details: list[dict[str, Any]] | None
+    messages: list[dict[str, Any]]
+    raw_completion_response: dict[str, Any] | None
+    raw_generation_response: dict[str, Any] | None
+    usage: AiUsageView
+
+
+@dataclass
+class GeneratedPostResultView:
+    platform: str
+    text: str
+    trace: AiExecutionTraceView
 
 
 @dataclass
