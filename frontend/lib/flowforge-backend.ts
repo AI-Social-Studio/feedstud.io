@@ -34,10 +34,10 @@ export async function backendFetch(
       cache: options.cache ?? "no-store",
       headers: {
         "Content-Type": "application/json",
+        ...options.headers,
         ...(env.BACKEND_INTERNAL_API_KEY
           ? { "X-Backend-Token": env.BACKEND_INTERNAL_API_KEY }
           : {}),
-        ...options.headers,
       },
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
       signal: controller.signal,
