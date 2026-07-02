@@ -11,16 +11,16 @@ import { useDictionary } from "@/lib/i18n";
 const NAMES = ["LinkedIn", "Instagram", "X (Twitter)"];
 
 const BADGES = [
-  <div key="linkedin" className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
+  <div key="linkedin" className="flex size-10 items-center justify-center rounded-lg bg-blue-600">
     <LinkedinLogo size={22} weight="fill" className="text-white" />
   </div>,
   <div
     key="instagram"
-    className="w-10 h-10 rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500 flex items-center justify-center"
+    className="flex size-10 items-center justify-center rounded-lg bg-linear-to-tr from-yellow-400 via-pink-500 to-purple-500"
   >
     <InstagramLogo size={22} weight="fill" className="text-white" />
   </div>,
-  <div key="x" className="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center">
+  <div key="x" className="flex size-10 items-center justify-center rounded-lg bg-gray-900">
     <XLogo size={22} weight="fill" className="text-white" />
   </div>,
 ];
@@ -30,7 +30,7 @@ export function Platforms() {
 
   return (
     <section id="platforms" className="bg-gray-50 py-24 px-4 dark:bg-gray-900">
-      <div className="max-w-5xl mx-auto">
+      <div className="container max-w-5xl">
         <Reveal className="text-center mb-16">
           <p className="font-mono text-xs font-semibold uppercase tracking-widest text-blue-600 mb-3 dark:text-blue-400">
             {dict.platforms.eyebrow}
@@ -58,7 +58,7 @@ export function Platforms() {
                 <ul className="space-y-1.5">
                   {p.traits.map((trait) => (
                     <li key={trait} className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                      <span className="w-1 h-1 rounded-full bg-blue-400 flex-shrink-0" />
+                      <span className="size-1 flex-shrink-0 rounded-full bg-blue-400" />
                       {trait}
                     </li>
                   ))}

@@ -11,7 +11,7 @@ export function Footer() {
 
   return (
     <footer className="border-t border-gray-100 bg-gray-50 px-4 pt-16 pb-8 dark:border-gray-800 dark:bg-gray-900">
-      <div className="mx-auto max-w-5xl">
+      <div className="container max-w-5xl">
         <div className="grid grid-cols-1 gap-10 pb-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Image

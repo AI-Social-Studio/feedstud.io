@@ -16,7 +16,7 @@ export function HowItWorks() {
 
   return (
     <section id="how-it-works" className="bg-gray-50 py-24 px-4 dark:bg-gray-900">
-      <div className="max-w-5xl mx-auto">
+      <div className="container max-w-5xl">
         <Reveal className="text-center mb-16">
           <p className="font-mono text-xs font-semibold uppercase tracking-widest text-blue-600 mb-3 dark:text-blue-400">
             {dict.howItWorks.eyebrow}
@@ -32,10 +32,10 @@ export function HowItWorks() {
           {dict.howItWorks.steps.map((step, index) => (
             <Reveal key={step.title} delayMs={index * 100} className="flex flex-col items-center text-center">
               <div className="relative mb-6">
-                <div className="w-20 h-20 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 transition-transform duration-300 hover:scale-105 dark:bg-blue-500/10 dark:text-blue-400">
+                <div className="flex size-20 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-transform duration-300 hover:scale-105 dark:bg-blue-500/10 dark:text-blue-400">
                   {ICONS[index]}
                 </div>
-                <span className="absolute -top-2 -right-2 font-mono text-xs font-bold text-blue-600 bg-blue-100 rounded-full w-6 h-6 flex items-center justify-center dark:text-blue-300 dark:bg-blue-500/20">
+                <span className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full bg-blue-100 font-mono text-xs font-bold text-blue-600 dark:bg-blue-500/20 dark:text-blue-300">
                   {NUMBERS[index]}
                 </span>
               </div>

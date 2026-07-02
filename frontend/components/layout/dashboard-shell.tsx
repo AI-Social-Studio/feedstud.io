@@ -31,7 +31,7 @@ export function DashboardShell({ children, role }: { children: ReactNode; role: 
       <div className="relative z-10 flex h-full flex-1 flex-col overflow-hidden">
         <TopHeader />
         <main className="flex-1 overflow-y-auto p-8">
-          <div key={pathname} className="max-w-6xl mx-auto space-y-8 pb-12 animate-page-in">
+          <div key={pathname} className="container max-w-6xl space-y-8 pb-12 animate-page-in">
             {children}
           </div>
         </main>

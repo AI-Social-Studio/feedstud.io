@@ -42,6 +42,8 @@ export function AssetThumb(props: ImageThumb | MemeThumb) {
             label={props.removeLabel}
           />
         ) : null}
+        {/* Blob previews bypass next/image optimization intentionally. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={props.src} alt={props.alt} className={`h-full w-full ${positionClass}`} />
       </div>
     );
@@ -81,7 +83,7 @@ function RemoveButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="absolute right-2 top-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white transition-colors hover:bg-black/85 disabled:pointer-events-none disabled:opacity-50"
+      className="absolute right-2 top-2 z-10 inline-flex size-7 items-center justify-center rounded-full bg-black/70 text-white transition-colors hover:bg-black/85 disabled:pointer-events-none disabled:opacity-50"
       aria-label={label ?? "Usuń plik"}
       title={label ?? "Usuń plik"}
     >
