@@ -1,7 +1,7 @@
 "use client";
 
-import { CalendarBlank, CaretLeft, CaretRight } from "@phosphor-icons/react/dist/ssr";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { CalendarBlankIcon, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react/dist/ssr";
+import { useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/lib/i18n";
 
 const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
@@ -36,10 +36,13 @@ function buildCells(year: number, month: number) {
   return cells;
 }
 
+type ParsedValue = ReturnType<typeof parseValue>;
+type CalendarDate = { y: number; m: number; d: number };
+
 export function formatDateValue(value: string, locale: string): string | null {
   if (!value) return null;
   const p = parseValue(value);
-  if (p.y == null) return null;
+  if (p.y === null) return null;
   try {
     const date = new Date(p.y, p.m!, p.d!, ...(p.t.split(":").map(Number) as [number, number]));
     return new Intl.DateTimeFormat(locale, {
@@ -64,22 +67,39 @@ export function CalendarPanel({
   timeLabel?: string;
 }) {
   const { locale } = useLanguage();
-
   const todayDate = useMemo(() => {
     const d = new Date();
     return { y: d.getFullYear(), m: d.getMonth(), d: d.getDate() };
   }, []);
-
   const parsed = useMemo(() => parseValue(value), [value]);
+
+  return (
+    <CalendarPanelBody
+      key={value || "empty"}
+      locale={locale}
+      todayDate={todayDate}
+      parsed={parsed}
+      onChange={onChange}
+      timeLabel={timeLabel}
+    />
+  );
+}
+
+function CalendarPanelBody({
+  locale,
+  todayDate,
+  parsed,
+  onChange,
+  timeLabel,
+}: {
+  locale: string;
+  todayDate: CalendarDate;
+  parsed: ParsedValue;
+  onChange: (v: string) => void;
+  timeLabel: string;
+}) {
   const [viewY, setViewY] = useState(() => parsed.y ?? todayDate.y);
   const [viewM, setViewM] = useState(() => parsed.m ?? todayDate.m);
-
-  useEffect(() => {
-    if (parsed.y != null) {
-      setViewY(parsed.y);
-      setViewM(parsed.m!);
-    }
-  }, [parsed.y, parsed.m]);
 
   const cells = useMemo(() => buildCells(viewY, viewM), [viewY, viewM]);
 
@@ -140,7 +160,7 @@ export function CalendarPanel({
           onClick={prevMonth}
           className="inline-flex size-7 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
         >
-          <CaretLeft size={13} weight="bold" />
+          <CaretLeftIcon size={13} weight="bold" />
         </button>
         <span className="text-sm font-semibold text-gray-900 capitalize dark:text-gray-100">
           {monthLabel}
@@ -150,7 +170,7 @@ export function CalendarPanel({
           onClick={nextMonth}
           className="inline-flex size-7 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
         >
-          <CaretRight size={13} weight="bold" />
+          <CaretRightIcon size={13} weight="bold" />
         </button>
       </div>
 
@@ -212,7 +232,7 @@ export function CalendarPanel({
                 "0",
               );
               const m = parsed.t.split(":")[1] ?? "00";
-              if (parsed.y != null)
+              if (parsed.y !== null)
                 onChange(`${parsed.y}-${pad(parsed.m! + 1)}-${pad(parsed.d!)}T${h}:${m}`);
             }}
             className={inputCls}
@@ -229,7 +249,7 @@ export function CalendarPanel({
                 2,
                 "0",
               );
-              if (parsed.y != null)
+              if (parsed.y !== null)
                 onChange(`${parsed.y}-${pad(parsed.m! + 1)}-${pad(parsed.d!)}T${h}:${m}`);
             }}
             className={inputCls}
@@ -279,7 +299,7 @@ export function DateTimePicker({
             : "border-gray-200 bg-white hover:border-blue-400 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-blue-600"
         }`}
       >
-        <CalendarBlank
+        <CalendarBlankIcon
           size={14}
           weight="bold"
           className="shrink-0 text-gray-400 dark:text-gray-500"

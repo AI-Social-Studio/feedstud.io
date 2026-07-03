@@ -1,21 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  CaretLeft,
-  CaretRight,
-  Check,
-  CheckCircle,
-  Copy,
-  Hash,
-  Megaphone,
-  PencilSimple,
-  Plus,
-  Scissors,
-  SmileyWink,
-  Sparkle,
-  TextAa,
+  CaretLeftIcon,
+  CaretRightIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  CopyIcon,
+  HashIcon,
+  MegaphoneIcon,
+  PencilSimpleIcon,
+  PlusIcon,
+  ScissorsIcon,
+  SmileyWinkIcon,
+  SparkleIcon,
+  TextAaIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { AssetThumb } from "@/components/ui/asset-thumb";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
@@ -102,12 +102,20 @@ function buildRefineActions(
   labels: Dictionary["studio"]["refineActions"],
 ): { action: RefineAction; label: string; icon: React.ReactNode }[] {
   return [
-    { action: "hook", label: labels.hook, icon: <Sparkle size={13} weight="bold" /> },
-    { action: "shorten", label: labels.shorten, icon: <Scissors size={13} weight="bold" /> },
-    { action: "formal", label: labels.formal, icon: <TextAa size={13} weight="bold" /> },
-    { action: "casual", label: labels.casual, icon: <SmileyWink size={13} weight="bold" /> },
-    { action: "cta", label: labels.cta, icon: <Megaphone size={13} weight="bold" /> },
-    { action: "hashtags", label: labels.hashtags, icon: <Hash size={13} weight="bold" /> },
+    { action: "hook", label: labels.hook, icon: <SparkleIcon size={13} weight="bold" /> },
+    {
+      action: "shorten",
+      label: labels.shorten,
+      icon: <ScissorsIcon size={13} weight="bold" />,
+    },
+    { action: "formal", label: labels.formal, icon: <TextAaIcon size={13} weight="bold" /> },
+    {
+      action: "casual",
+      label: labels.casual,
+      icon: <SmileyWinkIcon size={13} weight="bold" />,
+    },
+    { action: "cta", label: labels.cta, icon: <MegaphoneIcon size={13} weight="bold" /> },
+    { action: "hashtags", label: labels.hashtags, icon: <HashIcon size={13} weight="bold" /> },
   ];
 }
 
@@ -122,6 +130,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const refineActions = buildRefineActions(dict.studio.refineActions);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const toastIdRef = useRef(0);
+  const initialPostingSettings = getInitialPostingSettings(initialDraft?.id ?? null);
   const initialSelected = buildSelectedState(initialDraft?.platforms ?? DEFAULT_PLATFORMS);
   const initialActivePlatform =
     PLATFORM_ORDER.find((platform) => initialSelected[platform]) ?? PLATFORM_ORDER[0];
@@ -133,8 +142,8 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
     initialSelected,
     initialResults,
     initialFiles.map((file) => file.id),
-    "now",
-    {},
+    initialPostingSettings.publishMode,
+    initialPostingSettings.schedulePerPlatform,
   );
 
   const [draftId, setDraftId] = useState(initialDraft?.id ?? null);
@@ -146,9 +155,11 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const [results, setResults] = useState<Partial<Record<Platform, string>>>(initialResults);
   const [pristineResults, setPristineResults] =
     useState<Partial<Record<Platform, string>>>(initialResults);
-  const [publishMode, setPublishMode] = useState<"now" | "schedule">("now");
+  const [publishMode, setPublishMode] = useState<"now" | "schedule">(
+    initialPostingSettings.publishMode,
+  );
   const [schedulePerPlatform, setSchedulePerPlatform] = useState<Partial<Record<Platform, string>>>(
-    {},
+    initialPostingSettings.schedulePerPlatform,
   );
   const [savedSnapshot, setSavedSnapshot] = useState(initialSnapshot);
   const [copied, setCopied] = useState<Platform | null>(null);
@@ -161,9 +172,6 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const [refining, setRefining] = useState<Partial<Record<Platform, boolean>>>({});
   const [regenerating, setRegenerating] = useState<Partial<Record<Platform, boolean>>>({});
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
   const anySelected = PLATFORM_ORDER.some((platform) => selected[platform]);
   const activePlatforms = PLATFORM_ORDER.filter((platform) => selected[platform]);
   const assets = uploadedFilesToAssets(uploadedFiles);
@@ -408,25 +416,6 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
     setResults((prev) => ({ ...prev, [platform]: nextText }));
   }
 
-  useEffect(() => {
-    if (!draftId) return;
-    const stored = loadPostingSettings(draftId);
-    if (!stored) return;
-    setPublishMode(stored.publishMode);
-    setSchedulePerPlatform(stored.schedulePerPlatform);
-    setSavedSnapshot(
-      buildSnapshot(
-        draftTitle,
-        raw,
-        selected,
-        results,
-        uploadedFiles.map((file) => file.id),
-        stored.publishMode,
-        stored.schedulePerPlatform,
-      ),
-    );
-  }, [draftId]);
-
   function handlePublishNow() {
     pushToast("success", dict.studio.toasts.publishQueued);
   }
@@ -464,7 +453,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
               className="group inline-flex items-center gap-2 text-left text-2xl font-bold text-gray-900 transition-colors hover:text-blue-600 dark:text-gray-50 dark:hover:text-blue-400"
             >
               <span>{draftTitle || dict.studio.defaultTitle}</span>
-              <PencilSimple
+              <PencilSimpleIcon
                 size={18}
                 weight="bold"
                 className="text-gray-400 transition-colors group-hover:text-blue-500 dark:text-gray-500 dark:group-hover:text-blue-400"
@@ -503,7 +492,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                 id="brain-dump-text"
                 value={raw}
                 onChange={(event) => setRaw(event.target.value)}
-                className="min-h-[220px] flex-1 resize-none rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                className="min-h-55 flex-1 resize-none rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               />
             </div>
 
@@ -518,7 +507,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                   disabled={isUploading}
                   className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                 >
-                  <Plus size={12} /> {isUploading ? dict.studio.uploading : dict.studio.upload}
+                  <PlusIcon size={12} /> {isUploading ? dict.studio.uploading : dict.studio.upload}
                 </button>
                 <input
                   ref={uploadInputRef}
@@ -566,7 +555,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                     ),
                   )
                 ) : (
-                  <div className="col-span-2 flex min-h-[132px] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white/70 px-4 text-center sm:col-span-3 dark:border-gray-700 dark:bg-gray-900/70">
+                  <div className="col-span-2 flex min-h-33 flex-col items-center justify-center rounded-lg border border-gray-200 bg-white/70 px-4 text-center sm:col-span-3 dark:border-gray-700 dark:bg-gray-900/70">
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       {dict.studio.noFilesYet}
                     </p>
@@ -597,7 +586,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
               disabled={isGenerating || !anySelected}
               className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:-translate-y-px hover:bg-blue-700 hover:shadow-md active:translate-y-0 disabled:pointer-events-none disabled:opacity-70 disabled:hover:translate-y-0"
             >
-              <Sparkle size={16} weight="bold" />
+              <SparkleIcon size={16} weight="bold" />
               {isGenerating ? dict.studio.creatingPost : dict.studio.createPost}
             </button>
           }
@@ -620,7 +609,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
               >
                 <PlatformIconBadge platform={platform} size="sm" weight="bold" />
                 <span>{meta.name}</span>
-                {isOn ? <CheckCircle size={16} weight="fill" className="ml-auto" /> : null}
+                {isOn ? <CheckCircleIcon size={16} weight="fill" className="ml-auto" /> : null}
               </button>
             );
           })}
@@ -633,7 +622,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
             <div
               key={`editor-${focusedPlatform}`}
-              className="animate-page-in flex h-[70svh] min-h-[420px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:h-[600px] xl:h-[720px] dark:border-gray-800 dark:bg-gray-900"
+              className="animate-page-in flex h-[70svh] min-h-[420px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:h-150 xl:h-180 dark:border-gray-800 dark:bg-gray-900"
             >
               <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50/50 p-4 dark:border-gray-800 dark:bg-gray-800/40">
                 {activePlatforms.length > 1 ? (
@@ -643,7 +632,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                     className="inline-flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-blue-700 dark:hover:text-blue-400"
                     aria-label="Previous platform"
                   >
-                    <CaretLeft size={16} weight="bold" />
+                    <CaretLeftIcon size={16} weight="bold" />
                   </button>
                 ) : null}
                 <PlatformIconBadge platform={focusedPlatform} size="sm" weight="bold" />
@@ -667,7 +656,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                     className="inline-flex size-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-blue-700 dark:hover:text-blue-400"
                     aria-label="Next platform"
                   >
-                    <CaretRight size={16} weight="bold" />
+                    <CaretRightIcon size={16} weight="bold" />
                   </button>
                 ) : null}
               </div>
@@ -746,11 +735,11 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                 >
                   {copied === focusedPlatform ? (
                     <>
-                      <Check size={14} weight="bold" /> {dict.studio.copied}
+                      <CheckIcon size={14} weight="bold" /> {dict.studio.copied}
                     </>
                   ) : (
                     <>
-                      <Copy size={14} weight="bold" /> {dict.studio.copy}
+                      <CopyIcon size={14} weight="bold" /> {dict.studio.copy}
                     </>
                   )}
                 </button>
@@ -759,7 +748,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
 
             <div
               key={`preview-${focusedPlatform}`}
-              className="animate-page-in flex h-[70svh] min-h-[420px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:h-[600px] xl:h-[720px] dark:border-gray-800 dark:bg-gray-900"
+              className="animate-page-in flex h-[70svh] min-h-105 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:h-150 xl:h-180 dark:border-gray-800 dark:bg-gray-900"
             >
               <div className="border-b border-gray-100 px-5 py-4 dark:border-gray-800">
                 <div className="text-xs font-medium tracking-wider text-gray-400 uppercase dark:text-gray-500">
@@ -855,12 +844,12 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
               >
                 {publishMode === "schedule" ? (
                   <>
-                    <Megaphone size={15} weight="bold" />
+                    <MegaphoneIcon size={15} weight="bold" />
                     {dict.studio.schedulePublication}
                   </>
                 ) : (
                   <>
-                    <Megaphone size={15} weight="bold" />
+                    <MegaphoneIcon size={15} weight="bold" />
                     {dict.studio.publish}
                   </>
                 )}
@@ -870,7 +859,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
         </div>
       ) : null}
 
-      {mounted
+      {typeof document !== "undefined"
         ? createPortal(
             <div className="fixed right-4 bottom-4 z-50 flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2">
               {toasts.map((toast) => (
@@ -964,4 +953,12 @@ function loadPostingSettings(draftId: string): PostingSettings | null {
   } catch {
     return null;
   }
+}
+
+function getInitialPostingSettings(draftId: string | null): PostingSettings {
+  if (!draftId || typeof window === "undefined") {
+    return { publishMode: "now", schedulePerPlatform: {} };
+  }
+
+  return loadPostingSettings(draftId) ?? { publishMode: "now", schedulePerPlatform: {} };
 }
