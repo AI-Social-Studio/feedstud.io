@@ -4,6 +4,8 @@ import { AiExecutionDetailPanel } from "@/components/admin/ai-execution-detail";
 import { AiExecutionsTable } from "@/components/admin/ai-executions-table";
 import { AiUsageFilters } from "@/components/admin/ai-usage-filters";
 import { AiUsageKpis } from "@/components/admin/ai-usage-kpis";
+import { AiCostByModel } from "@/components/admin/ai-cost-by-model";
+import { AiCostChart } from "@/components/admin/ai-cost-chart";
 import { useDictionary } from "@/lib/i18n";
 import type { AiExecutionDetail, AiExecutionListItem, AiUsageSummary } from "@/lib/flowforge-api";
 
@@ -13,6 +15,8 @@ type FilterValues = {
   platform?: string;
   model?: string;
   userId?: string;
+  from?: string;
+  to?: string;
   limit: number;
 };
 
@@ -53,8 +57,14 @@ export function AdminTelemetryView({
         </p>
       </div>
 
-      <AiUsageKpis summary={summary} />
+      <AiUsageKpis summary={summary} from={filters.from} to={filters.to} />
       <AiUsageFilters values={filters} />
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <AiCostChart executions={executions} />
+        <AiCostByModel executions={executions} />
+      </div>
+
       <AiExecutionsTable
         rows={executions}
         selectedExecutionId={selectedExecutionId}
