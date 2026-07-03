@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   CaretLeftIcon,
@@ -130,7 +130,6 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const refineActions = buildRefineActions(dict.studio.refineActions);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const toastIdRef = useRef(0);
-  const initialPostingSettings = getInitialPostingSettings(initialDraft?.id ?? null);
   const initialSelected = buildSelectedState(initialDraft?.platforms ?? DEFAULT_PLATFORMS);
   const initialActivePlatform =
     PLATFORM_ORDER.find((platform) => initialSelected[platform]) ?? PLATFORM_ORDER[0];
@@ -142,8 +141,8 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
     initialSelected,
     initialResults,
     initialFiles.map((file) => file.id),
-    initialPostingSettings.publishMode,
-    initialPostingSettings.schedulePerPlatform,
+    DEFAULT_POSTING_SETTINGS.publishMode,
+    DEFAULT_POSTING_SETTINGS.schedulePerPlatform,
   );
 
   const [draftId, setDraftId] = useState(initialDraft?.id ?? null);
@@ -156,10 +155,10 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const [pristineResults, setPristineResults] =
     useState<Partial<Record<Platform, string>>>(initialResults);
   const [publishMode, setPublishMode] = useState<"now" | "schedule">(
-    initialPostingSettings.publishMode,
+    DEFAULT_POSTING_SETTINGS.publishMode,
   );
   const [schedulePerPlatform, setSchedulePerPlatform] = useState<Partial<Record<Platform, string>>>(
-    initialPostingSettings.schedulePerPlatform,
+    DEFAULT_POSTING_SETTINGS.schedulePerPlatform,
   );
   const [savedSnapshot, setSavedSnapshot] = useState(initialSnapshot);
   const [copied, setCopied] = useState<Platform | null>(null);
@@ -175,19 +174,44 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const anySelected = PLATFORM_ORDER.some((platform) => selected[platform]);
   const activePlatforms = PLATFORM_ORDER.filter((platform) => selected[platform]);
   const assets = uploadedFilesToAssets(uploadedFiles);
+  const uploadedFileIds = uploadedFiles.map((file) => file.id);
   const isAssetMutationLocked =
     isGenerating || isUploading || isSaving || Object.values(regenerating).some(Boolean);
   const hasAnyContent =
     raw.trim().length > 0 ||
     uploadedFiles.length > 0 ||
     Object.values(results).some((value) => Boolean(value?.trim()));
+
+  const applyPostingSettings = useEffectEvent((postingSettings: PostingSettings) => {
+    setPublishMode(postingSettings.publishMode);
+    setSchedulePerPlatform(postingSettings.schedulePerPlatform);
+    setSavedSnapshot(
+      buildSnapshot(
+        draftTitle,
+        raw,
+        selected,
+        results,
+        uploadedFileIds,
+        postingSettings.publishMode,
+        postingSettings.schedulePerPlatform,
+      ),
+    );
+  });
+
+  useEffect(() => {
+    const postingSettings = loadPostingSettings(draftId);
+    const timeoutId = window.setTimeout(() => applyPostingSettings(postingSettings), 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [draftId]);
+
   const hasUnsavedChanges =
     buildSnapshot(
       draftTitle,
       raw,
       selected,
       results,
-      uploadedFiles.map((file) => file.id),
+      uploadedFileIds,
       publishMode,
       schedulePerPlatform,
     ) !== savedSnapshot;
@@ -932,6 +956,7 @@ function buildSnapshot(
 }
 
 const POSTING_SETTINGS_KEY_PREFIX = "draft-posting-settings:";
+const DEFAULT_POSTING_SETTINGS: PostingSettings = { publishMode: "now", schedulePerPlatform: {} };
 
 function postingSettingsKey(draftId: string) {
   return `${POSTING_SETTINGS_KEY_PREFIX}${draftId}`;
@@ -941,7 +966,7 @@ function savePostingSettings(draftId: string, settings: PostingSettings) {
   window.localStorage.setItem(postingSettingsKey(draftId), JSON.stringify(settings));
 }
 
-function loadPostingSettings(draftId: string): PostingSettings | null {
+function loadPostingSettingsFromStorage(draftId: string): PostingSettings | null {
   const raw = window.localStorage.getItem(postingSettingsKey(draftId));
   if (!raw) return null;
   try {
@@ -955,10 +980,7 @@ function loadPostingSettings(draftId: string): PostingSettings | null {
   }
 }
 
-function getInitialPostingSettings(draftId: string | null): PostingSettings {
-  if (!draftId || typeof window === "undefined") {
-    return { publishMode: "now", schedulePerPlatform: {} };
-  }
-
-  return loadPostingSettings(draftId) ?? { publishMode: "now", schedulePerPlatform: {} };
+function loadPostingSettings(draftId: string | null): PostingSettings {
+  if (!draftId || typeof window === "undefined") return DEFAULT_POSTING_SETTINGS;
+  return loadPostingSettingsFromStorage(draftId) ?? DEFAULT_POSTING_SETTINGS;
 }
