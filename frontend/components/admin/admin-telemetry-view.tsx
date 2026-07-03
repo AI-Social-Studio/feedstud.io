@@ -38,8 +38,8 @@ export function AdminTelemetryView({
 
   return (
     <section className="space-y-6">
-      <div className="rounded-3xl border border-violet-200 bg-violet-50 p-8 dark:border-violet-900/60 dark:bg-violet-950/20">
-        <div className="mb-3 inline-flex rounded-full border border-violet-300 bg-white px-3 py-1 text-xs font-medium tracking-wider text-violet-700 uppercase dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300">
+      <div className="relative overflow-hidden rounded-3xl bg-violet-50/50 p-8 dark:bg-violet-950/20">
+        <div className="mb-4 inline-flex rounded-full bg-violet-100 px-3 py-1 text-[11px] font-semibold tracking-wider text-violet-800 uppercase dark:bg-violet-900/50 dark:text-violet-300">
           {dict.adminTelemetry.badge}
         </div>
         <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">

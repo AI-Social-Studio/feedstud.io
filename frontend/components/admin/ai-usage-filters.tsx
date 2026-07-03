@@ -15,7 +15,7 @@ export function AiUsageFilters({ values }: { values: FilterValues }) {
   const dict = useDictionary();
 
   return (
-    <form className="grid gap-3 rounded-2xl border border-gray-200 bg-white p-4 md:grid-cols-3 xl:grid-cols-6 dark:border-gray-800 dark:bg-gray-950">
+    <form className="flex flex-col gap-4 rounded-3xl border border-gray-100 bg-white/50 p-5 shadow-sm md:grid md:grid-cols-3 xl:grid-cols-6 dark:border-gray-800/60 dark:bg-gray-900/30">
       <FilterSelect
         name="kind"
         label={dict.adminTelemetry.filters.kind}
@@ -65,16 +65,16 @@ export function AiUsageFilters({ values }: { values: FilterValues }) {
         value={String(values.limit)}
         placeholder={dict.adminTelemetry.filters.placeholders.limit}
       />
-      <div className="flex gap-3 md:col-span-3 xl:col-span-6">
+      <div className="flex flex-wrap gap-3 md:col-span-3 xl:col-span-6">
         <button
           type="submit"
-          className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-gray-900"
+          className="flex h-[42px] min-w-[120px] items-center justify-center rounded-2xl bg-gray-900 px-5 text-sm font-medium text-white transition-colors hover:bg-gray-800 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white"
         >
           {dict.adminTelemetry.filters.apply}
         </button>
         <a
           href="/dashboard/admin"
-          className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300"
+          className="flex h-[42px] min-w-[120px] items-center justify-center rounded-2xl border border-gray-200 bg-white px-5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:bg-transparent dark:text-gray-300 dark:hover:bg-gray-800"
         >
           {dict.adminTelemetry.filters.reset}
         </a>
@@ -95,15 +95,15 @@ function FilterInput({
   placeholder: string;
 }) {
   return (
-    <label className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-      <span className="block text-xs font-medium tracking-wider text-gray-400 uppercase dark:text-gray-500">
+    <label className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
         {label}
       </span>
       <input
         name={name}
         defaultValue={value}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 ring-0 outline-none placeholder:text-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        className="h-[42px] w-full rounded-2xl border-none bg-gray-100/80 px-4 text-sm text-gray-900 ring-0 outline-none transition-colors focus:bg-gray-200/80 placeholder:text-gray-400 dark:bg-gray-900/60 dark:text-gray-100 dark:focus:bg-gray-800"
       />
     </label>
   );
@@ -123,14 +123,14 @@ function FilterSelect({
   allLabel: string;
 }) {
   return (
-    <label className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-      <span className="block text-xs font-medium tracking-wider text-gray-400 uppercase dark:text-gray-500">
+    <label className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
         {label}
       </span>
       <select
         name={name}
         defaultValue={value ?? ""}
-        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 ring-0 outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        className="h-[42px] w-full rounded-2xl border-none bg-gray-100/80 px-4 text-sm text-gray-900 ring-0 outline-none transition-colors focus:bg-gray-200/80 dark:bg-gray-900/60 dark:text-gray-100 dark:focus:bg-gray-800"
       >
         <option value="">{allLabel}</option>
         {options.map((option) => (
