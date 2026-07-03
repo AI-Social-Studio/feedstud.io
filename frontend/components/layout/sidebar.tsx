@@ -1,7 +1,14 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { House, List, Megaphone, Shield, CaretDoubleLeft, X } from "@phosphor-icons/react/dist/ssr";
+import {
+  CaretDoubleLeftIcon,
+  HouseIcon,
+  ListIcon,
+  MegaphoneIcon,
+  ShieldIcon,
+  XIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -58,9 +65,9 @@ export function Sidebar({
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
-            <List size={18} weight="bold" />
+            <ListIcon size={18} weight="bold" />
           ) : (
-            <CaretDoubleLeft size={18} weight="bold" />
+            <CaretDoubleLeftIcon size={18} weight="bold" />
           )}
         </button>
         <button
@@ -69,7 +76,7 @@ export function Sidebar({
           className="inline-flex size-9 flex-shrink-0 items-center justify-center rounded-xl border bg-white text-gray-500 shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-px hover:border-blue-300 hover:text-blue-700 md:hidden dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-blue-700 dark:hover:text-blue-400"
           aria-label="Close navigation menu"
         >
-          <X size={18} weight="bold" />
+          <XIcon size={18} weight="bold" />
         </button>
       </div>
 
@@ -77,14 +84,14 @@ export function Sidebar({
         <nav className="space-y-1" onClick={onMobileClose}>
           <SidebarNavItem
             href="/dashboard"
-            icon={<House size={18} weight="fill" />}
+            icon={<HouseIcon size={18} weight="fill" />}
             label={dict.nav.home}
             active={pathname === "/dashboard"}
             collapsed={effectiveCollapsed}
           />
           <SidebarNavItem
             href="/dashboard/history"
-            icon={<Megaphone size={18} />}
+            icon={<MegaphoneIcon size={18} />}
             label={dict.nav.myCampaigns}
             active={
               pathname === "/dashboard/history" ||
@@ -96,7 +103,7 @@ export function Sidebar({
           {isAdmin ? (
             <SidebarNavItem
               href="/dashboard/admin"
-              icon={<Shield size={18} weight="fill" />}
+              icon={<ShieldIcon size={18} weight="fill" />}
               label={dict.nav.admin}
               active={pathname === "/dashboard/admin" || pathname.startsWith("/dashboard/admin/")}
               collapsed={effectiveCollapsed}
