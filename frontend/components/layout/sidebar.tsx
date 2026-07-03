@@ -1,14 +1,7 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import {
-  House,
-  List,
-  Megaphone,
-  Shield,
-  CaretDoubleLeft,
-  X,
-} from "@phosphor-icons/react/dist/ssr";
+import { House, List, Megaphone, Shield, CaretDoubleLeft, X } from "@phosphor-icons/react/dist/ssr";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -64,7 +57,11 @@ export function Sidebar({
           className="hidden size-9 flex-shrink-0 items-center justify-center rounded-xl border bg-white text-gray-500 shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-px hover:border-blue-300 hover:text-blue-700 md:inline-flex dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-blue-700 dark:hover:text-blue-400"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {collapsed ? <List size={18} weight="bold" /> : <CaretDoubleLeft size={18} weight="bold" />}
+          {collapsed ? (
+            <List size={18} weight="bold" />
+          ) : (
+            <CaretDoubleLeft size={18} weight="bold" />
+          )}
         </button>
         <button
           type="button"
@@ -101,9 +98,7 @@ export function Sidebar({
               href="/dashboard/admin"
               icon={<Shield size={18} weight="fill" />}
               label={dict.nav.admin}
-              active={
-                pathname === "/dashboard/admin" || pathname.startsWith("/dashboard/admin/")
-              }
+              active={pathname === "/dashboard/admin" || pathname.startsWith("/dashboard/admin/")}
               collapsed={effectiveCollapsed}
             />
           ) : null}
@@ -112,7 +107,7 @@ export function Sidebar({
 
       <div className="flex flex-shrink-0 items-center justify-between border-t border-gray-200 px-[18px] py-4 dark:border-gray-800">
         <div
-          className={`transition-all duration-300 ease-in-out ${effectiveCollapsed ? "w-0 opacity-0 pointer-events-none" : "w-[92px] opacity-100"}`}
+          className={`transition-all duration-300 ease-in-out ${effectiveCollapsed ? "pointer-events-none w-0 opacity-0" : "w-[92px] opacity-100"}`}
         >
           <div className="flex w-[92px] items-center gap-2">
             <ThemeToggle />

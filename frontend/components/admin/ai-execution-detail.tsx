@@ -7,7 +7,11 @@ import { useRouter } from "next/navigation";
 import type { AiExecutionDetail } from "@/lib/flowforge-api";
 import { useLanguage } from "@/lib/i18n";
 import { useMountEffect } from "@/lib/use-mount-effect";
-import { formatTelemetryAction, formatTelemetryPlatform, formatTelemetryStatus } from "@/lib/admin-telemetry";
+import {
+  formatTelemetryAction,
+  formatTelemetryPlatform,
+  formatTelemetryStatus,
+} from "@/lib/admin-telemetry";
 
 export function AiExecutionDetailPanel({
   execution,
@@ -26,7 +30,8 @@ export function AiExecutionDetailPanel({
   const [mounted, setMounted] = useState(false);
   useMountEffect(() => {
     setMounted(true);
-    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     closeButtonRef.current?.focus();
 
     return () => {
@@ -77,7 +82,10 @@ export function AiExecutionDetailPanel({
 
   const responseText = execution.response_text ?? execution.error_message ?? "-";
   const overviewItems = [
-    { label: dict.adminTelemetry.detail.provider, value: execution.resolved_provider ?? execution.provider },
+    {
+      label: dict.adminTelemetry.detail.provider,
+      value: execution.resolved_provider ?? execution.provider,
+    },
     {
       label: dict.adminTelemetry.detail.platform,
       value: execution.platform ? formatTelemetryPlatform(execution.platform, dict) : "-",
@@ -86,8 +94,14 @@ export function AiExecutionDetailPanel({
       label: dict.adminTelemetry.detail.action,
       value: execution.action ? formatTelemetryAction(execution.action, dict) : "-",
     },
-    { label: dict.adminTelemetry.detail.createdAt, value: formatDateTime(execution.created_at, locale) },
-    { label: dict.adminTelemetry.detail.latency, value: formatDuration(execution.latency_ms, locale) },
+    {
+      label: dict.adminTelemetry.detail.createdAt,
+      value: formatDateTime(execution.created_at, locale),
+    },
+    {
+      label: dict.adminTelemetry.detail.latency,
+      value: formatDuration(execution.latency_ms, locale),
+    },
     {
       label: dict.adminTelemetry.detail.generationTime,
       value: formatDuration(execution.generation_time_ms, locale),
@@ -96,12 +110,18 @@ export function AiExecutionDetailPanel({
       label: dict.adminTelemetry.detail.finishReason,
       value: execution.native_finish_reason ?? execution.finish_reason ?? "-",
     },
-    { label: dict.adminTelemetry.detail.promptTokens, value: formatNumber(execution.usage.prompt_tokens, locale) },
+    {
+      label: dict.adminTelemetry.detail.promptTokens,
+      value: formatNumber(execution.usage.prompt_tokens, locale),
+    },
     {
       label: dict.adminTelemetry.detail.completionTokens,
       value: formatNumber(execution.usage.completion_tokens, locale),
     },
-    { label: dict.adminTelemetry.detail.cachedTokens, value: formatNumber(execution.usage.cached_tokens, locale) },
+    {
+      label: dict.adminTelemetry.detail.cachedTokens,
+      value: formatNumber(execution.usage.cached_tokens, locale),
+    },
     {
       label: dict.adminTelemetry.detail.reasoningTokens,
       value: formatNumber(execution.usage.reasoning_tokens, locale),
@@ -140,7 +160,10 @@ export function AiExecutionDetailPanel({
                     {dict.adminTelemetry.detail.previewBadge}
                   </span>
                 </div>
-                <h2 id={titleId} className="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
+                <h2
+                  id={titleId}
+                  className="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-50"
+                >
                   {dict.adminTelemetry.detail.title}
                 </h2>
                 <p className="mt-2 max-w-3xl text-sm text-gray-500 dark:text-gray-400">
@@ -171,12 +194,14 @@ export function AiExecutionDetailPanel({
                 <div className="text-xs font-medium tracking-wider text-gray-400 uppercase dark:text-gray-500">
                   {dict.adminTelemetry.detail.executionId}
                 </div>
-                <div className="mt-1 text-sm break-all text-gray-700 dark:text-gray-200">{execution.id}</div>
+                <div className="mt-1 text-sm break-all text-gray-700 dark:text-gray-200">
+                  {execution.id}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex-none flex gap-6 border-b border-gray-100 px-6 pt-2 dark:border-gray-800/60">
+          <div className="flex flex-none gap-6 border-b border-gray-100 px-6 pt-2 dark:border-gray-800/60">
             <TabButton
               active={activeTab === "overview"}
               label={dict.adminTelemetry.detail.tabs.overview}
@@ -195,113 +220,122 @@ export function AiExecutionDetailPanel({
           </div>
 
           <div className="flex-1 overflow-y-auto px-6 py-5">
-          {activeTab === "overview" ? (
-            <div className="space-y-6">
-              <section className="grid gap-y-6 gap-x-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                {overviewItems.map((item) => (
-                  <KeyValueCard key={item.label} label={item.label} value={item.value} />
-                ))}
-              </section>
+            {activeTab === "overview" ? (
+              <div className="space-y-6">
+                <section className="grid gap-x-4 gap-y-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {overviewItems.map((item) => (
+                    <KeyValueCard key={item.label} label={item.label} value={item.value} />
+                  ))}
+                </section>
 
-              <section className="grid gap-4 xl:grid-cols-2">
+                <section className="grid gap-4 xl:grid-cols-2">
+                  <DetailBlock
+                    title={dict.adminTelemetry.detail.inputPrompt}
+                    description={dict.adminTelemetry.detail.inputPromptHint}
+                    text={execution.user_prompt}
+                    copyLabel={dict.adminTelemetry.detail.copy}
+                    copiedLabel={dict.adminTelemetry.detail.copied}
+                    copied={copiedBlock === "input"}
+                    onCopy={() => copyToClipboard("input", execution.user_prompt, setCopiedBlock)}
+                    preserveWhitespace
+                    textClassName="text-sm leading-relaxed text-gray-800 dark:text-gray-200"
+                  />
+                  <DetailBlock
+                    title={dict.adminTelemetry.detail.modelOutput}
+                    description={dict.adminTelemetry.detail.modelOutputHint}
+                    text={responseText}
+                    copyLabel={dict.adminTelemetry.detail.copy}
+                    copiedLabel={dict.adminTelemetry.detail.copied}
+                    copied={copiedBlock === "output"}
+                    onCopy={() => copyToClipboard("output", responseText, setCopiedBlock)}
+                    preserveWhitespace
+                    textClassName="text-sm leading-relaxed text-gray-800 dark:text-gray-200"
+                  />
+                </section>
+
+                <section className="grid gap-3 md:grid-cols-2">
+                  <KeyValueCard
+                    label={dict.adminTelemetry.detail.requestId}
+                    value={execution.request_id ?? "-"}
+                  />
+                  <KeyValueCard
+                    label={dict.adminTelemetry.detail.generationId}
+                    value={execution.generation_id ?? "-"}
+                  />
+                  <KeyValueCard
+                    label={dict.adminTelemetry.detail.upstreamId}
+                    value={execution.upstream_id ?? "-"}
+                  />
+                </section>
+              </div>
+            ) : null}
+
+            {activeTab === "prompts" ? (
+              <div className="space-y-4">
                 <DetailBlock
-                  title={dict.adminTelemetry.detail.inputPrompt}
-                  description={dict.adminTelemetry.detail.inputPromptHint}
+                  title={dict.adminTelemetry.detail.systemPrompt}
+                  text={execution.system_prompt}
+                  copyLabel={dict.adminTelemetry.detail.copy}
+                  copiedLabel={dict.adminTelemetry.detail.copied}
+                  copied={copiedBlock === "system"}
+                  onCopy={() => copyToClipboard("system", execution.system_prompt, setCopiedBlock)}
+                  textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
+                />
+                <DetailBlock
+                  title={dict.adminTelemetry.detail.userPrompt}
                   text={execution.user_prompt}
                   copyLabel={dict.adminTelemetry.detail.copy}
                   copiedLabel={dict.adminTelemetry.detail.copied}
-                  copied={copiedBlock === "input"}
-                  onCopy={() => copyToClipboard("input", execution.user_prompt, setCopiedBlock)}
-                  preserveWhitespace
-                  textClassName="text-sm leading-relaxed text-gray-800 dark:text-gray-200"
+                  copied={copiedBlock === "user"}
+                  onCopy={() => copyToClipboard("user", execution.user_prompt, setCopiedBlock)}
+                  textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
                 />
                 <DetailBlock
-                  title={dict.adminTelemetry.detail.modelOutput}
-                  description={dict.adminTelemetry.detail.modelOutputHint}
+                  title={dict.adminTelemetry.detail.responseText}
                   text={responseText}
                   copyLabel={dict.adminTelemetry.detail.copy}
                   copiedLabel={dict.adminTelemetry.detail.copied}
-                  copied={copiedBlock === "output"}
-                  onCopy={() => copyToClipboard("output", responseText, setCopiedBlock)}
-                  preserveWhitespace
-                  textClassName="text-sm leading-relaxed text-gray-800 dark:text-gray-200"
+                  copied={copiedBlock === "response"}
+                  onCopy={() => copyToClipboard("response", responseText, setCopiedBlock)}
+                  textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
                 />
-              </section>
+                <DetailBlock
+                  title={dict.adminTelemetry.detail.reasoning}
+                  text={execution.response_reasoning ?? "-"}
+                  textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
+                />
+                <DetailBlock
+                  title={dict.adminTelemetry.detail.messages}
+                  text={stringifyDetailValue(execution.messages)}
+                  textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
+                />
+              </div>
+            ) : null}
 
-              <section className="grid gap-3 md:grid-cols-2">
-                <KeyValueCard label={dict.adminTelemetry.detail.requestId} value={execution.request_id ?? "-"} />
-                <KeyValueCard label={dict.adminTelemetry.detail.generationId} value={execution.generation_id ?? "-"} />
-                <KeyValueCard label={dict.adminTelemetry.detail.upstreamId} value={execution.upstream_id ?? "-"} />
-              </section>
-            </div>
-          ) : null}
-
-          {activeTab === "prompts" ? (
-            <div className="space-y-4">
-              <DetailBlock
-                title={dict.adminTelemetry.detail.systemPrompt}
-                text={execution.system_prompt}
-                copyLabel={dict.adminTelemetry.detail.copy}
-                copiedLabel={dict.adminTelemetry.detail.copied}
-                copied={copiedBlock === "system"}
-                onCopy={() => copyToClipboard("system", execution.system_prompt, setCopiedBlock)}
-                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
-              />
-              <DetailBlock
-                title={dict.adminTelemetry.detail.userPrompt}
-                text={execution.user_prompt}
-                copyLabel={dict.adminTelemetry.detail.copy}
-                copiedLabel={dict.adminTelemetry.detail.copied}
-                copied={copiedBlock === "user"}
-                onCopy={() => copyToClipboard("user", execution.user_prompt, setCopiedBlock)}
-                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
-              />
-              <DetailBlock
-                title={dict.adminTelemetry.detail.responseText}
-                text={responseText}
-                copyLabel={dict.adminTelemetry.detail.copy}
-                copiedLabel={dict.adminTelemetry.detail.copied}
-                copied={copiedBlock === "response"}
-                onCopy={() => copyToClipboard("response", responseText, setCopiedBlock)}
-                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
-              />
-              <DetailBlock
-                title={dict.adminTelemetry.detail.reasoning}
-                text={execution.response_reasoning ?? "-"}
-                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
-              />
-              <DetailBlock
-                title={dict.adminTelemetry.detail.messages}
-                text={stringifyDetailValue(execution.messages)}
-                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
-              />
-            </div>
-          ) : null}
-
-          {activeTab === "payloads" ? (
-            <div className="space-y-4">
-              <DetailBlock
-                title={dict.adminTelemetry.detail.providerResponses}
-                text={stringifyDetailValue(execution.provider_responses)}
-                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
-              />
-              <DetailBlock
-                title={dict.adminTelemetry.detail.rawCompletionResponse}
-                text={stringifyDetailValue(execution.raw_completion_response)}
-                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
-              />
-              <DetailBlock
-                title={dict.adminTelemetry.detail.rawGenerationResponse}
-                text={stringifyDetailValue(execution.raw_generation_response)}
-                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
-              />
-              <DetailBlock
-                title={dict.adminTelemetry.detail.rawError}
-                text={stringifyDetailValue(execution.error_json)}
-                textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
-              />
-            </div>
-          ) : null}
+            {activeTab === "payloads" ? (
+              <div className="space-y-4">
+                <DetailBlock
+                  title={dict.adminTelemetry.detail.providerResponses}
+                  text={stringifyDetailValue(execution.provider_responses)}
+                  textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
+                />
+                <DetailBlock
+                  title={dict.adminTelemetry.detail.rawCompletionResponse}
+                  text={stringifyDetailValue(execution.raw_completion_response)}
+                  textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
+                />
+                <DetailBlock
+                  title={dict.adminTelemetry.detail.rawGenerationResponse}
+                  text={stringifyDetailValue(execution.raw_generation_response)}
+                  textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
+                />
+                <DetailBlock
+                  title={dict.adminTelemetry.detail.rawError}
+                  text={stringifyDetailValue(execution.error_json)}
+                  textClassName="text-xs leading-relaxed text-gray-700 dark:text-gray-300"
+                />
+              </div>
+            ) : null}
           </div>
         </section>
       </div>
@@ -318,7 +352,7 @@ function KeyValueCard({ label, value }: { label: string; value: string }) {
       <div className="text-[11px] font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
         {label}
       </div>
-      <div className="text-sm text-gray-900 break-all dark:text-gray-100">{value}</div>
+      <div className="text-sm break-all text-gray-900 dark:text-gray-100">{value}</div>
     </div>
   );
 }
@@ -349,15 +383,22 @@ function DetailBlock({
       <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-2 dark:border-gray-800/60">
         <div>
           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">{title}</h3>
-          {description ? <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{description}</p> : null}
+          {description ? (
+            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{description}</p>
+          ) : null}
         </div>
         {copyLabel && copiedLabel && onCopy ? (
-          <CopyButton copyLabel={copyLabel} copiedLabel={copiedLabel} copied={Boolean(copied)} onCopy={onCopy} />
+          <CopyButton
+            copyLabel={copyLabel}
+            copiedLabel={copiedLabel}
+            copied={Boolean(copied)}
+            onCopy={onCopy}
+          />
         ) : null}
       </div>
       <div className="overflow-hidden rounded-md border border-gray-100 dark:border-gray-800/60">
         <pre
-          className={`overflow-x-auto bg-gray-50/50 p-4 dark:bg-gray-900/40 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 ${preserveWhitespace ? "whitespace-pre-wrap" : ""} ${textClassName}`}
+          className={`overflow-x-auto bg-gray-50/50 p-4 dark:bg-gray-900/40 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-700 ${preserveWhitespace ? "whitespace-pre-wrap" : ""} ${textClassName}`}
         >
           {text}
         </pre>

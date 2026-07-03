@@ -76,7 +76,10 @@ export function DashboardShell({
       <div className="relative z-10 flex h-full flex-1 flex-col overflow-hidden">
         <TopHeader onOpenMobileNav={() => setMobileNavOpen(true)} />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div key={pathname} className="animate-page-in container mx-auto max-w-6xl space-y-8 pb-12">
+          <div
+            key={pathname}
+            className="animate-page-in container mx-auto max-w-6xl space-y-8 pb-12"
+          >
             {children}
           </div>
         </main>

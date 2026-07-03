@@ -147,7 +147,9 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const [pristineResults, setPristineResults] =
     useState<Partial<Record<Platform, string>>>(initialResults);
   const [publishMode, setPublishMode] = useState<"now" | "schedule">("now");
-  const [schedulePerPlatform, setSchedulePerPlatform] = useState<Partial<Record<Platform, string>>>({});
+  const [schedulePerPlatform, setSchedulePerPlatform] = useState<Partial<Record<Platform, string>>>(
+    {},
+  );
   const [savedSnapshot, setSavedSnapshot] = useState(initialSnapshot);
   const [copied, setCopied] = useState<Platform | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(initialFiles);
@@ -798,9 +800,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                 type="button"
                 onClick={() => {
                   const now = nowDatetimeLocal();
-                  setSchedulePerPlatform(
-                    Object.fromEntries(activePlatforms.map((p) => [p, now])),
-                  );
+                  setSchedulePerPlatform(Object.fromEntries(activePlatforms.map((p) => [p, now])));
                   setPublishMode("schedule");
                 }}
                 className={`inline-flex items-center rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
@@ -935,7 +935,10 @@ function buildSnapshot(
     selected: PLATFORM_ORDER.map((platform) => [platform, selected[platform]]),
     results: PLATFORM_ORDER.map((platform) => [platform, results[platform] ?? ""]),
     publishMode,
-    schedulePerPlatform: PLATFORM_ORDER.map((platform) => [platform, schedulePerPlatform[platform] ?? ""]),
+    schedulePerPlatform: PLATFORM_ORDER.map((platform) => [
+      platform,
+      schedulePerPlatform[platform] ?? "",
+    ]),
   });
 }
 

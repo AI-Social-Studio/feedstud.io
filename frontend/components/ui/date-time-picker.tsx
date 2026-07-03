@@ -8,7 +8,12 @@ const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
 function parseValue(value: string) {
   if (!value)
-    return { y: null as number | null, m: null as number | null, d: null as number | null, t: "00:00" };
+    return {
+      y: null as number | null,
+      m: null as number | null,
+      d: null as number | null,
+      t: "00:00",
+    };
   const [date = "", t = "00:00"] = value.split("T");
   const [y, m, d] = date.split("-").map(Number);
   return { y, m: m - 1, d, t: t.slice(0, 5) };
@@ -26,7 +31,8 @@ function buildCells(year: number, month: number) {
   const cells: { day: number; rel: -1 | 0 | 1 }[] = [];
   for (let i = startOffset - 1; i >= 0; i--) cells.push({ day: daysInPrev - i, rel: -1 });
   for (let d = 1; d <= daysInMonth; d++) cells.push({ day: d, rel: 0 });
-  while (cells.length < 42) cells.push({ day: cells.length - daysInMonth - startOffset + 1, rel: 1 });
+  while (cells.length < 42)
+    cells.push({ day: cells.length - daysInMonth - startOffset + 1, rel: 1 });
   return cells;
 }
 
@@ -78,24 +84,47 @@ export function CalendarPanel({
   const cells = useMemo(() => buildCells(viewY, viewM), [viewY, viewM]);
 
   function prevMonth() {
-    if (viewM === 0) { setViewY((y) => y - 1); setViewM(11); }
-    else setViewM((m) => m - 1);
+    if (viewM === 0) {
+      setViewY((y) => y - 1);
+      setViewM(11);
+    } else setViewM((m) => m - 1);
   }
   function nextMonth() {
-    if (viewM === 11) { setViewY((y) => y + 1); setViewM(0); }
-    else setViewM((m) => m + 1);
+    if (viewM === 11) {
+      setViewY((y) => y + 1);
+      setViewM(0);
+    } else setViewM((m) => m + 1);
   }
 
   function selectDay({ day, rel }: { day: number; rel: -1 | 0 | 1 }) {
-    let y = viewY, m = viewM;
-    if (rel === -1) { m--; if (m < 0) { m = 11; y--; } }
-    if (rel === 1) { m++; if (m > 11) { m = 0; y++; } }
+    let y = viewY,
+      m = viewM;
+    if (rel === -1) {
+      m--;
+      if (m < 0) {
+        m = 11;
+        y--;
+      }
+    }
+    if (rel === 1) {
+      m++;
+      if (m > 11) {
+        m = 0;
+        y++;
+      }
+    }
     onChange(`${y}-${pad(m + 1)}-${pad(day)}T${parsed.t}`);
-    if (rel !== 0) { setViewY(y); setViewM(m); }
+    if (rel !== 0) {
+      setViewY(y);
+      setViewM(m);
+    }
   }
 
   const monthLabel = useMemo(
-    () => new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(viewY, viewM, 1)),
+    () =>
+      new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(
+        new Date(viewY, viewM, 1),
+      ),
     [viewY, viewM, locale],
   );
 
@@ -113,7 +142,7 @@ export function CalendarPanel({
         >
           <CaretLeft size={13} weight="bold" />
         </button>
-        <span className="text-sm font-semibold capitalize text-gray-900 dark:text-gray-100">
+        <span className="text-sm font-semibold text-gray-900 capitalize dark:text-gray-100">
           {monthLabel}
         </span>
         <button
@@ -128,7 +157,10 @@ export function CalendarPanel({
       {/* Weekday headers */}
       <div className="mb-1 grid grid-cols-7">
         {WEEKDAYS.map((w) => (
-          <div key={w} className="flex h-7 items-center justify-center text-[11px] font-medium text-gray-400 dark:text-gray-500">
+          <div
+            key={w}
+            className="flex h-7 items-center justify-center text-[11px] font-medium text-gray-400 dark:text-gray-500"
+          >
             {w}
           </div>
         ))}
@@ -137,8 +169,13 @@ export function CalendarPanel({
       {/* Day grid */}
       <div className="grid grid-cols-7 gap-y-0.5">
         {cells.map((cell, i) => {
-          const isSel = cell.rel === 0 && cell.day === parsed.d && viewY === parsed.y && viewM === parsed.m;
-          const isToday = cell.rel === 0 && cell.day === todayDate.d && viewY === todayDate.y && viewM === todayDate.m;
+          const isSel =
+            cell.rel === 0 && cell.day === parsed.d && viewY === parsed.y && viewM === parsed.m;
+          const isToday =
+            cell.rel === 0 &&
+            cell.day === todayDate.d &&
+            viewY === todayDate.y &&
+            viewM === todayDate.m;
           return (
             <button
               key={i}
@@ -170,9 +207,13 @@ export function CalendarPanel({
             max={23}
             value={Number(parsed.t.split(":")[0] ?? 0)}
             onChange={(e) => {
-              const h = String(Math.min(23, Math.max(0, Number(e.target.value) || 0))).padStart(2, "0");
+              const h = String(Math.min(23, Math.max(0, Number(e.target.value) || 0))).padStart(
+                2,
+                "0",
+              );
               const m = parsed.t.split(":")[1] ?? "00";
-              if (parsed.y != null) onChange(`${parsed.y}-${pad(parsed.m! + 1)}-${pad(parsed.d!)}T${h}:${m}`);
+              if (parsed.y != null)
+                onChange(`${parsed.y}-${pad(parsed.m! + 1)}-${pad(parsed.d!)}T${h}:${m}`);
             }}
             className={inputCls}
           />
@@ -184,8 +225,12 @@ export function CalendarPanel({
             value={Number(parsed.t.split(":")[1] ?? 0)}
             onChange={(e) => {
               const h = parsed.t.split(":")[0] ?? "00";
-              const m = String(Math.min(59, Math.max(0, Number(e.target.value) || 0))).padStart(2, "0");
-              if (parsed.y != null) onChange(`${parsed.y}-${pad(parsed.m! + 1)}-${pad(parsed.d!)}T${h}:${m}`);
+              const m = String(Math.min(59, Math.max(0, Number(e.target.value) || 0))).padStart(
+                2,
+                "0",
+              );
+              if (parsed.y != null)
+                onChange(`${parsed.y}-${pad(parsed.m! + 1)}-${pad(parsed.d!)}T${h}:${m}`);
             }}
             className={inputCls}
           />
@@ -234,8 +279,16 @@ export function DateTimePicker({
             : "border-gray-200 bg-white hover:border-blue-400 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-blue-600"
         }`}
       >
-        <CalendarBlank size={14} weight="bold" className="shrink-0 text-gray-400 dark:text-gray-500" />
-        <span className={displayLabel ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-600"}>
+        <CalendarBlank
+          size={14}
+          weight="bold"
+          className="shrink-0 text-gray-400 dark:text-gray-500"
+        />
+        <span
+          className={
+            displayLabel ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-600"
+          }
+        >
           {displayLabel ?? placeholder}
         </span>
       </button>
