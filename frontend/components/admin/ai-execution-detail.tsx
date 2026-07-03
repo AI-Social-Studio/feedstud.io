@@ -8,6 +8,7 @@ import type { AiExecutionDetail } from "@/lib/flowforge-api";
 import { useLanguage } from "@/lib/i18n";
 import { useMountEffect } from "@/lib/use-mount-effect";
 import {
+  formatTelemetryCurrency,
   formatTelemetryAction,
   formatTelemetryPlatform,
   formatTelemetryStatus,
@@ -126,7 +127,7 @@ export function AiExecutionDetailPanel({
     },
     {
       label: dict.adminTelemetry.detail.totalUpstreamCost,
-      value: formatCurrency(execution.usage.total_upstream_cost, locale),
+      value: formatTelemetryCurrency(execution.usage.total_upstream_cost, locale),
     },
   ];
 
@@ -473,16 +474,6 @@ function formatDuration(value: number | null, locale: string): string {
 function formatNumber(value: number | null, locale: string): string {
   if (value === null) return "-";
   return new Intl.NumberFormat(locale).format(value);
-}
-
-function formatCurrency(value: number | null, locale: string): string {
-  if (value === null) return "-";
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 6,
-  }).format(value);
 }
 
 function stringifyDetailValue(value: unknown): string {

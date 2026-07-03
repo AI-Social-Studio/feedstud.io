@@ -104,10 +104,15 @@ export function AiUsageFilters({ values }: { values: FilterValues }) {
   );
 }
 
-const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
-
 function pad(n: number) {
   return String(n).padStart(2, "0");
+}
+
+function getLocalizedWeekdays(locale: string): string[] {
+  const formatter = new Intl.DateTimeFormat(locale, { weekday: "short" });
+  return Array.from({ length: 7 }, (_, index) =>
+    formatter.format(new Date(Date.UTC(2024, 0, 1 + index))),
+  );
 }
 
 function buildCells(year: number, month: number) {
@@ -130,7 +135,11 @@ function parseDate(value: string | undefined): {
 } {
   if (!value) return { y: null, m: null, d: null };
   const parts = value.split("-").map(Number);
-  return { y: parts[0] ?? null, m: parts[1] != null ? parts[1] - 1 : null, d: parts[2] ?? null };
+  return {
+    y: parts[0] ?? null,
+    m: parts[1] !== undefined ? parts[1] - 1 : null,
+    d: parts[2] ?? null,
+  };
 }
 
 function formatDateDisplay(value: string | undefined, locale: string): string | null {
@@ -182,6 +191,7 @@ function FilterDatePicker({
 
   const cells = useMemo(() => buildCells(viewY, viewM), [viewY, viewM]);
   const displayLabel = useMemo(() => formatDateDisplay(selected, locale), [selected, locale]);
+  const weekdays = useMemo(() => getLocalizedWeekdays(locale), [locale]);
 
   useEffect(() => {
     if (!open) return;
@@ -232,7 +242,7 @@ function FilterDatePicker({
   }
 
   return (
-    <div className="flex flex-col gap-1.5" ref={ref}>
+    <div className="relative flex flex-col gap-1.5" ref={ref}>
       <span className="text-[11px] font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
         {label}
       </span>
@@ -304,7 +314,7 @@ function FilterDatePicker({
           </div>
           {/* Weekdays */}
           <div className="mb-1 grid grid-cols-7">
-            {WEEKDAYS.map((w) => (
+            {weekdays.map((w) => (
               <div
                 key={w}
                 className="flex h-7 items-center justify-center text-[11px] font-medium text-gray-400 dark:text-gray-500"

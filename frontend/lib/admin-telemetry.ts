@@ -29,3 +29,13 @@ export function formatTelemetryPlatform(platform: string, dict: Dictionary): str
   if (platform === "x") return dict.adminTelemetry.filters.options.platform.x;
   return platform;
 }
+
+export function formatTelemetryCurrency(value: number | null, locale: string): string {
+  if (value === null) return "-";
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 6,
+  }).format(value);
+}

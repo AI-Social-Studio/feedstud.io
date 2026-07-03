@@ -61,8 +61,14 @@ export function AdminTelemetryView({
       <AiUsageFilters values={filters} />
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <AiCostChart executions={executions} />
-        <AiCostByModel executions={executions} />
+        <AiCostChart
+          executions={executions}
+          scopeLabel={dict.adminTelemetry.costChart.loadedPageOnly}
+        />
+        <AiCostByModel
+          executions={executions}
+          scopeLabel={dict.adminTelemetry.costByModel.loadedPageOnly}
+        />
       </div>
 
       <AiExecutionsTable
