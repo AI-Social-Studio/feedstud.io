@@ -38,6 +38,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Search
         model: filters.model,
         userId: filters.userId,
         limit: filters.limit,
+        from: filters.from,
+        to: filters.to,
       }}
     />
   );
