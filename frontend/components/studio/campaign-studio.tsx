@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   CaretLeftIcon,
@@ -135,14 +135,15 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
     PLATFORM_ORDER.find((platform) => initialSelected[platform]) ?? PLATFORM_ORDER[0];
   const initialResults: Partial<Record<Platform, string>> = initialDraft?.posts ?? {};
   const initialFiles = initialDraft?.files ?? [];
+  const initialPostingSettings = loadPostingSettings(initialDraft?.id ?? null);
   const initialSnapshot = buildSnapshot(
     initialDraft?.title ?? "",
     initialDraft?.raw ?? DEFAULT_RAW,
     initialSelected,
     initialResults,
     initialFiles.map((file) => file.id),
-    DEFAULT_POSTING_SETTINGS.publishMode,
-    DEFAULT_POSTING_SETTINGS.schedulePerPlatform,
+    initialPostingSettings.publishMode,
+    initialPostingSettings.schedulePerPlatform,
   );
 
   const [draftId, setDraftId] = useState(initialDraft?.id ?? null);
@@ -155,10 +156,10 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const [pristineResults, setPristineResults] =
     useState<Partial<Record<Platform, string>>>(initialResults);
   const [publishMode, setPublishMode] = useState<"now" | "schedule">(
-    DEFAULT_POSTING_SETTINGS.publishMode,
+    initialPostingSettings.publishMode,
   );
   const [schedulePerPlatform, setSchedulePerPlatform] = useState<Partial<Record<Platform, string>>>(
-    DEFAULT_POSTING_SETTINGS.schedulePerPlatform,
+    initialPostingSettings.schedulePerPlatform,
   );
   const [savedSnapshot, setSavedSnapshot] = useState(initialSnapshot);
   const [copied, setCopied] = useState<Platform | null>(null);
@@ -181,29 +182,6 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
     raw.trim().length > 0 ||
     uploadedFiles.length > 0 ||
     Object.values(results).some((value) => Boolean(value?.trim()));
-
-  const applyPostingSettings = useEffectEvent((postingSettings: PostingSettings) => {
-    setPublishMode(postingSettings.publishMode);
-    setSchedulePerPlatform(postingSettings.schedulePerPlatform);
-    setSavedSnapshot(
-      buildSnapshot(
-        draftTitle,
-        raw,
-        selected,
-        results,
-        uploadedFileIds,
-        postingSettings.publishMode,
-        postingSettings.schedulePerPlatform,
-      ),
-    );
-  });
-
-  useEffect(() => {
-    const postingSettings = loadPostingSettings(draftId);
-    const timeoutId = window.setTimeout(() => applyPostingSettings(postingSettings), 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [draftId]);
 
   const hasUnsavedChanges =
     buildSnapshot(
