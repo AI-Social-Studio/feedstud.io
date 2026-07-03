@@ -53,6 +53,11 @@ def get_ai_usage_filters(
     created_after: datetime | None = Query(default=None, alias="from"),
     created_before: datetime | None = Query(default=None, alias="to"),
 ) -> AiUsageFiltersQuery:
+    if created_before and created_before.time() == datetime.min.time():
+        # When 'to' is provided as a date string (YYYY-MM-DD), FastAPI parses it as exactly midnight.
+        # To make date-based filtering inclusive of the entire day, we shift it to the end of the day.
+        created_before = datetime.combine(created_before.date(), datetime.max.time(), tzinfo=created_before.tzinfo)
+
     return AiUsageFiltersQuery(
         kind=kind,
         status=status_filter,
