@@ -74,8 +74,7 @@ export const pl: Dictionary = {
   platforms: {
     eyebrow: "obsługiwane platformy",
     title: "Jeden pomysł. Trzy odbiorców. Zero dodatkowej pracy.",
-    subtitle:
-      "Każda platforma ma swoją gramatykę. Feedstud.io mówi płynnie we wszystkich trzech.",
+    subtitle: "Każda platforma ma swoją gramatykę. Feedstud.io mówi płynnie we wszystkich trzech.",
     exampleLabel: "przykładowy wynik",
     items: [
       {
@@ -262,7 +261,9 @@ export const pl: Dictionary = {
       platform: "Platforma",
       model: "Model",
       userId: "ID użytkownika",
-      limit: "Limit",
+      limit: "Wyniki",
+      from: "Od",
+      to: "Do",
       apply: "Zastosuj filtry",
       reset: "Resetuj",
       all: "Wszystkie",
@@ -270,6 +271,8 @@ export const pl: Dictionary = {
         model: "gpt-oss-120b",
         userId: "user_...",
         limit: "25",
+        from: "Data początkowa",
+        to: "Data końcowa",
       },
       options: {
         kind: {
@@ -285,6 +288,12 @@ export const pl: Dictionary = {
           instagram: "Instagram",
           x: "X",
         },
+        limit: {
+          show25: "25 wyników",
+          show50: "50 wyników",
+          show100: "100 wyników",
+          show200: "200 wyników",
+        },
       },
     },
     kpis: {
@@ -296,7 +305,23 @@ export const pl: Dictionary = {
       tokenHint: "{prompt} tokenów wejściowych / {completion} tokenów wyjściowych",
       errorHint: "{failed} błędnych / {successful} udanych",
       reasoningTokens: "{count} tokenów rozumowania",
+      dateRange: "{from} – {to}",
+      allTime: "Cały okres",
     },
+    costByModel: {
+      title: "Koszt wg modelu",
+      model: "Model",
+      requests: "Żądania",
+      tokens: "Tokeny",
+      cost: "Koszt",
+      share: "Udział",
+      noData: "Brak danych o wykonaniach.",
+    },
+    costChart: {
+      title: "Koszt dzienny",
+      noData: "Brak danych o kosztach w tym okresie.",
+    },
+    exportCsv: "Eksportuj CSV",
     table: {
       title: "Ostatnie wykonania",
       time: "Czas",
@@ -311,6 +336,9 @@ export const pl: Dictionary = {
       openSelected: "Otwarte",
       noResults: "Żadne wykonania AI nie pasują do bieżących filtrów.",
       anonymous: "Anonimowy",
+      sortAsc: "Sortuj rosnąco",
+      sortDesc: "Sortuj malejąco",
+      sortClear: "Wyczyść sortowanie",
     },
     detail: {
       empty:
@@ -336,7 +364,8 @@ export const pl: Dictionary = {
       generationId: "Generation ID",
       upstreamId: "Upstream ID",
       inputPrompt: "Prompt wejściowy",
-      inputPromptHint: "Treść, którą aplikacja przekazała do modelu jako właściwe wejście użytkownika.",
+      inputPromptHint:
+        "Treść, którą aplikacja przekazała do modelu jako właściwe wejście użytkownika.",
       modelOutput: "Wyjście modelu",
       modelOutputHint: "Końcowa odpowiedź modelu lub komunikat błędu zwrócony dla tego wykonania.",
       promptTokens: "Tokeny promptu",
@@ -415,7 +444,8 @@ export const pl: Dictionary = {
     scheduleForAll: "Jedna data dla wszystkich",
     schedulePerPost: "Osobno dla każdego posta",
     scheduleDateTime: "Data i godzina publikacji",
-    scheduleHelp: "Ustaw jedną datę dla wszystkich postów albo osobne terminy dla każdej platformy.",
+    scheduleHelp:
+      "Ustaw jedną datę dla wszystkich postów albo osobne terminy dla każdej platformy.",
     scheduleEmpty: "Wybierz datę i godzinę, aby przygotować publikację.",
     removeFile: "Usuń plik",
     removeFileLocked: "Usuwanie zablokowane podczas generowania lub zapisu",
@@ -431,7 +461,8 @@ export const pl: Dictionary = {
         return `Wygenerowano ${count} postów.`;
       },
       generationPartial: (count) => {
-        if (count === 1) return "Wygenerowano 1 post. Niektóre platformy wymagają ponowienia próby.";
+        if (count === 1)
+          return "Wygenerowano 1 post. Niektóre platformy wymagają ponowienia próby.";
         if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) {
           return `Wygenerowano ${count} posty. Niektóre platformy wymagają ponowienia próby.`;
         }
@@ -454,7 +485,8 @@ export const pl: Dictionary = {
       waitForLock: "Poczekaj aż zakończy się generowanie lub zapis.",
       fileDeleted: "Plik został usunięty.",
       postCopied: "Post skopiowany do schowka.",
-      publishQueued: "Publikacja została przygotowana. Backend posting flow dodamy w następnym kroku.",
+      publishQueued:
+        "Publikacja została przygotowana. Backend posting flow dodamy w następnym kroku.",
       scheduleMissingAll: "Ustaw datę i godzinę publikacji dla wszystkich postów.",
       scheduleMissingPerPost: "Ustaw datę i godzinę dla każdego zaznaczonego posta.",
       scheduleReadyAll: "Termin publikacji ustawiony dla wszystkich zaznaczonych postów.",

@@ -117,6 +117,8 @@ export type Dictionary = {
       model: string;
       userId: string;
       limit: string;
+      from: string;
+      to: string;
       apply: string;
       reset: string;
       all: string;
@@ -124,6 +126,8 @@ export type Dictionary = {
         model: string;
         userId: string;
         limit: string;
+        from: string;
+        to: string;
       };
       options: {
         kind: {
@@ -139,6 +143,12 @@ export type Dictionary = {
           instagram: string;
           x: string;
         };
+        limit: {
+          show25: string;
+          show50: string;
+          show100: string;
+          show200: string;
+        };
       };
     };
     kpis: {
@@ -150,7 +160,23 @@ export type Dictionary = {
       tokenHint: string;
       errorHint: string;
       reasoningTokens: string;
+      dateRange: string;
+      allTime: string;
     };
+    costByModel: {
+      title: string;
+      model: string;
+      requests: string;
+      tokens: string;
+      cost: string;
+      share: string;
+      noData: string;
+    };
+    costChart: {
+      title: string;
+      noData: string;
+    };
+    exportCsv: string;
     table: {
       title: string;
       time: string;
@@ -165,6 +191,9 @@ export type Dictionary = {
       openSelected: string;
       noResults: string;
       anonymous: string;
+      sortAsc: string;
+      sortDesc: string;
+      sortClear: string;
     };
     detail: {
       empty: string;

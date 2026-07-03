@@ -256,7 +256,9 @@ export const en: Dictionary = {
       platform: "Platform",
       model: "Model",
       userId: "User ID",
-      limit: "Limit",
+      limit: "Results",
+      from: "From",
+      to: "To",
       apply: "Apply filters",
       reset: "Reset",
       all: "All",
@@ -264,6 +266,8 @@ export const en: Dictionary = {
         model: "gpt-oss-120b",
         userId: "user_...",
         limit: "25",
+        from: "Start date",
+        to: "End date",
       },
       options: {
         kind: {
@@ -279,6 +283,12 @@ export const en: Dictionary = {
           instagram: "Instagram",
           x: "X",
         },
+        limit: {
+          show25: "25 results",
+          show50: "50 results",
+          show100: "100 results",
+          show200: "200 results",
+        },
       },
     },
     kpis: {
@@ -290,7 +300,23 @@ export const en: Dictionary = {
       tokenHint: "{prompt} prompt / {completion} completion",
       errorHint: "{failed} failed / {successful} successful",
       reasoningTokens: "{count} reasoning tokens",
+      dateRange: "{from} – {to}",
+      allTime: "All time",
     },
+    costByModel: {
+      title: "Cost by model",
+      model: "Model",
+      requests: "Requests",
+      tokens: "Tokens",
+      cost: "Cost",
+      share: "Share",
+      noData: "No execution data available.",
+    },
+    costChart: {
+      title: "Daily cost",
+      noData: "No cost data for this period.",
+    },
+    exportCsv: "Export CSV",
     table: {
       title: "Recent executions",
       time: "Time",
@@ -305,6 +331,9 @@ export const en: Dictionary = {
       openSelected: "Opened",
       noResults: "No AI executions match the current filters.",
       anonymous: "Anonymous",
+      sortAsc: "Sort ascending",
+      sortDesc: "Sort descending",
+      sortClear: "Clear sort",
     },
     detail: {
       empty: "Select an execution to inspect prompt, output, usage, and raw OpenRouter payloads.",
@@ -331,7 +360,8 @@ export const en: Dictionary = {
       inputPrompt: "Input prompt",
       inputPromptHint: "The user-facing input that the app sent into the model for this execution.",
       modelOutput: "Model output",
-      modelOutputHint: "The final model response, or the execution error returned for this request.",
+      modelOutputHint:
+        "The final model response, or the execution error returned for this request.",
       promptTokens: "Prompt tokens",
       completionTokens: "Completion tokens",
       cachedTokens: "Cached tokens",
