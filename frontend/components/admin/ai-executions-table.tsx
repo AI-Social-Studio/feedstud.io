@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { CaretRightIcon } from "@phosphor-icons/react";
+import { useState, useMemo, useCallback } from "react";
+import {
+  CaretRightIcon,
+  CaretUpIcon,
+  CaretDownIcon,
+  DownloadSimpleIcon,
+} from "@phosphor-icons/react";
 import type { AiExecutionListItem } from "@/lib/flowforge-api";
 import { useLanguage } from "@/lib/i18n";
 import {
@@ -10,6 +16,9 @@ import {
   formatTelemetryPlatform,
   formatTelemetryStatus,
 } from "@/lib/admin-telemetry";
+
+type SortKey = "time" | "cost" | "tokens" | "status" | "model";
+type SortDirection = "asc" | "desc";
 
 export function AiExecutionsTable({
   rows,
@@ -21,30 +30,153 @@ export function AiExecutionsTable({
   queryString: string;
 }) {
   const { locale, dict } = useLanguage();
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDirection>("desc");
+
+  const handleSort = useCallback(
+    (key: SortKey) => {
+      if (sortKey === key) {
+        if (sortDir === "desc") setSortDir("asc");
+        else {
+          setSortKey(null);
+          setSortDir("desc");
+        }
+      } else {
+        setSortKey(key);
+        setSortDir("desc");
+      }
+    },
+    [sortKey, sortDir],
+  );
+
+  const sortedRows = useMemo(() => {
+    if (!sortKey) return rows;
+    const sorted = [...rows].sort((a, b) => {
+      let cmp = 0;
+      switch (sortKey) {
+        case "time":
+          cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        case "cost":
+          cmp = (a.cost ?? 0) - (b.cost ?? 0);
+          break;
+        case "tokens":
+          cmp = (a.total_tokens ?? 0) - (b.total_tokens ?? 0);
+          break;
+        case "status":
+          cmp = a.status.localeCompare(b.status);
+          break;
+        case "model":
+          cmp = (a.resolved_model ?? a.requested_model).localeCompare(
+            b.resolved_model ?? b.requested_model,
+          );
+          break;
+      }
+      return cmp;
+    });
+    return sortDir === "desc" ? sorted.reverse() : sorted;
+  }, [rows, sortKey, sortDir]);
+
+  const exportCsv = useCallback(() => {
+    const headers = [
+      "Time",
+      "Kind",
+      "Platform",
+      "Action",
+      "User",
+      "Model",
+      "Tokens",
+      "Cost",
+      "Status",
+    ];
+    const csvRows = [
+      headers.join(","),
+      ...rows.map((row) =>
+        [
+          `"${row.created_at}"`,
+          `"${row.kind}"`,
+          `"${row.platform ?? ""}"`,
+          `"${row.action ?? ""}"`,
+          `"${row.user_id ?? ""}"`,
+          `"${row.resolved_model ?? row.requested_model}"`,
+          row.total_tokens ?? 0,
+          row.cost ?? 0,
+          `"${row.status}"`,
+        ].join(","),
+      ),
+    ];
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ai-executions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [rows]);
 
   return (
     <section className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm dark:border-gray-800/60 dark:bg-gray-900/50">
-      <div className="px-6 py-5">
+      <div className="flex items-center justify-between px-6 py-5">
         <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-50">
           {dict.adminTelemetry.table.title}
         </h2>
+        <button
+          type="button"
+          onClick={exportCsv}
+          className="inline-flex items-center gap-1.5 rounded-2xl border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:bg-transparent dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          <DownloadSimpleIcon className="h-3.5 w-3.5" weight="bold" />
+          {dict.adminTelemetry.exportCsv}
+        </button>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
+      <div>
+        <table className="w-full text-sm">
           <thead>
             <tr className="border-y border-gray-100 text-left text-[11px] font-medium tracking-wider text-gray-400 uppercase dark:border-gray-800/60 dark:text-gray-500">
-              <th className="px-6 py-3">{dict.adminTelemetry.table.time}</th>
+              <SortableHeader
+                label={dict.adminTelemetry.table.time}
+                sortKey="time"
+                currentKey={sortKey}
+                currentDir={sortDir}
+                onClick={handleSort}
+              />
               <th className="px-6 py-3">{dict.adminTelemetry.table.kind}</th>
               <th className="px-6 py-3">{dict.adminTelemetry.table.user}</th>
-              <th className="hidden px-6 py-3 md:table-cell">{dict.adminTelemetry.table.model}</th>
-              <th className="hidden px-6 py-3 md:table-cell">{dict.adminTelemetry.table.tokens}</th>
-              <th className="px-6 py-3">{dict.adminTelemetry.table.cost}</th>
-              <th className="px-6 py-3">{dict.adminTelemetry.table.status}</th>
+              <SortableHeader
+                label={dict.adminTelemetry.table.model}
+                sortKey="model"
+                currentKey={sortKey}
+                currentDir={sortDir}
+                onClick={handleSort}
+                className="hidden md:table-cell"
+              />
+              <SortableHeader
+                label={dict.adminTelemetry.table.tokens}
+                sortKey="tokens"
+                currentKey={sortKey}
+                currentDir={sortDir}
+                onClick={handleSort}
+                className="hidden md:table-cell"
+              />
+              <SortableHeader
+                label={dict.adminTelemetry.table.cost}
+                sortKey="cost"
+                currentKey={sortKey}
+                currentDir={sortDir}
+                onClick={handleSort}
+              />
+              <SortableHeader
+                label={dict.adminTelemetry.table.status}
+                sortKey="status"
+                currentKey={sortKey}
+                currentDir={sortDir}
+                onClick={handleSort}
+              />
               <th className="px-6 py-3 text-right">{dict.adminTelemetry.table.details}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 dark:divide-gray-800/30">
-            {rows.map((row) => {
+            {sortedRows.map((row) => {
               const href = `/dashboard/admin?${appendExecutionId(queryString, row.id)}`;
               const active = selectedExecutionId === row.id;
               return (
@@ -56,7 +188,7 @@ export function AiExecutionsTable({
                       : "bg-transparent transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-800/20"
                   }
                 >
-                  <td className="whitespace-nowrap px-6 py-3">
+                  <td className="px-6 py-3 whitespace-nowrap">
                     <div className="flex flex-col">
                       <span className="font-medium text-gray-900 dark:text-gray-100">
                         {formatDatePart(row.created_at, locale)}
@@ -86,10 +218,10 @@ export function AiExecutionsTable({
                   <td className="hidden px-6 py-3 text-gray-500 md:table-cell dark:text-gray-400">
                     {formatNumber(row.total_tokens ?? 0, locale)}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-3 font-medium text-gray-700 dark:text-gray-300">
+                  <td className="px-6 py-3 font-medium whitespace-nowrap text-gray-700 dark:text-gray-300">
                     {formatCost(row.cost, locale)}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-3">
+                  <td className="px-6 py-3 whitespace-nowrap">
                     <span className={statusClassName(row.status)}>
                       {formatTelemetryStatus(row.status, dict)}
                     </span>
@@ -121,6 +253,47 @@ export function AiExecutionsTable({
         </table>
       </div>
     </section>
+  );
+}
+
+function SortableHeader({
+  label,
+  sortKey,
+  currentKey,
+  currentDir,
+  onClick,
+  className = "",
+}: {
+  label: string;
+  sortKey: SortKey;
+  currentKey: SortKey | null;
+  currentDir: SortDirection;
+  onClick: (key: SortKey) => void;
+  className?: string;
+}) {
+  const active = currentKey === sortKey;
+  return (
+    <th className={`px-6 py-3 ${className}`}>
+      <button
+        type="button"
+        onClick={() => onClick(sortKey)}
+        className="inline-flex items-center gap-1 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
+      >
+        {label}
+        {active ? (
+          currentDir === "asc" ? (
+            <CaretUpIcon className="h-3 w-3 text-violet-500" weight="bold" />
+          ) : (
+            <CaretDownIcon className="h-3 w-3 text-violet-500" weight="bold" />
+          )
+        ) : (
+          <CaretDownIcon
+            className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-30"
+            weight="bold"
+          />
+        )}
+      </button>
+    </th>
   );
 }
 
