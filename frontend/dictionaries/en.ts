@@ -305,6 +305,7 @@ export const en: Dictionary = {
     },
     costByModel: {
       title: "Cost by model",
+      loadedPageOnly: "Loaded page only",
       model: "Model",
       requests: "Requests",
       tokens: "Tokens",
@@ -314,6 +315,7 @@ export const en: Dictionary = {
     },
     costChart: {
       title: "Daily cost",
+      loadedPageOnly: "Loaded page only",
       noData: "No cost data for this period.",
     },
     exportCsv: "Export CSV",
@@ -321,6 +323,8 @@ export const en: Dictionary = {
       title: "Recent executions",
       time: "Time",
       kind: "Kind",
+      platform: "Platform",
+      action: "Action",
       user: "User",
       model: "Model",
       tokens: "Tokens",

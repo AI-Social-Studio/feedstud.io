@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { formatTelemetryCurrency } from "@/lib/admin-telemetry";
 import type { AiExecutionListItem } from "@/lib/flowforge-api";
 import { useLanguage } from "@/lib/i18n";
 
@@ -12,7 +13,13 @@ type ModelRow = {
   share: number;
 };
 
-export function AiCostByModel({ executions }: { executions: AiExecutionListItem[] }) {
+export function AiCostByModel({
+  executions,
+  scopeLabel,
+}: {
+  executions: AiExecutionListItem[];
+  scopeLabel?: string;
+}) {
   const { locale, dict } = useLanguage();
 
   const models = useMemo(() => {
@@ -46,6 +53,9 @@ export function AiCostByModel({ executions }: { executions: AiExecutionListItem[
         <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-50">
           {dict.adminTelemetry.costByModel.title}
         </h2>
+        {scopeLabel ? (
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{scopeLabel}</p>
+        ) : null}
       </div>
       {models.length === 0 ? (
         <div className="px-6 pb-6 text-sm text-gray-500 dark:text-gray-400">
@@ -81,7 +91,7 @@ export function AiCostByModel({ executions }: { executions: AiExecutionListItem[
                     {formatNumber(row.tokens, locale)}
                   </td>
                   <td className="px-6 py-3 text-right font-medium whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    {formatCurrency(row.cost, locale)}
+                    {formatTelemetryCurrency(row.cost, locale)}
                   </td>
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-2">
@@ -104,15 +114,6 @@ export function AiCostByModel({ executions }: { executions: AiExecutionListItem[
       )}
     </section>
   );
-}
-
-function formatCurrency(value: number, locale: string): string {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 6,
-  }).format(value);
 }
 
 function formatNumber(value: number, locale: string): string {

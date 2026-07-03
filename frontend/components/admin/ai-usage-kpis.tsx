@@ -1,6 +1,7 @@
 "use client";
 
 import type { AiUsageSummary } from "@/lib/flowforge-api";
+import { formatTelemetryCurrency } from "@/lib/admin-telemetry";
 import { useLanguage } from "@/lib/i18n";
 
 import { WarningCircleIcon, CpuIcon, CurrencyDollarIcon, CoinsIcon } from "@phosphor-icons/react";
@@ -21,7 +22,7 @@ export function AiUsageKpis({
   const cards = [
     {
       label: dict.adminTelemetry.kpis.totalCost,
-      value: formatCurrency(summary.total_cost, locale),
+      value: formatTelemetryCurrency(summary.total_cost, locale),
       hint: dict.adminTelemetry.kpis.requests.replace(
         "{count}",
         formatNumber(summary.total_requests, locale),
@@ -52,7 +53,7 @@ export function AiUsageKpis({
     },
     {
       label: dict.adminTelemetry.kpis.averageCostPerRequest,
-      value: formatCurrency(summary.average_cost_per_request, locale),
+      value: formatTelemetryCurrency(summary.average_cost_per_request, locale),
       hint: dict.adminTelemetry.kpis.reasoningTokens.replace(
         "{count}",
         formatNumber(summary.total_reasoning_tokens, locale),
@@ -138,15 +139,6 @@ function errorRateBg(part: number, total: number): string {
   if (rate <= 1) return "bg-emerald-50 dark:bg-emerald-500/10";
   if (rate <= 5) return "bg-amber-50 dark:bg-amber-500/10";
   return "bg-rose-50 dark:bg-rose-500/10";
-}
-
-function formatCurrency(value: number, locale: string): string {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 6,
-  }).format(value);
 }
 
 function formatNumber(value: number, locale: string): string {

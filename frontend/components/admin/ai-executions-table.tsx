@@ -11,6 +11,7 @@ import {
 import type { AiExecutionListItem } from "@/lib/flowforge-api";
 import { useLanguage } from "@/lib/i18n";
 import {
+  formatTelemetryCurrency,
   formatTelemetryAction,
   formatTelemetryKind,
   formatTelemetryPlatform,
@@ -79,29 +80,29 @@ export function AiExecutionsTable({
 
   const exportCsv = useCallback(() => {
     const headers = [
-      "Time",
-      "Kind",
-      "Platform",
-      "Action",
-      "User",
-      "Model",
-      "Tokens",
-      "Cost",
-      "Status",
+      dict.adminTelemetry.table.time,
+      dict.adminTelemetry.table.kind,
+      dict.adminTelemetry.table.platform,
+      dict.adminTelemetry.table.action,
+      dict.adminTelemetry.table.user,
+      dict.adminTelemetry.table.model,
+      dict.adminTelemetry.table.tokens,
+      dict.adminTelemetry.table.cost,
+      dict.adminTelemetry.table.status,
     ];
     const csvRows = [
-      headers.join(","),
+      headers.map(escapeCsvCell).join(","),
       ...rows.map((row) =>
         [
-          `"${row.created_at}"`,
-          `"${row.kind}"`,
-          `"${row.platform ?? ""}"`,
-          `"${row.action ?? ""}"`,
-          `"${row.user_id ?? ""}"`,
-          `"${row.resolved_model ?? row.requested_model}"`,
+          escapeCsvCell(row.created_at),
+          escapeCsvCell(row.kind),
+          escapeCsvCell(row.platform ?? ""),
+          escapeCsvCell(row.action ?? ""),
+          escapeCsvCell(row.user_id ?? ""),
+          escapeCsvCell(row.resolved_model ?? row.requested_model),
           row.total_tokens ?? 0,
           row.cost ?? 0,
-          `"${row.status}"`,
+          escapeCsvCell(row.status),
         ].join(","),
       ),
     ];
@@ -112,7 +113,7 @@ export function AiExecutionsTable({
     a.download = `ai-executions-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [rows]);
+  }, [dict, rows]);
 
   return (
     <section className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm dark:border-gray-800/60 dark:bg-gray-900/50">
@@ -139,6 +140,9 @@ export function AiExecutionsTable({
                 currentKey={sortKey}
                 currentDir={sortDir}
                 onClick={handleSort}
+                sortAscLabel={dict.adminTelemetry.table.sortAsc}
+                sortDescLabel={dict.adminTelemetry.table.sortDesc}
+                sortClearLabel={dict.adminTelemetry.table.sortClear}
               />
               <th className="px-6 py-3">{dict.adminTelemetry.table.kind}</th>
               <th className="px-6 py-3">{dict.adminTelemetry.table.user}</th>
@@ -148,6 +152,9 @@ export function AiExecutionsTable({
                 currentKey={sortKey}
                 currentDir={sortDir}
                 onClick={handleSort}
+                sortAscLabel={dict.adminTelemetry.table.sortAsc}
+                sortDescLabel={dict.adminTelemetry.table.sortDesc}
+                sortClearLabel={dict.adminTelemetry.table.sortClear}
                 className="hidden md:table-cell"
               />
               <SortableHeader
@@ -156,6 +163,9 @@ export function AiExecutionsTable({
                 currentKey={sortKey}
                 currentDir={sortDir}
                 onClick={handleSort}
+                sortAscLabel={dict.adminTelemetry.table.sortAsc}
+                sortDescLabel={dict.adminTelemetry.table.sortDesc}
+                sortClearLabel={dict.adminTelemetry.table.sortClear}
                 className="hidden md:table-cell"
               />
               <SortableHeader
@@ -164,6 +174,9 @@ export function AiExecutionsTable({
                 currentKey={sortKey}
                 currentDir={sortDir}
                 onClick={handleSort}
+                sortAscLabel={dict.adminTelemetry.table.sortAsc}
+                sortDescLabel={dict.adminTelemetry.table.sortDesc}
+                sortClearLabel={dict.adminTelemetry.table.sortClear}
               />
               <SortableHeader
                 label={dict.adminTelemetry.table.status}
@@ -171,6 +184,9 @@ export function AiExecutionsTable({
                 currentKey={sortKey}
                 currentDir={sortDir}
                 onClick={handleSort}
+                sortAscLabel={dict.adminTelemetry.table.sortAsc}
+                sortDescLabel={dict.adminTelemetry.table.sortDesc}
+                sortClearLabel={dict.adminTelemetry.table.sortClear}
               />
               <th className="px-6 py-3 text-right">{dict.adminTelemetry.table.details}</th>
             </tr>
@@ -219,7 +235,7 @@ export function AiExecutionsTable({
                     {formatNumber(row.total_tokens ?? 0, locale)}
                   </td>
                   <td className="px-6 py-3 font-medium whitespace-nowrap text-gray-700 dark:text-gray-300">
-                    {formatCost(row.cost, locale)}
+                    {formatTelemetryCurrency(row.cost, locale)}
                   </td>
                   <td className="px-6 py-3 whitespace-nowrap">
                     <span className={statusClassName(row.status)}>
@@ -262,6 +278,9 @@ function SortableHeader({
   currentKey,
   currentDir,
   onClick,
+  sortAscLabel,
+  sortDescLabel,
+  sortClearLabel,
   className = "",
 }: {
   label: string;
@@ -269,15 +288,22 @@ function SortableHeader({
   currentKey: SortKey | null;
   currentDir: SortDirection;
   onClick: (key: SortKey) => void;
+  sortAscLabel: string;
+  sortDescLabel: string;
+  sortClearLabel: string;
   className?: string;
 }) {
   const active = currentKey === sortKey;
+  const ariaLabel = `${label}: ${
+    !active ? sortDescLabel : currentDir === "desc" ? sortAscLabel : sortClearLabel
+  }`;
   return (
     <th className={`px-6 py-3 ${className}`}>
       <button
         type="button"
         onClick={() => onClick(sortKey)}
-        className="inline-flex items-center gap-1 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
+        aria-label={ariaLabel}
+        className="group inline-flex items-center gap-1 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
       >
         {label}
         {active ? (
@@ -315,18 +341,12 @@ function formatTimePart(value: string, locale: string): string {
   }).format(new Date(value));
 }
 
-function formatCost(value: number | null, locale: string): string {
-  if (value === null) return "-";
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 6,
-  }).format(value);
-}
-
 function formatNumber(value: number, locale: string): string {
   return new Intl.NumberFormat(locale).format(value);
+}
+
+function escapeCsvCell(value: string): string {
+  return `"${value.replaceAll('"', '""')}"`;
 }
 
 function statusClassName(status: string): string {

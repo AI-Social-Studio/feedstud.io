@@ -310,6 +310,7 @@ export const pl: Dictionary = {
     },
     costByModel: {
       title: "Koszt wg modelu",
+      loadedPageOnly: "Tylko załadowana strona",
       model: "Model",
       requests: "Żądania",
       tokens: "Tokeny",
@@ -319,6 +320,7 @@ export const pl: Dictionary = {
     },
     costChart: {
       title: "Koszt dzienny",
+      loadedPageOnly: "Tylko załadowana strona",
       noData: "Brak danych o kosztach w tym okresie.",
     },
     exportCsv: "Eksportuj CSV",
@@ -326,6 +328,8 @@ export const pl: Dictionary = {
       title: "Ostatnie wykonania",
       time: "Czas",
       kind: "Typ",
+      platform: "Platforma",
+      action: "Akcja",
       user: "Użytkownik",
       model: "Model",
       tokens: "Tokeny",

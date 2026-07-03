@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { formatTelemetryCurrency } from "@/lib/admin-telemetry";
 import type { AiExecutionListItem } from "@/lib/flowforge-api";
 import { useLanguage } from "@/lib/i18n";
 
@@ -11,7 +12,13 @@ type DayBucket = {
   requests: number;
 };
 
-export function AiCostChart({ executions }: { executions: AiExecutionListItem[] }) {
+export function AiCostChart({
+  executions,
+  scopeLabel,
+}: {
+  executions: AiExecutionListItem[];
+  scopeLabel?: string;
+}) {
   const { locale, dict } = useLanguage();
 
   const buckets = useMemo(() => {
@@ -46,6 +53,9 @@ export function AiCostChart({ executions }: { executions: AiExecutionListItem[] 
         <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-50">
           {dict.adminTelemetry.costChart.title}
         </h2>
+        {scopeLabel ? (
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{scopeLabel}</p>
+        ) : null}
       </div>
       {buckets.length === 0 ? (
         <div className="px-6 pb-6 text-sm text-gray-500 dark:text-gray-400">
@@ -60,6 +70,9 @@ export function AiCostChart({ executions }: { executions: AiExecutionListItem[] 
                 <div
                   key={bucket.date}
                   className="group relative flex flex-1 flex-col items-center"
+                  tabIndex={0}
+                  role="img"
+                  aria-label={`${bucket.label}: ${formatTelemetryCurrency(bucket.cost, locale)}, ${bucket.requests} requests`}
                   style={{ height: "100%" }}
                 >
                   <div className="flex w-full flex-1 items-end">
@@ -68,8 +81,8 @@ export function AiCostChart({ executions }: { executions: AiExecutionListItem[] 
                       style={{ height: `${heightPercent}%` }}
                     />
                   </div>
-                  <div className="absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 rounded-lg bg-gray-900 px-2.5 py-1 text-[10px] font-medium whitespace-nowrap text-white shadow-lg group-hover:block dark:bg-gray-100 dark:text-gray-900">
-                    {formatCurrency(bucket.cost, locale)}
+                  <div className="absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 rounded-lg bg-gray-900 px-2.5 py-1 text-[10px] font-medium whitespace-nowrap text-white shadow-lg group-focus-within:block group-hover:block dark:bg-gray-100 dark:text-gray-900">
+                    {formatTelemetryCurrency(bucket.cost, locale)}
                     <span className="mx-1 text-gray-400 dark:text-gray-500">·</span>
                     {bucket.requests} req
                   </div>
@@ -93,13 +106,4 @@ export function AiCostChart({ executions }: { executions: AiExecutionListItem[] 
       )}
     </section>
   );
-}
-
-function formatCurrency(value: number, locale: string): string {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4,
-  }).format(value);
 }

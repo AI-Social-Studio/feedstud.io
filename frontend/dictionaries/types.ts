@@ -165,6 +165,7 @@ export type Dictionary = {
     };
     costByModel: {
       title: string;
+      loadedPageOnly: string;
       model: string;
       requests: string;
       tokens: string;
@@ -174,6 +175,7 @@ export type Dictionary = {
     };
     costChart: {
       title: string;
+      loadedPageOnly: string;
       noData: string;
     };
     exportCsv: string;
@@ -181,6 +183,8 @@ export type Dictionary = {
       title: string;
       time: string;
       kind: string;
+      platform: string;
+      action: string;
       user: string;
       model: string;
       tokens: string;
