@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, X } from "@phosphor-icons/react/dist/ssr";
+import { CheckIcon, CopyIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -27,9 +27,7 @@ export function AiExecutionDetailPanel({
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  const [mounted, setMounted] = useState(false);
   useMountEffect(() => {
-    setMounted(true);
     previousFocusRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     closeButtonRef.current?.focus();
@@ -177,7 +175,7 @@ export function AiExecutionDetailPanel({
                 className="inline-flex rounded-md p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
                 aria-label={dict.adminTelemetry.detail.close}
               >
-                <X className="size-5" />
+                <XIcon className="size-5" />
               </button>
             </div>
 
@@ -342,7 +340,7 @@ export function AiExecutionDetailPanel({
     </>
   );
 
-  if (!mounted) return null;
+  if (typeof document === "undefined") return null;
   return createPortal(content, document.body);
 }
 
@@ -424,7 +422,7 @@ function CopyButton({
       onClick={onCopy}
       className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
     >
-      {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+      {copied ? <CheckIcon className="size-3.5" /> : <CopyIcon className="size-3.5" />}
       {copied ? copiedLabel : copyLabel}
     </button>
   );
