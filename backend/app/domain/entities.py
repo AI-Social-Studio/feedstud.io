@@ -7,6 +7,18 @@ from .value_objects import ImageContentType, Platform
 
 
 @dataclass
+class AppUser:
+    auth_provider: str
+    auth_subject: str
+    id: UUID = field(default_factory=uuid4)
+    primary_email: str | None = None
+    display_name: str | None = None
+    status: str = "active"
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
 class UploadedFile:
     id: UUID = field(default_factory=uuid4)
     original_filename: str = ""

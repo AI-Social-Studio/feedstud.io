@@ -6,15 +6,56 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.ports import (
     AiExecutionRepository,
+    AppUserRepository,
     DraftRepository,
     FileRepository,
     GenerateJobRepository,
 )
-from app.domain.entities import AiExecution, Draft, GenerateJob, UploadedFile
+from app.domain.entities import AiExecution, AppUser, Draft, GenerateJob, UploadedFile
 from app.domain.value_objects import ImageContentType, Platform
-from app.infrastructure.db.models import AiExecutionModel, DraftModel, GenerateJobModel, UploadedFileModel
+from app.infrastructure.db.models import AiExecutionModel, AppUserModel, DraftModel, GenerateJobModel, UploadedFileModel
 
 STALE_JOB_TIMEOUT = timedelta(minutes=15)
+
+
+class SqlAlchemyAppUserRepository(AppUserRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def get_by_auth_identity(self, *, provider: str, subject: str) -> AppUser | None:
+        result = await self._session.execute(
+            select(AppUserModel)
+            .where(AppUserModel.auth_provider == provider)
+            .where(AppUserModel.auth_subject == subject)
+        )
+        model = result.scalar_one_or_none()
+        if model is None:
+            return None
+        return AppUser(
+            id=model.id,
+            auth_provider=model.auth_provider,
+            auth_subject=model.auth_subject,
+            primary_email=model.primary_email,
+            display_name=model.display_name,
+            status=model.status,
+            created_at=model.created_at,
+            updated_at=model.updated_at,
+        )
+
+    async def add(self, app_user: AppUser) -> None:
+        self._session.add(
+            AppUserModel(
+                id=app_user.id,
+                auth_provider=app_user.auth_provider,
+                auth_subject=app_user.auth_subject,
+                primary_email=app_user.primary_email,
+                display_name=app_user.display_name,
+                status=app_user.status,
+                created_at=app_user.created_at,
+                updated_at=app_user.updated_at,
+            )
+        )
+        await self._session.commit()
 
 
 class SqlAlchemyFileRepository(FileRepository):

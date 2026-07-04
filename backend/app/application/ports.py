@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import BinaryIO
 from uuid import UUID
 
-from app.domain.entities import AiExecution, Draft, GenerateJob, GeneratedPostResult, UploadedFile
+from app.domain.entities import AppUser, AiExecution, Draft, GenerateJob, GeneratedPostResult, UploadedFile
 from app.domain.value_objects import Platform, RefineAction
 
 
@@ -36,6 +36,14 @@ class FileRepository(ABC):
 
     @abstractmethod
     async def delete(self, file_id: UUID) -> bool: ...
+
+
+class AppUserRepository(ABC):
+    @abstractmethod
+    async def get_by_auth_identity(self, *, provider: str, subject: str) -> AppUser | None: ...
+
+    @abstractmethod
+    async def add(self, app_user: AppUser) -> None: ...
 
 
 class ContentGenerator(ABC):

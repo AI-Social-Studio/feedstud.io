@@ -10,6 +10,22 @@ class Base(DeclarativeBase):
     pass
 
 
+class AppUserModel(Base):
+    __tablename__ = "app_users"
+    __table_args__ = (
+        Index("ix_app_users_auth_identity", "auth_provider", "auth_subject", unique=True),
+    )
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    auth_provider: Mapped[str] = mapped_column(String(32), nullable=False)
+    auth_subject: Mapped[str] = mapped_column(String(255), nullable=False)
+    primary_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    display_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class UploadedFileModel(Base):
     __tablename__ = "uploaded_files"
 
