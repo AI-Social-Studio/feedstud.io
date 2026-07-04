@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { NewCampaignButton } from "@/components/dashboard/new-campaign-button";
 import { PlatformIconBadge } from "@/components/ui/platform-icon-badge";
@@ -10,6 +9,7 @@ import type { AppRole } from "@/lib/auth/roles";
 import { useLanguage } from "@/lib/i18n";
 import type { DraftSummary } from "@/lib/drafts-api";
 import type { Platform } from "@/components/studio/content-engine";
+import {CaretDownIcon} from "@phosphor-icons/react";
 
 export function MyCampaignsView({
   drafts,
@@ -70,7 +70,7 @@ export function MyCampaignsView({
             <option value="oldest">{dict.myCampaigns.sortOldest}</option>
           </select>
           <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400 dark:text-gray-500">
-            <CaretDown size={14} weight="bold" />
+            <CaretDownIcon size={14} weight="bold" />
           </span>
         </div>
       </div>
