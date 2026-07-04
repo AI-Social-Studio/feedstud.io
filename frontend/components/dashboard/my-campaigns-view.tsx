@@ -9,7 +9,7 @@ import type { AppRole } from "@/lib/auth/roles";
 import { useLanguage } from "@/lib/i18n";
 import type { DraftSummary } from "@/lib/drafts-api";
 import type { Platform } from "@/components/studio/content-engine";
-import {CaretDownIcon} from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
 
 export function MyCampaignsView({
   drafts,
