@@ -4,11 +4,13 @@ from uuid import UUID
 from app.application.dto import DraftSummaryView, DraftView, UploadedFileView
 from app.application.ports import DraftRepository, FileRepository, ObjectStorage
 from app.domain.entities import Draft
+from app.domain.exceptions import InvalidGenerateInputError
 from app.domain.value_objects import Platform
 
 
 @dataclass
 class SaveDraftInput:
+    app_user_id: UUID
     raw_text: str
     selected_platforms: list[Platform]
     posts: dict[Platform, str]
@@ -25,6 +27,7 @@ class SaveDraftUseCase:
         title = _normalize_title(payload.title, payload.raw_text, payload.posts)
         if payload.draft_id is None:
             draft = Draft(
+                app_user_id=payload.app_user_id,
                 title=title,
                 raw_text=payload.raw_text,
                 selected_platforms=payload.selected_platforms,
@@ -34,18 +37,9 @@ class SaveDraftUseCase:
             await self._drafts.add(draft)
             return draft.id
 
-        current = await self._drafts.get(payload.draft_id)
+        current = await self._drafts.get(payload.draft_id, app_user_id=payload.app_user_id)
         if current is None:
-            draft = Draft(
-                id=payload.draft_id,
-                title=title,
-                raw_text=payload.raw_text,
-                selected_platforms=payload.selected_platforms,
-                posts=payload.posts,
-                file_ids=payload.file_ids,
-            )
-            await self._drafts.add(draft)
-            return draft.id
+            raise InvalidGenerateInputError("Draft not found")
 
         current.title = title
         current.raw_text = payload.raw_text
@@ -67,8 +61,8 @@ class GetDraftUseCase:
         self._files = files
         self._storage = storage
 
-    async def execute(self, draft_id: UUID) -> DraftView | None:
-        draft = await self._drafts.get(draft_id)
+    async def execute(self, draft_id: UUID, *, app_user_id: UUID) -> DraftView | None:
+        draft = await self._drafts.get(draft_id, app_user_id=app_user_id)
         if draft is None:
             return None
         return await _to_draft_view(draft, self._files, self._storage)
@@ -78,8 +72,8 @@ class ListDraftsUseCase:
     def __init__(self, drafts: DraftRepository) -> None:
         self._drafts = drafts
 
-    async def execute(self, limit: int = 50) -> list[DraftSummaryView]:
-        drafts = await self._drafts.list_recent(limit=limit)
+    async def execute(self, *, app_user_id: UUID, limit: int = 50) -> list[DraftSummaryView]:
+        drafts = await self._drafts.list_recent(limit=limit, app_user_id=app_user_id)
         return [
             DraftSummaryView(
                 id=draft.id,
@@ -102,7 +96,7 @@ async def _to_draft_view(
     uploaded_files: list[UploadedFileView] = []
     available_file_ids: list[UUID] = []
     for file_id in draft.file_ids:
-        file = await files.get(file_id)
+        file = await files.get(file_id, app_user_id=draft.app_user_id)
         if file is None or file.content_type is None:
             continue
         available_file_ids.append(file.id)
@@ -119,6 +113,7 @@ async def _to_draft_view(
 
     return DraftView(
         id=draft.id,
+        app_user_id=draft.app_user_id,
         title=draft.title,
         raw_text=draft.raw_text,
         selected_platforms=[platform.value for platform in draft.selected_platforms],

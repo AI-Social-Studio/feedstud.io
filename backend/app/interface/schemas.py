@@ -96,6 +96,7 @@ class DraftSummaryResponse(BaseModel):
 
 class DraftResponse(BaseModel):
     id: UUID
+    app_user_id: UUID
     title: str
     raw: str
     platforms: list[PlatformLiteral]

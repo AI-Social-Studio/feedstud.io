@@ -28,8 +28,10 @@ class AppUserModel(Base):
 
 class UploadedFileModel(Base):
     __tablename__ = "uploaded_files"
+    __table_args__ = (Index("ix_uploaded_files_app_user_id", "app_user_id"),)
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    app_user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
     original_filename: Mapped[str] = mapped_column(String(512), nullable=False)
     storage_key: Mapped[str] = mapped_column(String(1024), nullable=False, unique=True)
     content_type: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -40,8 +42,10 @@ class UploadedFileModel(Base):
 
 class DraftModel(Base):
     __tablename__ = "drafts"
+    __table_args__ = (Index("ix_drafts_app_user_id", "app_user_id"),)
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    app_user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
     title: Mapped[str] = mapped_column(String(120), nullable=False)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
     selected_platforms: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)

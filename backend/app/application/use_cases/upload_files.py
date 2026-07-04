@@ -29,7 +29,7 @@ class UploadFilesUseCase:
         self._repository = repository
         self._limits = limits
 
-    async def execute(self, files: list[IncomingFile]) -> list[UploadedFileView]:
+    async def execute(self, files: list[IncomingFile], *, app_user_id: UUID) -> list[UploadedFileView]:
         if len(files) > self._limits.max_files:
             raise TooManyFilesError(max_files=self._limits.max_files, received=len(files))
         if not files:
@@ -49,6 +49,7 @@ class UploadFilesUseCase:
         for f in files:
             content_type = ImageContentType.from_mime(f.content_type, filename=f.filename)
             entity = UploadedFile(
+                app_user_id=app_user_id,
                 original_filename=f.filename,
                 content_type=content_type,
                 size_bytes=f.size,
@@ -84,8 +85,8 @@ class GetFileUseCase:
         self._storage = storage
         self._repository = repository
 
-    async def execute(self, file_id: UUID) -> UploadedFileView | None:
-        entity = await self._repository.get(file_id)
+    async def execute(self, file_id: UUID, *, app_user_id: UUID) -> UploadedFileView | None:
+        entity = await self._repository.get(file_id, app_user_id=app_user_id)
         if entity is None or entity.content_type is None:
             return None
         url = await self._storage.presigned_get_url(entity.storage_key)
@@ -104,10 +105,10 @@ class DeleteFileUseCase:
         self._storage = storage
         self._repository = repository
 
-    async def execute(self, file_id: UUID) -> bool:
-        entity = await self._repository.get(file_id)
+    async def execute(self, file_id: UUID, *, app_user_id: UUID) -> bool:
+        entity = await self._repository.get(file_id, app_user_id=app_user_id)
         if entity is None:
             return False
         await self._storage.delete(entity.storage_key)
-        await self._repository.delete(file_id)
+        await self._repository.delete(file_id, app_user_id=app_user_id)
         return True

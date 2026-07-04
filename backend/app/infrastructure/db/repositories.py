@@ -66,6 +66,7 @@ class SqlAlchemyFileRepository(FileRepository):
         assert file.content_type is not None
         model = UploadedFileModel(
             id=file.id,
+            app_user_id=file.app_user_id,
             original_filename=file.original_filename,
             storage_key=file.storage_key,
             content_type=file.content_type.value,
@@ -76,25 +77,28 @@ class SqlAlchemyFileRepository(FileRepository):
         self._session.add(model)
         await self._session.commit()
 
-    async def get(self, file_id: UUID) -> UploadedFile | None:
-        result = await self._session.execute(
-            select(UploadedFileModel).where(UploadedFileModel.id == file_id)
-        )
+    async def get(self, file_id: UUID, *, app_user_id: UUID | None = None) -> UploadedFile | None:
+        stmt = select(UploadedFileModel).where(UploadedFileModel.id == file_id)
+        if app_user_id is not None:
+            stmt = stmt.where(UploadedFileModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
         return self._to_entity(model) if model else None
 
-    async def list_recent(self, limit: int = 50) -> list[UploadedFile]:
+    async def list_recent(self, limit: int = 50, *, app_user_id: UUID | None = None) -> list[UploadedFile]:
+        stmt = select(UploadedFileModel)
+        if app_user_id is not None:
+            stmt = stmt.where(UploadedFileModel.app_user_id == app_user_id)
         result = await self._session.execute(
-            select(UploadedFileModel)
-            .order_by(UploadedFileModel.created_at.desc())
-            .limit(limit)
+            stmt.order_by(UploadedFileModel.created_at.desc()).limit(limit)
         )
         return [self._to_entity(m) for m in result.scalars().all()]
 
-    async def delete(self, file_id: UUID) -> bool:
-        result = await self._session.execute(
-            delete(UploadedFileModel).where(UploadedFileModel.id == file_id)
-        )
+    async def delete(self, file_id: UUID, *, app_user_id: UUID | None = None) -> bool:
+        stmt = delete(UploadedFileModel).where(UploadedFileModel.id == file_id)
+        if app_user_id is not None:
+            stmt = stmt.where(UploadedFileModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt)
         await self._session.commit()
         return result.rowcount > 0
 
@@ -102,6 +106,7 @@ class SqlAlchemyFileRepository(FileRepository):
     def _to_entity(model: UploadedFileModel) -> UploadedFile:
         return UploadedFile(
             id=model.id,
+            app_user_id=model.app_user_id,
             original_filename=model.original_filename,
             storage_key=model.storage_key,
             content_type=ImageContentType(value=model.content_type, extension=model.extension),
@@ -132,20 +137,26 @@ class SqlAlchemyDraftRepository(DraftRepository):
         await self._session.commit()
         return True
 
-    async def get(self, draft_id: UUID) -> Draft | None:
-        model = await self._session.get(DraftModel, draft_id)
+    async def get(self, draft_id: UUID, *, app_user_id: UUID | None = None) -> Draft | None:
+        stmt = select(DraftModel).where(DraftModel.id == draft_id)
+        if app_user_id is not None:
+            stmt = stmt.where(DraftModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
         return self._to_draft(model) if model else None
 
-    async def list_recent(self, limit: int = 50) -> list[Draft]:
-        result = await self._session.execute(
-            select(DraftModel).order_by(DraftModel.updated_at.desc()).limit(limit)
-        )
+    async def list_recent(self, limit: int = 50, *, app_user_id: UUID | None = None) -> list[Draft]:
+        stmt = select(DraftModel)
+        if app_user_id is not None:
+            stmt = stmt.where(DraftModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt.order_by(DraftModel.updated_at.desc()).limit(limit))
         return [self._to_draft(model) for model in result.scalars().all()]
 
     @staticmethod
     def _to_model(draft: Draft) -> DraftModel:
         return DraftModel(
             id=draft.id,
+            app_user_id=draft.app_user_id,
             title=draft.title,
             raw_text=draft.raw_text,
             selected_platforms=[platform.value for platform in draft.selected_platforms],
@@ -159,6 +170,7 @@ class SqlAlchemyDraftRepository(DraftRepository):
     def _to_draft(model: DraftModel) -> Draft:
         return Draft(
             id=model.id,
+            app_user_id=model.app_user_id,
             title=model.title,
             raw_text=model.raw_text,
             selected_platforms=[Platform(platform) for platform in model.selected_platforms],

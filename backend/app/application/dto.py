@@ -183,6 +183,7 @@ class DraftSummaryView:
 @dataclass
 class DraftView:
     id: UUID
+    app_user_id: UUID
     title: str
     raw_text: str
     selected_platforms: list[str]

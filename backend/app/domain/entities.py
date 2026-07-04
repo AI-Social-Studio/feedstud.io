@@ -20,6 +20,7 @@ class AppUser:
 
 @dataclass
 class UploadedFile:
+    app_user_id: UUID
     id: UUID = field(default_factory=uuid4)
     original_filename: str = ""
     storage_key: str = ""
@@ -121,6 +122,7 @@ class GenerateJob:
 
 @dataclass
 class Draft:
+    app_user_id: UUID
     raw_text: str
     selected_platforms: list[Platform]
     posts: dict[Platform, str]
