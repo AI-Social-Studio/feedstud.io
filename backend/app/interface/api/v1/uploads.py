@@ -10,6 +10,7 @@ from app.application.use_cases.upload_files import (
 )
 from app.domain.error_codes import ErrorCode
 from app.interface.dependencies import (
+    get_current_app_user_id,
     get_delete_use_case,
     get_get_use_case,
     get_upload_use_case,
@@ -28,6 +29,7 @@ router = APIRouter(prefix="/uploads", tags=["uploads"])
 )
 async def upload_files(
     files: list[UploadFile] = File(..., description="One or more image files"),
+    app_user_id: UUID = Depends(get_current_app_user_id),
     use_case: UploadFilesUseCase = Depends(get_upload_use_case),
 ) -> UploadResponse:
     incoming: list[IncomingFile] = []
@@ -42,7 +44,7 @@ async def upload_files(
             )
         )
 
-    views = await use_case.execute(incoming)
+    views = await use_case.execute(incoming, app_user_id=app_user_id)
     return UploadResponse(
         files=[
             UploadedFileResponse(
@@ -61,9 +63,10 @@ async def upload_files(
 @router.get("/{file_id}", response_model=UploadedFileResponse)
 async def get_file(
     file_id: UUID,
+    app_user_id: UUID = Depends(get_current_app_user_id),
     use_case: GetFileUseCase = Depends(get_get_use_case),
 ) -> UploadedFileResponse:
-    view = await use_case.execute(file_id)
+    view = await use_case.execute(file_id, app_user_id=app_user_id)
     if view is None:
         raise api_error(
             status.HTTP_404_NOT_FOUND,
@@ -84,9 +87,10 @@ async def get_file(
 @router.delete("/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_file(
     file_id: UUID,
+    app_user_id: UUID = Depends(get_current_app_user_id),
     use_case: DeleteFileUseCase = Depends(get_delete_use_case),
 ) -> None:
-    deleted = await use_case.execute(file_id)
+    deleted = await use_case.execute(file_id, app_user_id=app_user_id)
     if not deleted:
         raise api_error(
             status.HTTP_404_NOT_FOUND,

@@ -1,10 +1,12 @@
 from collections.abc import AsyncIterator
 from functools import lru_cache
+from uuid import UUID
 
 from fastapi import Depends, Header, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.ports import (
+    AppUserRepository,
     AiExecutionRepository,
     ContentGenerator,
     DraftRepository,
@@ -13,6 +15,7 @@ from app.application.ports import (
     GenerateJobRepository,
     ObjectStorage,
 )
+from app.application.use_cases.app_users import EnsureAppUserInput, EnsureAppUserUseCase
 from app.application.use_cases.drafts import GetDraftUseCase, ListDraftsUseCase, SaveDraftUseCase
 from app.application.use_cases.admin_ai_usage import (
     GetAiExecutionDetailsUseCase,
@@ -34,6 +37,7 @@ from app.core.config import Settings, get_settings
 from app.domain.error_codes import ErrorCode
 from app.infrastructure.ai.openrouter_client import OpenRouterContentGenerator
 from app.infrastructure.db.repositories import (
+    SqlAlchemyAppUserRepository,
     SqlAlchemyAiExecutionRepository,
     SqlAlchemyDraftRepository,
     SqlAlchemyFileRepository,
@@ -78,6 +82,10 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 
 def get_file_repository(session: AsyncSession = Depends(get_session)) -> FileRepository:
     return SqlAlchemyFileRepository(session)
+
+
+def get_app_user_repository(session: AsyncSession = Depends(get_session)) -> AppUserRepository:
+    return SqlAlchemyAppUserRepository(session)
 
 
 def get_draft_repository(session: AsyncSession = Depends(get_session)) -> DraftRepository:
@@ -137,6 +145,30 @@ def get_trusted_actor_user_id(
     actor_user_id: str | None = Header(default=None, alias="X-Actor-Id"),
 ) -> str | None:
     return actor_user_id
+
+
+def get_ensure_app_user_use_case(
+    users: AppUserRepository = Depends(get_app_user_repository),
+) -> EnsureAppUserUseCase:
+    return EnsureAppUserUseCase(users=users)
+
+
+async def get_current_app_user_id(
+    actor_user_id: str | None = Depends(get_trusted_actor_user_id),
+    ensure_app_user: EnsureAppUserUseCase = Depends(get_ensure_app_user_use_case),
+) -> UUID:
+    if actor_user_id is None:
+        raise api_error(
+            status.HTTP_401_UNAUTHORIZED,
+            ErrorCode.UNAUTHORIZED,
+            "Unauthorized",
+        )
+    return await ensure_app_user.execute(
+        EnsureAppUserInput(
+            auth_provider="clerk",
+            auth_subject=actor_user_id,
+        )
+    )
 
 
 def get_upload_limits(settings: Settings = Depends(get_settings)) -> UploadLimits:

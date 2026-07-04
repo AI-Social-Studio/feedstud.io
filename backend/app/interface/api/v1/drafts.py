@@ -6,6 +6,7 @@ from app.application.use_cases.drafts import GetDraftUseCase, ListDraftsUseCase,
 from app.domain.error_codes import ErrorCode
 from app.domain.value_objects import Platform
 from app.interface.dependencies import (
+    get_current_app_user_id,
     get_get_draft_use_case,
     get_list_drafts_use_case,
     get_save_draft_use_case,
@@ -19,9 +20,10 @@ router = APIRouter(prefix="/drafts", tags=["drafts"])
 @router.get("", response_model=list[DraftSummaryResponse], summary="List recent drafts")
 async def list_drafts(
     limit: int = Query(default=50, ge=1, le=100),
+    app_user_id: UUID = Depends(get_current_app_user_id),
     use_case: ListDraftsUseCase = Depends(get_list_drafts_use_case),
 ) -> list[DraftSummaryResponse]:
-    drafts = await use_case.execute(limit=limit)
+    drafts = await use_case.execute(app_user_id=app_user_id, limit=limit)
     return [
         DraftSummaryResponse(
             id=draft.id,
@@ -39,11 +41,12 @@ async def list_drafts(
 @router.post("", response_model=DraftResponse, status_code=status.HTTP_201_CREATED)
 async def create_draft(
     payload: SaveDraftRequest,
+    app_user_id: UUID = Depends(get_current_app_user_id),
     save_use_case: SaveDraftUseCase = Depends(get_save_draft_use_case),
     get_use_case: GetDraftUseCase = Depends(get_get_draft_use_case),
 ) -> DraftResponse:
-    draft_id = await save_use_case.execute(_to_save_input(payload))
-    draft = await get_use_case.execute(draft_id)
+    draft_id = await save_use_case.execute(_to_save_input(payload, app_user_id=app_user_id))
+    draft = await get_use_case.execute(draft_id, app_user_id=app_user_id)
     assert draft is not None
     return _to_response(draft)
 
@@ -51,9 +54,10 @@ async def create_draft(
 @router.get("/{draft_id}", response_model=DraftResponse, summary="Get a draft")
 async def get_draft(
     draft_id: UUID,
+    app_user_id: UUID = Depends(get_current_app_user_id),
     use_case: GetDraftUseCase = Depends(get_get_draft_use_case),
 ) -> DraftResponse:
-    draft = await use_case.execute(draft_id)
+    draft = await use_case.execute(draft_id, app_user_id=app_user_id)
     if draft is None:
         raise api_error(
             status.HTTP_404_NOT_FOUND,
@@ -68,17 +72,34 @@ async def get_draft(
 async def update_draft(
     draft_id: UUID,
     payload: SaveDraftRequest,
+    app_user_id: UUID = Depends(get_current_app_user_id),
     save_use_case: SaveDraftUseCase = Depends(get_save_draft_use_case),
     get_use_case: GetDraftUseCase = Depends(get_get_draft_use_case),
 ) -> DraftResponse:
-    saved_id = await save_use_case.execute(_to_save_input(payload, draft_id=draft_id))
-    draft = await get_use_case.execute(saved_id)
+    current = await get_use_case.execute(draft_id, app_user_id=app_user_id)
+    if current is None:
+        raise api_error(
+            status.HTTP_404_NOT_FOUND,
+            ErrorCode.DRAFT_NOT_FOUND,
+            "Draft not found",
+            {"draft_id": str(draft_id)},
+        )
+    saved_id = await save_use_case.execute(
+        _to_save_input(payload, app_user_id=app_user_id, draft_id=draft_id)
+    )
+    draft = await get_use_case.execute(saved_id, app_user_id=app_user_id)
     assert draft is not None
     return _to_response(draft)
 
 
-def _to_save_input(payload: SaveDraftRequest, draft_id: UUID | None = None) -> SaveDraftInput:
+def _to_save_input(
+    payload: SaveDraftRequest,
+    *,
+    app_user_id: UUID,
+    draft_id: UUID | None = None,
+) -> SaveDraftInput:
     return SaveDraftInput(
+        app_user_id=app_user_id,
         draft_id=draft_id,
         title=payload.title,
         raw_text=payload.raw,
@@ -91,6 +112,7 @@ def _to_save_input(payload: SaveDraftRequest, draft_id: UUID | None = None) -> S
 def _to_response(draft) -> DraftResponse:
     return DraftResponse(
         id=draft.id,
+        app_user_id=draft.app_user_id,
         title=draft.title,
         raw=draft.raw_text,
         platforms=draft.selected_platforms,
