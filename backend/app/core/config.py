@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     rabbitmq_generate_queue: str = "generate_posts"
     rabbitmq_prefetch_count: int = Field(default=10, ge=1, le=100)
 
+    linkedin_client_id: str = ""
+    linkedin_client_secret: str = ""
+    linkedin_oauth_state_secret: str = ""
+    secret_cipher_key: str = ""
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

@@ -14,6 +14,9 @@ from app.application.ports import (
     GenerateJobQueue,
     GenerateJobRepository,
     ObjectStorage,
+    SecretCipher,
+    SocialConnectionRepository,
+    SocialOAuthClient,
 )
 from app.application.use_cases.app_users import EnsureAppUserInput, EnsureAppUserUseCase
 from app.application.use_cases.drafts import GetDraftUseCase, ListDraftsUseCase, SaveDraftUseCase
@@ -21,6 +24,12 @@ from app.application.use_cases.admin_ai_usage import (
     GetAiExecutionDetailsUseCase,
     GetAiUsageSummaryUseCase,
     ListAiExecutionsUseCase,
+)
+from app.application.use_cases.social_connections import (
+    CompleteLinkedInConnectUseCase,
+    DisconnectSocialConnectionUseCase,
+    ListSocialConnectionsUseCase,
+    StartLinkedInConnectUseCase,
 )
 from app.application.use_cases.generate_jobs import GetGenerateJobUseCase, SubmitGenerateJobUseCase
 from app.application.use_cases.generate_posts import (
@@ -42,9 +51,12 @@ from app.infrastructure.db.repositories import (
     SqlAlchemyDraftRepository,
     SqlAlchemyFileRepository,
     SqlAlchemyGenerateJobRepository,
+    SqlAlchemySocialConnectionRepository,
 )
 from app.infrastructure.messaging.rabbitmq import RabbitMqGenerateJobQueue
 from app.infrastructure.db.session import Database
+from app.infrastructure.security.fernet_cipher import FernetSecretCipher
+from app.infrastructure.social.linkedin_oauth import LinkedInOAuthClient
 from app.infrastructure.storage.minio_storage import MinioObjectStorage
 from app.interface.errors import api_error
 
@@ -102,6 +114,12 @@ def get_generate_job_repository(
     session: AsyncSession = Depends(get_session),
 ) -> GenerateJobRepository:
     return SqlAlchemyGenerateJobRepository(session)
+
+
+def get_social_connection_repository(
+    session: AsyncSession = Depends(get_session),
+) -> SocialConnectionRepository:
+    return SqlAlchemySocialConnectionRepository(session)
 
 
 def get_ai_usage_summary_use_case(
@@ -169,6 +187,64 @@ async def get_current_app_user_id(
             auth_subject=actor_user_id,
         )
     )
+
+
+def get_secret_cipher(settings: Settings = Depends(get_settings)) -> SecretCipher:
+    if not settings.secret_cipher_key:
+        raise api_error(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            ErrorCode.SOCIAL_AUTH_NOT_CONFIGURED,
+            "Secret cipher is not configured",
+        )
+    return FernetSecretCipher(settings.secret_cipher_key)
+
+
+def get_linkedin_oauth_client(settings: Settings = Depends(get_settings)) -> SocialOAuthClient:
+    if (
+        not settings.linkedin_client_id
+        or not settings.linkedin_client_secret
+        or not settings.linkedin_oauth_state_secret
+    ):
+        raise api_error(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            ErrorCode.SOCIAL_AUTH_NOT_CONFIGURED,
+            "LinkedIn OAuth is not configured",
+        )
+    return LinkedInOAuthClient(
+        client_id=settings.linkedin_client_id,
+        client_secret=settings.linkedin_client_secret,
+        state_secret=settings.linkedin_oauth_state_secret,
+    )
+
+
+def get_start_linkedin_connect_use_case(
+    oauth_client: SocialOAuthClient = Depends(get_linkedin_oauth_client),
+) -> StartLinkedInConnectUseCase:
+    return StartLinkedInConnectUseCase(oauth_client=oauth_client)
+
+
+def get_complete_linkedin_connect_use_case(
+    oauth_client: SocialOAuthClient = Depends(get_linkedin_oauth_client),
+    connections: SocialConnectionRepository = Depends(get_social_connection_repository),
+    cipher: SecretCipher = Depends(get_secret_cipher),
+) -> CompleteLinkedInConnectUseCase:
+    return CompleteLinkedInConnectUseCase(
+        oauth_client=oauth_client,
+        connections=connections,
+        cipher=cipher,
+    )
+
+
+def get_list_social_connections_use_case(
+    connections: SocialConnectionRepository = Depends(get_social_connection_repository),
+) -> ListSocialConnectionsUseCase:
+    return ListSocialConnectionsUseCase(connections=connections)
+
+
+def get_disconnect_social_connection_use_case(
+    connections: SocialConnectionRepository = Depends(get_social_connection_repository),
+) -> DisconnectSocialConnectionUseCase:
+    return DisconnectSocialConnectionUseCase(connections=connections)
 
 
 def get_upload_limits(settings: Settings = Depends(get_settings)) -> UploadLimits:
