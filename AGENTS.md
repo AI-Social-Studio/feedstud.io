@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Feedstudio.ai is a full-stack app for generating and refining social media posts.
+Feedstudio is a full-stack app for generating and refining social media posts.
 
 - `frontend/`: Next.js 16, React 19, TypeScript, Tailwind CSS 4
 - `backend/`: FastAPI, PostgreSQL, MinIO, OpenRouter
