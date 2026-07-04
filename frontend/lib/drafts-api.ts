@@ -1,9 +1,7 @@
 import axios from "axios";
 import type { Platform } from "@/components/studio/content-engine";
-import { env } from "@/env";
 
 const draftsApi = axios.create({
-  baseURL: env.NEXT_PUBLIC_BACKEND_URL,
   timeout: 60000,
 });
 
@@ -47,21 +45,21 @@ export type SaveDraftRequest = {
 };
 
 export async function createDraft(payload: SaveDraftRequest): Promise<Draft> {
-  const response = await draftsApi.post<Draft>("/drafts", payload);
+  const response = await draftsApi.post<Draft>("/api/drafts", payload);
   return response.data;
 }
 
 export async function updateDraft(draftId: string, payload: SaveDraftRequest): Promise<Draft> {
-  const response = await draftsApi.put<Draft>(`/drafts/${draftId}`, payload);
+  const response = await draftsApi.put<Draft>(`/api/drafts/${draftId}`, payload);
   return response.data;
 }
 
 export async function getDraft(draftId: string): Promise<Draft> {
-  const response = await draftsApi.get<Draft>(`/drafts/${draftId}`);
+  const response = await draftsApi.get<Draft>(`/api/drafts/${draftId}`);
   return response.data;
 }
 
 export async function listDrafts(limit = 50): Promise<DraftSummary[]> {
-  const response = await draftsApi.get<DraftSummary[]>("/drafts", { params: { limit } });
+  const response = await draftsApi.get<DraftSummary[]>("/api/drafts", { params: { limit } });
   return response.data;
 }
