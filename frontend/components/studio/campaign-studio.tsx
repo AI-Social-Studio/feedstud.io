@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -23,6 +24,9 @@ import { PlatformIconBadge } from "@/components/ui/platform-icon-badge";
 import { StepHeader } from "@/components/ui/step-header";
 import type { Dictionary } from "@/dictionaries";
 import { useDictionary } from "@/lib/i18n";
+import type { Publication } from "@/lib/publications-api";
+import { createPublication, waitForPublication } from "@/lib/publications-api";
+import type { SocialConnection } from "@/lib/social-connections-api";
 import { PlatformPreview } from "./platform-preview";
 import { PLATFORM_META, PLATFORM_ORDER, type Platform, type RefineAction } from "./content-engine";
 import { createDraft, type Draft, type UploadedFile, updateDraft } from "@/lib/drafts-api";
@@ -68,6 +72,8 @@ type Toast = {
 type Props = {
   initialDraft?: Draft | null;
   initialTitle?: string;
+  initialSocialConnections: SocialConnection[];
+  initialPublications: Publication[];
 };
 
 type PostingSettings = {
@@ -122,7 +128,14 @@ function nowDatetimeLocal(): string {
   return now.toISOString().slice(0, 16);
 }
 
-export function CampaignStudio({ initialDraft, initialTitle }: Props) {
+const LINKEDIN_ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/gif"]);
+
+export function CampaignStudio({
+  initialDraft,
+  initialTitle,
+  initialSocialConnections,
+  initialPublications,
+}: Props) {
   const dict = useDictionary();
   const refineActions = buildRefineActions(dict.studio.refineActions);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
@@ -165,10 +178,15 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [removingFileIds, setRemovingFileIds] = useState<string[]>([]);
   const [refining, setRefining] = useState<Partial<Record<Platform, boolean>>>({});
   const [regenerating, setRegenerating] = useState<Partial<Record<Platform, boolean>>>({});
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const socialConnections = initialSocialConnections;
+  const [latestPublication, setLatestPublication] = useState<Publication | null>(
+    initialPublications[0] ?? null,
+  );
   const anySelected = PLATFORM_ORDER.some((platform) => selected[platform]);
   const activePlatforms = PLATFORM_ORDER.filter((platform) => selected[platform]);
   const assets = uploadedFilesToAssets(uploadedFiles);
@@ -199,6 +217,24 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const focusedLength = focusedText.length;
   const focusedOver = focusedLength > focusedMeta.limit;
   const hasFocusedManualChanges = focusedText !== focusedPristine;
+  const linkedinConnection = socialConnections.find(
+    (connection) => connection.provider === "linkedin" && connection.status === "active",
+  );
+  const linkedinText = results.linkedin?.trim() ?? "";
+  const linkedinFileIds = uploadedFiles.map((file) => file.id);
+  const unsupportedLinkedinFile = uploadedFiles.find((file) => {
+    const contentType = file.content_type.toLowerCase().split(";", 1)[0]?.trim() ?? "";
+    return !LINKEDIN_ALLOWED_IMAGE_TYPES.has(contentType);
+  });
+  const publishDisabled =
+    isPublishing ||
+    isGenerating ||
+    isSaving ||
+    !selected.linkedin ||
+    !linkedinConnection ||
+    !linkedinText ||
+    Boolean(unsupportedLinkedinFile) ||
+    uploadedFiles.length > 1;
 
   function togglePlatform(platform: Platform) {
     setSelected((prev) => ({ ...prev, [platform]: !prev[platform] }));
@@ -318,10 +354,10 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
     }
   }
 
-  async function saveDraftState() {
+  async function saveDraftState(): Promise<Draft | null> {
     if (!hasAnyContent) {
       pushToast("info", dict.studio.toasts.addContentFirst);
-      return;
+      return null;
     }
 
     setIsSaving(true);
@@ -353,8 +389,10 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
         "success",
         draftId ? dict.studio.toasts.draftUpdated : dict.studio.toasts.draftSaved,
       );
+      return savedDraft;
     } catch (error) {
       pushToast("error", getApiErrorMessage(error));
+      return null;
     } finally {
       setIsSaving(false);
     }
@@ -415,8 +453,57 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
     setResults((prev) => ({ ...prev, [platform]: nextText }));
   }
 
-  function handlePublishNow() {
-    pushToast("success", dict.studio.toasts.publishQueued);
+  async function handlePublishNow() {
+    if (!selected.linkedin) {
+      pushToast("info", dict.studio.toasts.linkedinSelectFirst);
+      return;
+    }
+    if (!linkedinConnection) {
+      pushToast("info", dict.studio.toasts.linkedinConnectFirst);
+      return;
+    }
+    if (!linkedinText) {
+      pushToast("info", dict.studio.toasts.linkedinGenerateFirst);
+      return;
+    }
+    if (unsupportedLinkedinFile) {
+      pushToast("error", dict.studio.toasts.linkedinUnsupportedAsset);
+      return;
+    }
+    if (uploadedFiles.length > 1) {
+      pushToast("info", dict.studio.toasts.linkedinSingleImageOnly);
+      return;
+    }
+
+    const savedDraft = !draftId || hasUnsavedChanges ? await saveDraftState() : null;
+    const savedDraftId = savedDraft?.id ?? draftId;
+    if (!savedDraftId) return;
+
+    setIsPublishing(true);
+    try {
+      const queuedPublication = await createPublication({
+        provider: "linkedin",
+        draft_id: savedDraftId,
+        social_connection_id: linkedinConnection.id,
+        text: linkedinText,
+        file_ids: linkedinFileIds,
+        asset_order: linkedinFileIds,
+      });
+      setLatestPublication(queuedPublication);
+      pushToast("success", dict.studio.toasts.publicationQueued);
+
+      const finalPublication = await waitForPublication(queuedPublication.id);
+      setLatestPublication(finalPublication);
+      if (finalPublication.status === "completed") {
+        pushToast("success", dict.studio.toasts.publicationPublished);
+      } else {
+        pushToast("error", finalPublication.error_detail || "Publication failed");
+      }
+    } catch (error) {
+      pushToast("error", getApiErrorMessage(error));
+    } finally {
+      setIsPublishing(false);
+    }
   }
 
   function handleSchedulePublication() {
@@ -772,6 +859,67 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
         <div>
           <StepHeader marker="4" title={dict.studio.step4Title} />
           <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            {publishMode === "now" ? (
+              <div className="mb-5 space-y-3">
+                <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-4 text-sm dark:border-gray-700 dark:bg-gray-800/50">
+                  <div className="font-semibold text-gray-900 dark:text-gray-100">
+                    LinkedIn publish
+                  </div>
+                  <div className="mt-1 text-gray-600 dark:text-gray-400">
+                    {linkedinConnection
+                      ? `Connected as ${linkedinConnection.provider_account_name ?? linkedinConnection.provider_account_id}`
+                      : "No LinkedIn account connected."}
+                  </div>
+                  {!linkedinConnection ? (
+                    <Link
+                      href="/dashboard"
+                      className="mt-3 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      Manage connected accounts
+                    </Link>
+                  ) : null}
+                </div>
+
+                {latestPublication ? (
+                  <div
+                    className={`rounded-xl border p-4 text-sm ${
+                      latestPublication.status === "completed"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                        : latestPublication.status === "failed"
+                          ? "border-red-200 bg-red-50 text-red-900 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+                          : "border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300"
+                    }`}
+                  >
+                    <div className="font-semibold">
+                      {latestPublication.status === "completed"
+                        ? "Published on LinkedIn"
+                        : latestPublication.status === "failed"
+                          ? "LinkedIn publication failed"
+                          : "LinkedIn publication in progress"}
+                    </div>
+                    <div className="mt-1 opacity-90">
+                      {latestPublication.status === "completed"
+                        ? latestPublication.external_post_urn
+                        : latestPublication.status === "failed"
+                          ? latestPublication.error_detail
+                          : "The backend worker is processing this publication."}
+                    </div>
+                    {latestPublication.status === "completed" &&
+                    latestPublication.external_post_url ? (
+                      <a
+                        href={latestPublication.external_post_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-3 inline-flex font-semibold underline underline-offset-2"
+                      >
+                        Open on LinkedIn
+                      </a>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="flex gap-2">
               <button
                 type="button"
@@ -839,7 +987,8 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
               <button
                 type="button"
                 onClick={publishMode === "schedule" ? handleSchedulePublication : handlePublishNow}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:-translate-y-px hover:bg-blue-700"
+                disabled={publishMode === "now" ? publishDisabled : false}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:-translate-y-px hover:bg-blue-700 disabled:pointer-events-none disabled:bg-blue-300 disabled:hover:translate-y-0 dark:disabled:bg-blue-900/40"
               >
                 {publishMode === "schedule" ? (
                   <>
@@ -849,7 +998,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                 ) : (
                   <>
                     <MegaphoneIcon size={15} weight="bold" />
-                    {dict.studio.publish}
+                    {isPublishing ? dict.studio.publishNow : dict.studio.publish}
                   </>
                 )}
               </button>

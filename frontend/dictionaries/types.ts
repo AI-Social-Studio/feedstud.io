@@ -323,6 +323,13 @@ export type Dictionary = {
       fileDeleted: string;
       postCopied: string;
       publishQueued: string;
+      linkedinSelectFirst: string;
+      linkedinConnectFirst: string;
+      linkedinGenerateFirst: string;
+      linkedinUnsupportedAsset: string;
+      linkedinSingleImageOnly: string;
+      publicationQueued: string;
+      publicationPublished: string;
       scheduleMissingAll: string;
       scheduleMissingPerPost: string;
       scheduleReadyAll: string;

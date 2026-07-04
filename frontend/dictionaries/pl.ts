@@ -491,6 +491,13 @@ export const pl: Dictionary = {
       postCopied: "Post skopiowany do schowka.",
       publishQueued:
         "Publikacja została przygotowana. Backend posting flow dodamy w następnym kroku.",
+      linkedinSelectFirst: "Wybierz LinkedIn przed publikacją.",
+      linkedinConnectFirst: "Najpierw połącz konto LinkedIn.",
+      linkedinGenerateFirst: "Najpierw wygeneruj albo edytuj post na LinkedIn.",
+      linkedinUnsupportedAsset: "LinkedIn obsługuje tylko obrazy JPG, PNG i GIF.",
+      linkedinSingleImageOnly: "MVP LinkedIn obsługuje maksymalnie 1 obraz na post.",
+      publicationQueued: "Publikacja na LinkedIn została zakolejkowana.",
+      publicationPublished: "Opublikowano na LinkedIn.",
       scheduleMissingAll: "Ustaw datę i godzinę publikacji dla wszystkich postów.",
       scheduleMissingPerPost: "Ustaw datę i godzinę dla każdego zaznaczonego posta.",
       scheduleReadyAll: "Termin publikacji ustawiony dla wszystkich zaznaczonych postów.",
