@@ -19,6 +19,23 @@ class AppUser:
 
 
 @dataclass
+class SocialConnection:
+    app_user_id: UUID
+    provider: str
+    provider_account_id: str
+    provider_account_urn: str
+    id: UUID = field(default_factory=uuid4)
+    provider_account_name: str | None = None
+    access_token_encrypted: str = ""
+    refresh_token_encrypted: str | None = None
+    expires_at: datetime | None = None
+    scopes: list[str] = field(default_factory=list)
+    status: str = "active"
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
 class UploadedFile:
     app_user_id: UUID
     id: UUID = field(default_factory=uuid4)

@@ -55,6 +55,33 @@ class DraftModel(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class SocialConnectionModel(Base):
+    __tablename__ = "social_connections"
+    __table_args__ = (
+        Index("ix_social_connections_app_user_id", "app_user_id"),
+        Index(
+            "ix_social_connections_provider_account",
+            "provider",
+            "provider_account_id",
+            unique=True,
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    app_user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    provider: Mapped[str] = mapped_column(String(32), nullable=False)
+    provider_account_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    provider_account_urn: Mapped[str] = mapped_column(String(255), nullable=False)
+    provider_account_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    access_token_encrypted: Mapped[str] = mapped_column(Text, nullable=False)
+    refresh_token_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    scopes: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class AiExecutionModel(Base):
     __tablename__ = "ai_executions"
     __table_args__ = (

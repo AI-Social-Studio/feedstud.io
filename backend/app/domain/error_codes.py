@@ -18,5 +18,8 @@ class ErrorCode(StrEnum):
     UNAUTHORIZED = "unauthorized"
     DRAFT_NOT_FOUND = "draft_not_found"
     FILE_NOT_FOUND = "file_not_found"
+    SOCIAL_AUTH_NOT_CONFIGURED = "social_auth_not_configured"
+    SOCIAL_CONNECTION_NOT_FOUND = "social_connection_not_found"
+    SOCIAL_CONNECTION_CONFLICT = "social_connection_conflict"
     AI_EXECUTION_NOT_FOUND = "ai_execution_not_found"
     INTERNAL_SERVER_ERROR = "internal_server_error"

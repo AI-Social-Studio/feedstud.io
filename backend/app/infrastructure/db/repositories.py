@@ -10,10 +10,11 @@ from app.application.ports import (
     DraftRepository,
     FileRepository,
     GenerateJobRepository,
+    SocialConnectionRepository,
 )
-from app.domain.entities import AiExecution, AppUser, Draft, GenerateJob, UploadedFile
+from app.domain.entities import AiExecution, AppUser, Draft, GenerateJob, SocialConnection, UploadedFile
 from app.domain.value_objects import ImageContentType, Platform
-from app.infrastructure.db.models import AiExecutionModel, AppUserModel, DraftModel, GenerateJobModel, UploadedFileModel
+from app.infrastructure.db.models import AiExecutionModel, AppUserModel, DraftModel, GenerateJobModel, SocialConnectionModel, UploadedFileModel
 
 STALE_JOB_TIMEOUT = timedelta(minutes=15)
 
@@ -112,6 +113,103 @@ class SqlAlchemyFileRepository(FileRepository):
             content_type=ImageContentType(value=model.content_type, extension=model.extension),
             size_bytes=model.size_bytes,
             created_at=model.created_at,
+        )
+
+
+class SqlAlchemySocialConnectionRepository(SocialConnectionRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, connection: SocialConnection) -> None:
+        self._session.add(self._to_model(connection))
+        await self._session.commit()
+
+    async def update(self, connection: SocialConnection) -> bool:
+        model = await self._session.get(SocialConnectionModel, connection.id)
+        if model is None:
+            return False
+        model.provider_account_urn = connection.provider_account_urn
+        model.provider_account_name = connection.provider_account_name
+        model.access_token_encrypted = connection.access_token_encrypted
+        model.refresh_token_encrypted = connection.refresh_token_encrypted
+        model.expires_at = connection.expires_at
+        model.scopes = connection.scopes
+        model.status = connection.status
+        model.updated_at = connection.updated_at
+        await self._session.commit()
+        return True
+
+    async def get(
+        self, connection_id: UUID, *, app_user_id: UUID | None = None
+    ) -> SocialConnection | None:
+        stmt = select(SocialConnectionModel).where(SocialConnectionModel.id == connection_id)
+        if app_user_id is not None:
+            stmt = stmt.where(SocialConnectionModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+        return self._to_entity(model) if model else None
+
+    async def get_by_provider_account(
+        self, *, provider: str, provider_account_id: str
+    ) -> SocialConnection | None:
+        result = await self._session.execute(
+            select(SocialConnectionModel)
+            .where(SocialConnectionModel.provider == provider)
+            .where(SocialConnectionModel.provider_account_id == provider_account_id)
+        )
+        model = result.scalar_one_or_none()
+        return self._to_entity(model) if model else None
+
+    async def list_by_user(self, *, app_user_id: UUID) -> list[SocialConnection]:
+        result = await self._session.execute(
+            select(SocialConnectionModel)
+            .where(SocialConnectionModel.app_user_id == app_user_id)
+            .order_by(SocialConnectionModel.created_at.desc())
+        )
+        return [self._to_entity(model) for model in result.scalars().all()]
+
+    async def delete(self, connection_id: UUID, *, app_user_id: UUID | None = None) -> bool:
+        stmt = delete(SocialConnectionModel).where(SocialConnectionModel.id == connection_id)
+        if app_user_id is not None:
+            stmt = stmt.where(SocialConnectionModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt)
+        await self._session.commit()
+        return result.rowcount > 0
+
+    @staticmethod
+    def _to_model(connection: SocialConnection) -> SocialConnectionModel:
+        return SocialConnectionModel(
+            id=connection.id,
+            app_user_id=connection.app_user_id,
+            provider=connection.provider,
+            provider_account_id=connection.provider_account_id,
+            provider_account_urn=connection.provider_account_urn,
+            provider_account_name=connection.provider_account_name,
+            access_token_encrypted=connection.access_token_encrypted,
+            refresh_token_encrypted=connection.refresh_token_encrypted,
+            expires_at=connection.expires_at,
+            scopes=connection.scopes,
+            status=connection.status,
+            created_at=connection.created_at,
+            updated_at=connection.updated_at,
+        )
+
+    @staticmethod
+    def _to_entity(model: SocialConnectionModel) -> SocialConnection:
+        return SocialConnection(
+            id=model.id,
+            app_user_id=model.app_user_id,
+            provider=model.provider,
+            provider_account_id=model.provider_account_id,
+            provider_account_urn=model.provider_account_urn,
+            provider_account_name=model.provider_account_name,
+            access_token_encrypted=model.access_token_encrypted,
+            refresh_token_encrypted=model.refresh_token_encrypted,
+            expires_at=model.expires_at,
+            scopes=model.scopes,
+            status=model.status,
+            created_at=model.created_at,
+            updated_at=model.updated_at,
         )
 
 

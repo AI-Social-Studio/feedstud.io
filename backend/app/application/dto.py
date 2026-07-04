@@ -25,6 +25,37 @@ class UploadedFileView:
 
 
 @dataclass
+class SocialConnectionView:
+    id: UUID
+    provider: str
+    provider_account_id: str
+    provider_account_urn: str
+    provider_account_name: str | None
+    expires_at: datetime | None
+    scopes: list[str]
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+
+@dataclass
+class SocialConnectionStartView:
+    authorization_url: str
+
+
+@dataclass
+class SocialOAuthConnectionData:
+    provider: str
+    provider_account_id: str
+    provider_account_urn: str
+    access_token: str
+    refresh_token: str | None
+    expires_at: datetime | None
+    scopes: list[str]
+    provider_account_name: str | None = None
+
+
+@dataclass
 class ErrorView:
     code: ErrorCode
     detail: str

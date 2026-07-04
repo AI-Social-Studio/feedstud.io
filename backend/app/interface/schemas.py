@@ -187,3 +187,20 @@ class AiExecutionDetailResponse(BaseModel):
     raw_generation_response: dict | None
     error_message: str | None
     error_json: dict | None
+
+
+class SocialConnectionResponse(BaseModel):
+    id: UUID
+    provider: str
+    provider_account_id: str
+    provider_account_urn: str
+    provider_account_name: str | None
+    expires_at: datetime | None
+    scopes: list[str]
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class SocialConnectionStartResponse(BaseModel):
+    authorization_url: str
