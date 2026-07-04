@@ -4,7 +4,7 @@ import { CheckIcon, CopyIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import type { AiExecutionDetail } from "@/lib/feedstudio-api";
+import type { AiExecutionDetail } from "@/lib/admin-ai-telemetry";
 import { useLanguage } from "@/lib/i18n";
 import { useMountEffect } from "@/lib/use-mount-effect";
 import {

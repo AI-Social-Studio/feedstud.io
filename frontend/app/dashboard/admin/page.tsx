@@ -4,7 +4,7 @@ import {
   fetchAiExecutionServer,
   fetchAiUsageSummaryServer,
   listAiExecutionsServer,
-} from "@/lib/feedstudio-api-server";
+} from "@/lib/server-admin-ai-telemetry";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 const MAX_EXECUTIONS_LIMIT = 200;

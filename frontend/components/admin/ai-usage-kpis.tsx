@@ -1,6 +1,6 @@
 "use client";
 
-import type { AiUsageSummary } from "@/lib/feedstudio-api";
+import type { AiUsageSummary } from "@/lib/admin-ai-telemetry";
 import { formatTelemetryCurrency } from "@/lib/admin-telemetry";
 import { useLanguage } from "@/lib/i18n";
 

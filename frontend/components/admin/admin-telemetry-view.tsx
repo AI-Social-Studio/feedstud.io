@@ -7,7 +7,11 @@ import { AiUsageKpis } from "@/components/admin/ai-usage-kpis";
 import { AiCostByModel } from "@/components/admin/ai-cost-by-model";
 import { AiCostChart } from "@/components/admin/ai-cost-chart";
 import { useDictionary } from "@/lib/i18n";
-import type { AiExecutionDetail, AiExecutionListItem, AiUsageSummary } from "@/lib/feedstudio-api";
+import type {
+  AiExecutionDetail,
+  AiExecutionListItem,
+  AiUsageSummary,
+} from "@/lib/admin-ai-telemetry";
 
 type FilterValues = {
   kind?: string;

@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { createAuthedBackendProxy } from "@/lib/authed-backend-proxy";
+import { createAuthedBackendProxy } from "@/lib/authenticated-backend-api-proxy";
 
 type RouteContext = {
   params: Promise<{ jobId: string }>;

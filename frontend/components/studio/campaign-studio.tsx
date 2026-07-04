@@ -25,18 +25,15 @@ import type { Dictionary } from "@/dictionaries";
 import { useDictionary } from "@/lib/i18n";
 import { PlatformPreview } from "./platform-preview";
 import { PLATFORM_META, PLATFORM_ORDER, type Platform, type RefineAction } from "./content-engine";
+import { createDraft, type Draft, type UploadedFile, updateDraft } from "@/lib/drafts-api";
 import {
-  createDraft,
   deleteUpload,
   generatePosts,
   getApiErrorMessage,
   refinePost,
   type GenerateResponse,
-  updateDraft,
   uploadFiles,
-  type Draft,
-  type UploadedFile,
-} from "@/lib/feedstudio-api";
+} from "@/lib/studio-api";
 
 const DEMO_IMAGE: Record<Platform, string | undefined> = {
   linkedin: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=640&q=80",

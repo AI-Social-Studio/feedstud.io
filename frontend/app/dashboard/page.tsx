@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { HomeView } from "@/components/dashboard/home-view";
-import { listDraftsServer } from "@/lib/feedstudio-api-server";
+import { listDraftsServer } from "@/lib/server-drafts-api";
 import { getSessionAppRole } from "@/lib/auth/roles";
-import type { DraftSummary } from "@/lib/feedstudio-api";
+import type { DraftSummary } from "@/lib/drafts-api";
 import { parseSidebarCollapsed, SIDEBAR_COLLAPSED_COOKIE_NAME } from "@/lib/sidebar-state";
 
 export default async function DashboardHomePage() {

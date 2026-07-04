@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { formatTelemetryCurrency } from "@/lib/admin-telemetry";
-import type { AiExecutionListItem } from "@/lib/feedstudio-api";
+import type { AiExecutionListItem } from "@/lib/admin-ai-telemetry";
 import { useLanguage } from "@/lib/i18n";
 
 type DayBucket = {

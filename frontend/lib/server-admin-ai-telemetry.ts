@@ -2,19 +2,21 @@ import type {
   AiExecutionDetail,
   AiExecutionListItem,
   AiUsageSummary,
-  Draft,
-  DraftSummary,
-} from "@/lib/feedstudio-api";
-import { BackendRequestError, backendJson } from "@/lib/feedstudio-backend";
+} from "@/lib/admin-ai-telemetry";
+import { BackendRequestError, backendJson } from "@/lib/backend-api-client";
 
-export async function fetchDraftServer(draftId: string): Promise<Draft | null> {
-  try {
-    return await backendJson<Draft>(`/drafts/${encodeURIComponent(draftId)}`);
-  } catch (error) {
-    if (error instanceof BackendRequestError && error.status === 404) return null;
-    throw error;
-  }
-}
+type AiUsageFilters = {
+  limit?: number;
+  offset?: number;
+  kind?: string;
+  status?: string;
+  platform?: string;
+  action?: string;
+  model?: string;
+  userId?: string;
+  from?: string;
+  to?: string;
+};
 
 export async function fetchAiUsageSummaryServer(
   filters: AiUsageFilters = {},
@@ -50,23 +52,6 @@ export async function fetchAiExecutionServer(
     throw error;
   }
 }
-
-export async function listDraftsServer(limit = 50): Promise<DraftSummary[]> {
-  return backendJson<DraftSummary[]>(`/drafts?limit=${limit}`);
-}
-
-type AiUsageFilters = {
-  limit?: number;
-  offset?: number;
-  kind?: string;
-  status?: string;
-  platform?: string;
-  action?: string;
-  model?: string;
-  userId?: string;
-  from?: string;
-  to?: string;
-};
 
 function emptyAiUsageSummary(): AiUsageSummary {
   return {
