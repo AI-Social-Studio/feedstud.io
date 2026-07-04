@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { NewCampaignButton } from "@/components/dashboard/new-campaign-button";
+import { SocialConnectionsCard } from "@/components/dashboard/social-connections-card";
 import { PlatformIconBadge } from "@/components/ui/platform-icon-badge";
 import type { AppRole } from "@/lib/auth/roles";
 import { useLanguage } from "@/lib/i18n";
 import type { DraftSummary } from "@/lib/drafts-api";
+import type { SocialConnection } from "@/lib/social-connections-api";
 import type { Platform } from "@/components/studio/content-engine";
 
 type Props = {
@@ -16,6 +18,7 @@ type Props = {
   last30Days: number;
   total: number;
   recentDrafts: DraftSummary[];
+  socialConnections: SocialConnection[];
 };
 
 export function HomeView({
@@ -25,6 +28,7 @@ export function HomeView({
   last30Days,
   total,
   recentDrafts,
+  socialConnections,
 }: Props) {
   const { locale, dict } = useLanguage();
 
@@ -45,6 +49,8 @@ export function HomeView({
         <StatCard label={dict.home.statLast30} value={last30Days} />
         <StatCard label={dict.home.statTotal} value={total} />
       </div>
+
+      <SocialConnectionsCard connections={socialConnections} />
 
       <div>
         <div className="mb-3 flex items-center justify-between">

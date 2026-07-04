@@ -4,6 +4,7 @@ import { HomeView } from "@/components/dashboard/home-view";
 import { listDraftsServer } from "@/lib/server-drafts-api";
 import { getSessionAppRole } from "@/lib/auth/roles";
 import type { DraftSummary } from "@/lib/drafts-api";
+import { listSocialConnectionsServer } from "@/lib/server-social-connections-api";
 import { parseSidebarCollapsed, SIDEBAR_COLLAPSED_COOKIE_NAME } from "@/lib/sidebar-state";
 
 export default async function DashboardHomePage() {
@@ -11,7 +12,11 @@ export default async function DashboardHomePage() {
   const initialSidebarCollapsed = parseSidebarCollapsed(
     cookieStore.get(SIDEBAR_COLLAPSED_COOKIE_NAME)?.value,
   );
-  const [drafts, role] = await Promise.all([listDraftsServer(100), getSessionAppRole()]);
+  const [drafts, role, socialConnections] = await Promise.all([
+    listDraftsServer(100),
+    getSessionAppRole(),
+    listSocialConnectionsServer(),
+  ]);
   // connection() opts this page into per-request dynamic rendering, making Date.now() safe here:
   // https://nextjs.org/docs/app/getting-started/caching#working-with-non-deterministic-operations
   await connection();
@@ -30,6 +35,7 @@ export default async function DashboardHomePage() {
       last30Days={last30Days}
       total={drafts.length}
       recentDrafts={recentDrafts}
+      socialConnections={socialConnections}
     />
   );
 }
