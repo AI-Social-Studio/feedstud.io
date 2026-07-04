@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     openrouter_max_tokens: int = 8192
     openrouter_temperature: float = 0.9
     openrouter_site_url: str = "http://localhost:3000"
-    openrouter_app_name: str = "FlowForge"
+    openrouter_app_name: str = "Feedstudio"
 
     rabbitmq_url: str
     rabbitmq_generate_queue: str = "generate_posts"

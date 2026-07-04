@@ -1,6 +1,6 @@
 "use client";
 
-import type { AiUsageSummary } from "@/lib/flowforge-api";
+import type { AiUsageSummary } from "@/lib/feedstudio-api";
 import { formatTelemetryCurrency } from "@/lib/admin-telemetry";
 import { useLanguage } from "@/lib/i18n";
 

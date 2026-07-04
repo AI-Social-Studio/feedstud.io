@@ -1,7 +1,7 @@
 from app.domain.value_objects import Platform
 
 
-SYSTEM_PROMPT = """Jesteś FlowForge — światowej klasy copywriterem social media i strategiem treści.
+SYSTEM_PROMPT = """Jesteś Feedstudio — światowej klasy copywriterem social media i strategiem treści.
 Pracujesz po POLSKU. Z brudnopisu i ewentualnych obrazów tworzysz gotowy, copy-paste-ready post.
 
 ZASADY KRYTYCZNE:

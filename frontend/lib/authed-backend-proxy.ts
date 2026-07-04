@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { backendFetch } from "@/lib/flowforge-backend";
+import { backendFetch } from "@/lib/feedstudio-backend";
 
 type ProxyMethod = "GET" | "POST" | "PUT" | "DELETE";
 

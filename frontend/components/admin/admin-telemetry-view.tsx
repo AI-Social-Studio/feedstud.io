@@ -7,7 +7,7 @@ import { AiUsageKpis } from "@/components/admin/ai-usage-kpis";
 import { AiCostByModel } from "@/components/admin/ai-cost-by-model";
 import { AiCostChart } from "@/components/admin/ai-cost-chart";
 import { useDictionary } from "@/lib/i18n";
-import type { AiExecutionDetail, AiExecutionListItem, AiUsageSummary } from "@/lib/flowforge-api";
+import type { AiExecutionDetail, AiExecutionListItem, AiUsageSummary } from "@/lib/feedstudio-api";
 
 type FilterValues = {
   kind?: string;

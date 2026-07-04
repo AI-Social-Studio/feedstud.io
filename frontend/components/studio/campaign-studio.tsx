@@ -36,7 +36,7 @@ import {
   uploadFiles,
   type Draft,
   type UploadedFile,
-} from "@/lib/flowforge-api";
+} from "@/lib/feedstudio-api";
 
 const DEMO_IMAGE: Record<Platform, string | undefined> = {
   linkedin: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=640&q=80",

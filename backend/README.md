@@ -12,10 +12,10 @@ Services:
 
 - backend: http://localhost:4000 (OpenAPI: http://localhost:4000/docs)
 - MinIO API: http://localhost:9000
-- MinIO Console: http://localhost:9001 (login `flowforge` / `flowforge-secret`)
-- Postgres: localhost:5433 (`flowforge` / `flowforge` / db `flowforge`)
+- MinIO Console: http://localhost:9001 (login `feedstudio` / `feedstudio-secret`)
+- Postgres: localhost:5433 (`feedstudio` / `feedstudio` / db `feedstudio`)
 
-Bucket `flowforge-uploads` is auto-created on startup. DB schema is auto-created via `Base.metadata.create_all` in the lifespan; set `DB_RESET_ON_START=true` in `.env` to drop+recreate on every boot (local dev mode).
+Bucket `feedstudio-uploads` is auto-created on startup. DB schema is auto-created via `Base.metadata.create_all` in the lifespan; set `DB_RESET_ON_START=true` in `.env` to drop+recreate on every boot (local dev mode).
 
 ## Required env
 
@@ -27,7 +27,7 @@ OPENROUTER_MODEL=openai/gpt-oss-120b:free
 OPENROUTER_MAX_TOKENS=8192
 OPENROUTER_TEMPERATURE=0.9
 OPENROUTER_SITE_URL=http://localhost:3000
-OPENROUTER_APP_NAME=FlowForge
+OPENROUTER_APP_NAME=Feedstudio
 DB_RESET_ON_START=true
 ```
 

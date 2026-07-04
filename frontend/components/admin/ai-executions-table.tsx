@@ -8,7 +8,7 @@ import {
   CaretDownIcon,
   DownloadSimpleIcon,
 } from "@phosphor-icons/react";
-import type { AiExecutionListItem } from "@/lib/flowforge-api";
+import type { AiExecutionListItem } from "@/lib/feedstudio-api";
 import { useLanguage } from "@/lib/i18n";
 import {
   formatTelemetryCurrency,

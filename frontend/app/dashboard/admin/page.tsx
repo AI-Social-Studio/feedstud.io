@@ -4,7 +4,7 @@ import {
   fetchAiExecutionServer,
   fetchAiUsageSummaryServer,
   listAiExecutionsServer,
-} from "@/lib/flowforge-api-server";
+} from "@/lib/feedstudio-api-server";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 const MAX_EXECUTIONS_LIMIT = 200;

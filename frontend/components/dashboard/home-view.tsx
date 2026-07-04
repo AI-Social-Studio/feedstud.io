@@ -6,7 +6,7 @@ import { NewCampaignButton } from "@/components/dashboard/new-campaign-button";
 import { PlatformIconBadge } from "@/components/ui/platform-icon-badge";
 import type { AppRole } from "@/lib/auth/roles";
 import { useLanguage } from "@/lib/i18n";
-import type { DraftSummary } from "@/lib/flowforge-api";
+import type { DraftSummary } from "@/lib/feedstudio-api";
 import type { Platform } from "@/components/studio/content-engine";
 
 type Props = {

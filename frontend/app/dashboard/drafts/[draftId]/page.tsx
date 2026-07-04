@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { CampaignStudio } from "@/components/studio/campaign-studio";
-import { fetchDraftServer } from "@/lib/flowforge-api-server";
+import { fetchDraftServer } from "@/lib/feedstudio-api-server";
 import { getSessionAppRole } from "@/lib/auth/roles";
 import { parseSidebarCollapsed, SIDEBAR_COLLAPSED_COOKIE_NAME } from "@/lib/sidebar-state";
 

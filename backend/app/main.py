@@ -47,7 +47,7 @@ async def lifespan(_: FastAPI):
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
-        title="FlowForge Backend",
+        title="Feedstudio Backend",
         version="0.1.0",
         lifespan=lifespan,
     )

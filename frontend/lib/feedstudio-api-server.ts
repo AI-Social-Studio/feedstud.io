@@ -4,8 +4,8 @@ import type {
   AiUsageSummary,
   Draft,
   DraftSummary,
-} from "@/lib/flowforge-api";
-import { BackendRequestError, backendJson } from "@/lib/flowforge-backend";
+} from "@/lib/feedstudio-api";
+import { BackendRequestError, backendJson } from "@/lib/feedstudio-backend";
 
 export async function fetchDraftServer(draftId: string): Promise<Draft | null> {
   try {

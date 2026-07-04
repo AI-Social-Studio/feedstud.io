@@ -1,4 +1,4 @@
-name: flowforge
+name: feedstudio
 
 x-app-shared-env: &app-shared-env
   OPENROUTER_API_KEY: "${OPENROUTER_API_KEY:-}"
@@ -6,7 +6,7 @@ x-app-shared-env: &app-shared-env
   OPENROUTER_MAX_TOKENS: "${OPENROUTER_MAX_TOKENS:-8192}"
   OPENROUTER_TEMPERATURE: "${OPENROUTER_TEMPERATURE:-0.9}"
   OPENROUTER_SITE_URL: "${OPENROUTER_SITE_URL:-http://localhost:3000}"
-  OPENROUTER_APP_NAME: "${OPENROUTER_APP_NAME:-FlowForge}"
+  OPENROUTER_APP_NAME: "${OPENROUTER_APP_NAME:-Feedstudio}"
   RABBITMQ_URL: "${RABBITMQ_URL:?RABBITMQ_URL must be set}"
   RABBITMQ_GENERATE_QUEUE: "${RABBITMQ_GENERATE_QUEUE:-generate_posts}"
   RABBITMQ_PREFETCH_COUNT: "${RABBITMQ_PREFETCH_COUNT:-10}"
@@ -15,15 +15,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: flowforge
-      POSTGRES_PASSWORD: flowforge
-      POSTGRES_DB: flowforge
+      POSTGRES_USER: feedstudio
+      POSTGRES_PASSWORD: feedstudio
+      POSTGRES_DB: feedstudio
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U flowforge -d flowforge"]
+      test: ["CMD-SHELL", "pg_isready -U feedstudio -d feedstudio"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -32,8 +32,8 @@ services:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: flowforge
-      MINIO_ROOT_PASSWORD: flowforge-secret
+      MINIO_ROOT_USER: feedstudio
+      MINIO_ROOT_PASSWORD: feedstudio-secret
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -48,8 +48,8 @@ services:
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     environment:
-      RABBITMQ_DEFAULT_USER: flowforge
-      RABBITMQ_DEFAULT_PASS: flowforge
+      RABBITMQ_DEFAULT_USER: feedstudio
+      RABBITMQ_DEFAULT_PASS: feedstudio
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -70,11 +70,11 @@ services:
       APP_ENV: development
       APP_PORT: 4000
       CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
-      DATABASE_URL: postgresql+asyncpg://flowforge:flowforge@postgres:5432/flowforge
+      DATABASE_URL: postgresql+asyncpg://feedstudio:feedstudio@postgres:5432/feedstudio
       MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: flowforge
-      MINIO_SECRET_KEY: flowforge-secret
-      MINIO_BUCKET: flowforge-uploads
+      MINIO_ACCESS_KEY: feedstudio
+      MINIO_SECRET_KEY: feedstudio-secret
+      MINIO_BUCKET: feedstudio-uploads
       MINIO_SECURE: "false"
       MINIO_PUBLIC_ENDPOINT: http://localhost:9000
       UPLOAD_MAX_FILES: "10"
@@ -99,11 +99,11 @@ services:
     environment:
       <<: *app-shared-env
       APP_ENV: development
-      DATABASE_URL: postgresql+asyncpg://flowforge:flowforge@postgres:5432/flowforge
+      DATABASE_URL: postgresql+asyncpg://feedstudio:feedstudio@postgres:5432/feedstudio
       MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: flowforge
-      MINIO_SECRET_KEY: flowforge-secret
-      MINIO_BUCKET: flowforge-uploads
+      MINIO_ACCESS_KEY: feedstudio
+      MINIO_SECRET_KEY: feedstudio-secret
+      MINIO_BUCKET: feedstudio-uploads
       MINIO_SECURE: "false"
       MINIO_PUBLIC_ENDPOINT: http://localhost:9000
     depends_on:

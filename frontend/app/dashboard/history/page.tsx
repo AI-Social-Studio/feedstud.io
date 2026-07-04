@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { MyCampaignsView } from "@/components/dashboard/my-campaigns-view";
-import { listDraftsServer } from "@/lib/flowforge-api-server";
+import { listDraftsServer } from "@/lib/feedstudio-api-server";
 import { getSessionAppRole } from "@/lib/auth/roles";
 import { parseSidebarCollapsed, SIDEBAR_COLLAPSED_COOKIE_NAME } from "@/lib/sidebar-state";
 

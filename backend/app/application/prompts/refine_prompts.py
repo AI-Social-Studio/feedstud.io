@@ -1,7 +1,7 @@
 from app.domain.value_objects import Platform, RefineAction
 
 
-REFINE_SYSTEM_PROMPT = """Jesteś FlowForge — refinujesz istniejący post po polsku.
+REFINE_SYSTEM_PROMPT = """Jesteś Feedstudio — refinujesz istniejący post po polsku.
 Dostajesz tekst posta i akcję modyfikującą. Zwracasz przerobiony post.
 
 ZASADY:

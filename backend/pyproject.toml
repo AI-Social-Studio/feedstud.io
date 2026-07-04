@@ -1,7 +1,7 @@
 [project]
-name = "flowforge-backend"
+name = "feedstudio-backend"
 version = "0.1.0"
-description = "FlowForge backend: FastAPI + PostgreSQL + MinIO + OpenRouter content generation"
+description = "Feedstudio backend: FastAPI + PostgreSQL + MinIO + OpenRouter content generation"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi[standard]>=0.115.0",

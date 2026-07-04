@@ -66,11 +66,11 @@ else
 fi
 
 echo ""
-echo "FlowForge is running:"
+echo "Feedstudio is running:"
 echo "  frontend: http://localhost:3000"
 echo "  backend:  http://localhost:4000"
 echo "  docs:     http://localhost:4000/docs"
-echo "  minio:    http://localhost:9001 (flowforge / flowforge-secret)"
+echo "  minio:    http://localhost:9001 (feedstudio / feedstudio-secret)"
 echo ""
 echo "Press Ctrl+C to stop the frontend dev server. Docker services stay running."
 echo "Stop Docker services with: cd backend && docker compose down"
