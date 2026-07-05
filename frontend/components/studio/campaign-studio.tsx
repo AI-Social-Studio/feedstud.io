@@ -1012,11 +1012,7 @@ export function CampaignStudio({
                           : dict.studio.publicationInProgress}
                     </div>
                     <div className="mt-1 opacity-90">
-                      {latestPublication.status === "completed"
-                        ? latestPublication.external_post_urn
-                        : latestPublication.status === "failed"
-                          ? getPublicationErrorMessage(latestPublication, dict)
-                          : dict.studio.publicationProcessingHint}
+                      {getPublicationErrorMessage(latestPublication, dict)}
                     </div>
                     {latestPublication.status === "completed" &&
                     latestPublication.external_post_url ? (
@@ -1287,7 +1283,7 @@ function getPublicationStatusLabel(publication: Publication, dict: Dictionary) {
 
 function getPublicationErrorMessage(publication: Publication, dict: Dictionary) {
   if (publication.status === "completed") {
-    return publication.external_post_urn ?? dict.studio.publicationCompleted;
+    return dict.studio.publicationCompleted;
   }
   if (publication.status !== "failed") {
     return dict.studio.publicationProcessingHint;
