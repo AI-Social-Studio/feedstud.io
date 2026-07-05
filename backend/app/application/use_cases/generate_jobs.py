@@ -89,12 +89,18 @@ class ProcessGenerateJobUseCase:
         if not await self._jobs.mark_processing(job_id):
             return
 
-        try:
-            memory_ctx = ""
-            if self._memory is not None and job.actor_user_id:
+        memory_ctx = ""
+        if self._memory is not None and job.actor_user_id:
+            try:
                 user_memory = await self._memory.get_by_user_id(job.actor_user_id)
                 memory_ctx = build_memory_context(user_memory)
+            except Exception:
+                logger.warning(
+                    "Failed to load user memory, proceeding without context",
+                    extra={"job_id": str(job_id), "user_id": job.actor_user_id},
+                )
 
+        try:
             result = await self._generator.execute(
                 GeneratePostsInput(
                     raw_text=job.raw_text,
