@@ -32,4 +32,8 @@ class EnsureAppUserUseCase:
             display_name=payload.display_name,
         )
         await self._users.add(app_user)
-        return app_user.id
+        persisted = await self._users.get_by_auth_identity(
+            provider=payload.auth_provider,
+            subject=payload.auth_subject,
+        )
+        return persisted.id if persisted is not None else app_user.id

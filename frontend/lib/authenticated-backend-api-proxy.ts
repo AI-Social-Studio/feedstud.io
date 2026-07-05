@@ -16,7 +16,7 @@ export async function createAuthedBackendProxy(
   }
 
   let payload: unknown;
-  if (method !== "GET") {
+  if (method !== "GET" && request.body !== null) {
     try {
       payload = await request.json();
     } catch {

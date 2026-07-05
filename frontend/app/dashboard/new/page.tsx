@@ -17,10 +17,8 @@ export default async function NewCampaignPage({ searchParams }: Props) {
     cookieStore.get(SIDEBAR_COLLAPSED_COOKIE_NAME)?.value,
   );
   const { title } = await searchParams;
-  const [role, socialConnections] = await Promise.all([
-    getSessionAppRole(),
-    listSocialConnectionsServer(),
-  ]);
+  const role = await getSessionAppRole();
+  const socialConnections = await listSocialConnectionsServer().catch(() => []);
 
   return (
     <DashboardShell role={role ?? "user"} initialCollapsed={initialSidebarCollapsed}>

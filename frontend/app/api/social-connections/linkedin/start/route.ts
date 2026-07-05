@@ -9,8 +9,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
+  const redirectUri = new URL("/api/social-connections/linkedin/callback", request.url).toString();
+
   try {
-    const redirectUri = new URL("/api/social-connections/linkedin/callback", request.url).toString();
     const params = new URLSearchParams({ redirect_uri: redirectUri });
     const response = await backendJson<{ authorization_url: string }>(
       `/social-connections/linkedin/start?${params.toString()}`,
@@ -19,7 +20,12 @@ export async function GET(request: NextRequest) {
       },
     );
     return NextResponse.redirect(response.authorization_url);
-  } catch {
+  } catch (error) {
+    console.error("LinkedIn start failed", {
+      userId,
+      redirectUri,
+      error,
+    });
     return NextResponse.redirect(new URL("/dashboard?linkedin=error", request.url));
   }
 }

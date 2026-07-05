@@ -82,7 +82,19 @@ class CompleteLinkedInConnectUseCase:
                 scopes=resolved.scopes,
             )
             await self._connections.add(connection)
-            return _to_view(connection)
+            persisted = await self._connections.get_by_provider_account(
+                provider=resolved.provider,
+                provider_account_id=resolved.provider_account_id,
+            )
+            if persisted is None:
+                return _to_view(connection)
+            if persisted.app_user_id != payload.app_user_id:
+                raise DomainError(
+                    "Social account already connected to another user",
+                    code=ErrorCode.SOCIAL_CONNECTION_CONFLICT,
+                    public_message="Social account is already connected",
+                )
+            return _to_view(persisted)
 
         existing.provider_account_urn = resolved.provider_account_urn
         existing.provider_account_name = resolved.provider_account_name

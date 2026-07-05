@@ -16,7 +16,9 @@ export function SocialConnectionsCard({ connections: initialConnections }: Props
   const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
   const [disconnectError, setDisconnectError] = useState<string | null>(null);
   const linkedinConnection =
-    connections.find((connection) => connection.provider === "linkedin") ?? null;
+    connections.find(
+      (connection) => connection.provider === "linkedin" && connection.status === "active",
+    ) ?? null;
 
   async function handleDisconnect(connectionId: string) {
     setDisconnectingId(connectionId);

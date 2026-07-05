@@ -419,8 +419,9 @@ def get_refine_post_use_case(
 
 def get_save_draft_use_case(
     drafts: DraftRepository = Depends(get_draft_repository),
+    files: FileRepository = Depends(get_file_repository),
 ) -> SaveDraftUseCase:
-    return SaveDraftUseCase(drafts=drafts)
+    return SaveDraftUseCase(drafts=drafts, files=files)
 
 
 def get_list_drafts_use_case(

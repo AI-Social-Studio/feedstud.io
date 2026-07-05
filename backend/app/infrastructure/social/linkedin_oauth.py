@@ -1,4 +1,5 @@
 import base64
+import binascii
 import hashlib
 import hmac
 import json
@@ -148,7 +149,19 @@ def _verify_state(*, state: str, expected_app_user_id: UUID, secret: bytes) -> N
             public_message="LinkedIn authorization failed",
         ) from exc
 
-    expected_signature = hmac.new(secret, payload_b64.encode("ascii"), hashlib.sha256).hexdigest()
+    try:
+        expected_signature = hmac.new(secret, payload_b64.encode("ascii"), hashlib.sha256).hexdigest()
+        payload = json.loads(base64.urlsafe_b64decode(payload_b64.encode("ascii")))
+        if not isinstance(payload, dict):
+            raise TypeError("LinkedIn OAuth state payload must be an object")
+        ts = int(payload.get("ts") or 0)
+    except (ValueError, TypeError, UnicodeEncodeError, json.JSONDecodeError, binascii.Error) as exc:
+        raise DomainError(
+            "LinkedIn OAuth state is invalid",
+            code=ErrorCode.CLIENT_ERROR,
+            public_message="LinkedIn authorization failed",
+        ) from exc
+
     if not hmac.compare_digest(signature, expected_signature):
         raise DomainError(
             "LinkedIn OAuth state signature mismatch",
@@ -156,14 +169,12 @@ def _verify_state(*, state: str, expected_app_user_id: UUID, secret: bytes) -> N
             public_message="LinkedIn authorization failed",
         )
 
-    payload = json.loads(base64.urlsafe_b64decode(payload_b64.encode("ascii")))
     if payload.get("app_user_id") != str(expected_app_user_id):
         raise DomainError(
             "LinkedIn OAuth state user mismatch",
             code=ErrorCode.CLIENT_ERROR,
             public_message="LinkedIn authorization failed",
         )
-    ts = int(payload.get("ts") or 0)
     if ts <= 0 or time.time() - ts > STATE_MAX_AGE_SECONDS:
         raise DomainError(
             "LinkedIn OAuth state expired",

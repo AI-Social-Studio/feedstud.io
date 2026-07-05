@@ -285,6 +285,9 @@ export type Dictionary = {
     assetAltTextLabel: string;
     assetAltTextPlaceholder: string;
     manageConnectedAccounts: string;
+    linkedinPublishTitle: string;
+    linkedinConnectedAs: (accountName: string) => string;
+    linkedinDisconnected: string;
     publicationCompleted: string;
     publicationFailed: string;
     publicationInProgress: string;

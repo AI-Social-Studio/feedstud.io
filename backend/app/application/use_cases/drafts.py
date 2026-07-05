@@ -20,11 +20,13 @@ class SaveDraftInput:
 
 
 class SaveDraftUseCase:
-    def __init__(self, drafts: DraftRepository) -> None:
+    def __init__(self, drafts: DraftRepository, files: FileRepository) -> None:
         self._drafts = drafts
+        self._files = files
 
     async def execute(self, payload: SaveDraftInput) -> UUID:
         title = _normalize_title(payload.title, payload.raw_text, payload.posts)
+        await self._validate_file_ids(payload.file_ids, app_user_id=payload.app_user_id)
         if payload.draft_id is None:
             draft = Draft(
                 app_user_id=payload.app_user_id,
@@ -48,6 +50,11 @@ class SaveDraftUseCase:
         current.file_ids = payload.file_ids
         await self._drafts.update(current)
         return current.id
+
+    async def _validate_file_ids(self, file_ids: list[UUID], *, app_user_id: UUID) -> None:
+        for file_id in file_ids:
+            if await self._files.get(file_id, app_user_id=app_user_id) is None:
+                raise InvalidGenerateInputError(f"File '{file_id}' not found")
 
 
 class GetDraftUseCase:

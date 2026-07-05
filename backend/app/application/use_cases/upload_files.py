@@ -109,6 +109,7 @@ class DeleteFileUseCase:
         entity = await self._repository.get(file_id, app_user_id=app_user_id)
         if entity is None:
             return False
+        if not await self._repository.delete(file_id, app_user_id=app_user_id):
+            return False
         await self._storage.delete(entity.storage_key)
-        await self._repository.delete(file_id, app_user_id=app_user_id)
         return True

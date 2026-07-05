@@ -27,7 +27,12 @@ export async function GET(request: NextRequest) {
       headers: { "X-Actor-Id": userId },
     });
     return NextResponse.redirect(new URL("/dashboard?linkedin=connected", request.url));
-  } catch {
+  } catch (error) {
+    console.error("LinkedIn callback failed", {
+      userId,
+      redirectUri,
+      error,
+    });
     return NextResponse.redirect(new URL("/dashboard?linkedin=error", request.url));
   }
 }

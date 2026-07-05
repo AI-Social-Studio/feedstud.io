@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import logging
 from dataclasses import dataclass
 from time import perf_counter
@@ -22,6 +23,7 @@ from app.domain.exceptions import (
     InvalidPublicationInputError,
     ProviderRateLimitedError,
     SocialConnectionInvalidError,
+    SocialTokenExpiredError,
     TooManyPublicationAssetsError,
     UnsupportedPublicationAssetTypeError,
 )
@@ -112,7 +114,6 @@ class SubmitPublicationJobUseCase:
             platform_text=text,
             platform_payload={
                 "file_ids": [str(file_id) for file_id in ordered_file_ids],
-                "asset_order": [str(file_id) for file_id in ordered_file_ids],
                 "asset_alt_texts": {
                     str(file_id): _normalize_alt_text(payload.asset_alt_texts.get(file_id))
                     for file_id in ordered_file_ids
@@ -200,6 +201,7 @@ class ProcessPublicationJobUseCase:
             },
         )
 
+        connection = None
         try:
             connection = await self._connections.get(
                 publication.social_connection_id,
@@ -231,6 +233,29 @@ class ProcessPublicationJobUseCase:
                 text=publication.platform_text,
                 assets=publication.assets,
             )
+        except SocialTokenExpiredError as exc:
+            if connection is not None and connection.status == "active":
+                connection.status = "inactive"
+                connection.updated_at = datetime.now(timezone.utc)
+                await self._connections.update(connection)
+            await self._publications.fail(
+                publication_id,
+                from_status="processing",
+                code=exc.code.value,
+                detail=exc.public_message,
+            )
+            logger.info(
+                "Publication job failed",
+                extra={
+                    "publication_id": str(publication_id),
+                    "provider": publication.provider,
+                    "draft_id": str(publication.draft_id),
+                    "asset_count": len(publication.assets),
+                    "error_code": exc.code.value,
+                    "latency_ms": int((perf_counter() - started_at) * 1000),
+                },
+            )
+            return
         except DomainError as exc:
             await self._publications.fail(
                 publication_id,

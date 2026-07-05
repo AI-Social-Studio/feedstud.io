@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from sqlalchemy import case, delete, func, select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.ports import (
@@ -63,8 +64,9 @@ class SqlAlchemyAppUserRepository(AppUserRepository):
         )
 
     async def add(self, app_user: AppUser) -> None:
-        self._session.add(
-            AppUserModel(
+        await self._session.execute(
+            insert(AppUserModel)
+            .values(
                 id=app_user.id,
                 auth_provider=app_user.auth_provider,
                 auth_subject=app_user.auth_subject,
@@ -74,6 +76,7 @@ class SqlAlchemyAppUserRepository(AppUserRepository):
                 created_at=app_user.created_at,
                 updated_at=app_user.updated_at,
             )
+            .on_conflict_do_nothing(index_elements=["auth_provider", "auth_subject"])
         )
         await self._session.commit()
 
@@ -140,7 +143,25 @@ class SqlAlchemySocialConnectionRepository(SocialConnectionRepository):
         self._session = session
 
     async def add(self, connection: SocialConnection) -> None:
-        self._session.add(self._to_model(connection))
+        await self._session.execute(
+            insert(SocialConnectionModel)
+            .values(
+                id=connection.id,
+                app_user_id=connection.app_user_id,
+                provider=connection.provider,
+                provider_account_id=connection.provider_account_id,
+                provider_account_urn=connection.provider_account_urn,
+                provider_account_name=connection.provider_account_name,
+                access_token_encrypted=connection.access_token_encrypted,
+                refresh_token_encrypted=connection.refresh_token_encrypted,
+                expires_at=connection.expires_at,
+                scopes=connection.scopes,
+                status=connection.status,
+                created_at=connection.created_at,
+                updated_at=connection.updated_at,
+            )
+            .on_conflict_do_nothing(index_elements=["provider", "provider_account_id"])
+        )
         await self._session.commit()
 
     async def update(self, connection: SocialConnection) -> bool:

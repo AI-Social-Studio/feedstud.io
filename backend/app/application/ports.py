@@ -3,7 +3,11 @@ from datetime import datetime
 from typing import BinaryIO
 from uuid import UUID
 
-from app.application.dto import SocialOAuthConnectionData
+from app.application.dto import (
+    PreparedSocialAssetData,
+    PublishedPostData,
+    SocialOAuthConnectionData,
+)
 from app.domain.entities import (
     AppUser,
     AiExecution,
@@ -164,7 +168,7 @@ class SocialAssetPreparer(ABC):
         author_urn: str,
         file: UploadedFile,
         data: bytes,
-    ) -> "PreparedSocialAssetData": ...
+    ) -> PreparedSocialAssetData: ...
 
 
 class SocialPublisher(ABC):
@@ -176,7 +180,7 @@ class SocialPublisher(ABC):
         author_urn: str,
         text: str,
         assets: list[PublicationAsset],
-    ) -> "PublishedPostData": ...
+    ) -> PublishedPostData: ...
 
 
 class ContentGenerator(ABC):

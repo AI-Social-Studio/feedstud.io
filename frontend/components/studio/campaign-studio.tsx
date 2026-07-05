@@ -977,12 +977,15 @@ export function CampaignStudio({
               <div className="mb-5 space-y-3">
                 <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-4 text-sm dark:border-gray-700 dark:bg-gray-800/50">
                   <div className="font-semibold text-gray-900 dark:text-gray-100">
-                    LinkedIn publish
+                    {dict.studio.linkedinPublishTitle}
                   </div>
                   <div className="mt-1 text-gray-600 dark:text-gray-400">
                     {linkedinConnection
-                      ? `Connected as ${linkedinConnection.provider_account_name ?? linkedinConnection.provider_account_id}`
-                      : "No LinkedIn account connected."}
+                      ? dict.studio.linkedinConnectedAs(
+                          linkedinConnection.provider_account_name ??
+                            linkedinConnection.provider_account_id,
+                        )
+                      : dict.studio.linkedinDisconnected}
                   </div>
                   {!linkedinConnection ? (
                     <Link
@@ -1172,7 +1175,7 @@ export function CampaignStudio({
                 ) : (
                   <>
                     <MegaphoneIcon size={15} weight="bold" />
-                    {isPublishing ? dict.studio.publishNow : dict.studio.publish}
+                    {isPublishing ? dict.studio.publicationInProgress : dict.studio.publish}
                   </>
                 )}
               </button>
