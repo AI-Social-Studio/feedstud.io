@@ -568,7 +568,10 @@ export const en: Dictionary = {
         awareness: { label: "Awareness", description: "I want more people to know me" },
         inbound_contact: { label: "New contacts", description: "I want people to message me" },
         engagement: { label: "Engagement", description: "I want shares and comments" },
-        credibility: { label: "Credibility", description: "I want to show my expertise (authority)" },
+        credibility: {
+          label: "Credibility",
+          description: "I want to show my expertise (authority)",
+        },
         networking: { label: "Networking", description: "I want to meet new people" },
         sales: { label: "Sales", description: "I want to sell my products or services" },
       },

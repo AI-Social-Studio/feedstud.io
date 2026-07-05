@@ -26,21 +26,27 @@ export function BlockB({
 }) {
   const dict = useDictionary().onboarding.blockB;
 
-  const platforms = useMemo(() => [
-    { id: "linkedin", label: dict.platforms.linkedin, icon: LinkedinLogoIcon },
-    { id: "instagram", label: dict.platforms.instagram, icon: InstagramLogoIcon },
-    { id: "x", label: dict.platforms.x, icon: XLogoIcon },
-    { id: "unknown", label: dict.platforms.unknown, icon: QuestionIcon },
-  ], [dict]);
+  const platforms = useMemo(
+    () => [
+      { id: "linkedin", label: dict.platforms.linkedin, icon: LinkedinLogoIcon },
+      { id: "instagram", label: dict.platforms.instagram, icon: InstagramLogoIcon },
+      { id: "x", label: dict.platforms.x, icon: XLogoIcon },
+      { id: "unknown", label: dict.platforms.unknown, icon: QuestionIcon },
+    ],
+    [dict],
+  );
 
-  const audiences = useMemo(() => [
-    { id: "employers", label: dict.audiences.employers, icon: BriefcaseIcon },
-    { id: "same_interests", label: dict.audiences.same_interests, icon: UsersThreeIcon },
-    { id: "friends", label: dict.audiences.friends, icon: UsersIcon },
-    { id: "customers", label: dict.audiences.customers, icon: ShoppingCartIcon },
-    { id: "broad_reach", label: dict.audiences.broad_reach, icon: GlobeHemisphereWestIcon },
-    { id: "other", label: dict.audiences.other, icon: AsteriskIcon },
-  ], [dict]);
+  const audiences = useMemo(
+    () => [
+      { id: "employers", label: dict.audiences.employers, icon: BriefcaseIcon },
+      { id: "same_interests", label: dict.audiences.same_interests, icon: UsersThreeIcon },
+      { id: "friends", label: dict.audiences.friends, icon: UsersIcon },
+      { id: "customers", label: dict.audiences.customers, icon: ShoppingCartIcon },
+      { id: "broad_reach", label: dict.audiences.broad_reach, icon: GlobeHemisphereWestIcon },
+      { id: "other", label: dict.audiences.other, icon: AsteriskIcon },
+    ],
+    [dict],
+  );
 
   const togglePlatform = (id: string) => {
     const current = data.primary_platforms || [];
@@ -95,7 +101,7 @@ export function BlockB({
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both">
+    <div className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both space-y-10 duration-500">
       <div>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{dict.titlePlatforms}</h2>
         <p className="mt-1.5 text-base text-gray-500 dark:text-gray-400">
@@ -116,9 +122,7 @@ export function BlockB({
 
       <div className="pt-2">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{dict.titleAudience}</h2>
-        <p className="mt-1.5 text-base text-gray-500 dark:text-gray-400">
-          {dict.subtitleAudience}
-        </p>
+        <p className="mt-1.5 text-base text-gray-500 dark:text-gray-400">{dict.subtitleAudience}</p>
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {audiences.map((audience) => {
             const selected = isAudienceSelected(audience.id);
@@ -133,7 +137,9 @@ export function BlockB({
                     if (selected) {
                       const current = data.target_audience_intents || [];
                       const knownIds = audiences.map((a) => a.id).filter((a) => a !== "other");
-                      onChange({ target_audience_intents: current.filter((item) => knownIds.includes(item)) });
+                      onChange({
+                        target_audience_intents: current.filter((item) => knownIds.includes(item)),
+                      });
                     } else {
                       const current = data.target_audience_intents || [];
                       onChange({ target_audience_intents: [...current, "other"] });

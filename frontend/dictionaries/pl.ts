@@ -546,10 +546,16 @@ export const pl: Dictionary = {
       profiles: {
         student: { label: "Uczę się / studiuję", description: "" },
         employee: { label: "Pracuję na etacie", description: "Chcę być bardziej widoczny/a" },
-        business_owner: { label: "Prowadzę własną firmę", description: "Lub działalność gospodarczą" },
+        business_owner: {
+          label: "Prowadzę własną firmę",
+          description: "Lub działalność gospodarczą",
+        },
         creator: { label: "Jestem twórcą", description: "Tworzę treści w internecie" },
         job_seeker: { label: "Szukam pracy", description: "Lub zmieniam branżę" },
-        ngo: { label: "Działam społecznie", description: "W organizacjach charytatywnych lub fundacjach" },
+        ngo: {
+          label: "Działam społecznie",
+          description: "W organizacjach charytatywnych lub fundacjach",
+        },
         hobbyist: { label: "Rozwijam pasję", description: "Dzielę się swoim hobby" },
         other: { label: "Coś innego", description: "" },
       },
@@ -586,12 +592,19 @@ export const pl: Dictionary = {
     },
     blockC: {
       titleGoals: "Co chcesz osiągnąć swoimi postami?",
-      subtitleGoals: "Wybierz max 2 najważniejsze cele. To kluczowe, aby AI mogło dobrze dopasować treść.",
+      subtitleGoals:
+        "Wybierz max 2 najważniejsze cele. To kluczowe, aby AI mogło dobrze dopasować treść.",
       goals: {
         awareness: { label: "Rozpoznawalność", description: "Chcę, żeby więcej osób mnie znało" },
-        inbound_contact: { label: "Nowe kontakty", description: "Chcę, żeby ludzie do mnie pisali / zgłaszali się" },
+        inbound_contact: {
+          label: "Nowe kontakty",
+          description: "Chcę, żeby ludzie do mnie pisali / zgłaszali się",
+        },
         engagement: { label: "Zaangażowanie", description: "Chcę udostępnień i komentarzy" },
-        credibility: { label: "Wiarygodność", description: "Chcę pokazać, że wiem co robię (autorytet)" },
+        credibility: {
+          label: "Wiarygodność",
+          description: "Chcę pokazać, że wiem co robię (autorytet)",
+        },
         networking: { label: "Networking", description: "Chcę poznawać nowe osoby" },
         sales: { label: "Sprzedaż", description: "Chcę sprzedawać swoje produkty lub usługi" },
       },
