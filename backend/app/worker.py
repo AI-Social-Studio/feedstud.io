@@ -10,6 +10,7 @@ from app.infrastructure.db.repositories import (
     SqlAlchemyAiExecutionRepository,
     SqlAlchemyFileRepository,
     SqlAlchemyGenerateJobRepository,
+    SqlAlchemyUserMemoryRepository,
 )
 from app.infrastructure.messaging.rabbitmq import RabbitMqGenerateJobQueue
 from app.interface.dependencies import _content_generator, _database, _storage
@@ -36,8 +37,13 @@ async def _process_job(job_id: UUID) -> None:
             storage=_storage(),
             executions=SqlAlchemyAiExecutionRepository(session),
         )
+        memory = SqlAlchemyUserMemoryRepository(session)
         try:
-            await ProcessGenerateJobUseCase(jobs=jobs, generator=generate).execute(job_id)
+            await ProcessGenerateJobUseCase(
+                jobs=jobs,
+                generator=generate,
+                memory=memory,
+            ).execute(job_id)
         except Exception:
             logger.exception("Failed to process generate job", extra={"job_id": str(job_id)})
             raise
