@@ -124,3 +124,18 @@ class GenerateJobModel(Base):
     error_meta: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class UserMemoryModel(Base):
+    __tablename__ = "user_memories"
+    __table_args__ = (Index("ix_user_memories_user_id", "user_id", unique=True),)
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    self_description: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    interests_tags: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    primary_platforms: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    target_audience_intents: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    post_goals: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
