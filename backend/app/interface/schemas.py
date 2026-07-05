@@ -201,10 +201,12 @@ class UserMemoryRequest(BaseModel):
     )
     primary_platforms: list[str] = Field(
         default_factory=list,
+        max_length=5,
         description="Platform IDs the user targets",
     )
     target_audience_intents: list[str] = Field(
         default_factory=list,
+        max_length=5,
         description="Audience segment IDs or custom free-text",
     )
     post_goals: list[str] = Field(
