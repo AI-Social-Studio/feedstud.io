@@ -236,6 +236,15 @@ export const pl: Dictionary = {
     emptyState: "Nie masz jeszcze żadnych kampanii. Zacznij od nowej kampanii powyżej.",
     noDescription: "Brak opisu",
   },
+  socialConnections: {
+    title: "Połączone konta",
+    subtitle: "Zarządzaj kontami social używanymi do bezpośredniej publikacji.",
+    connectLinkedIn: "Połącz LinkedIn",
+    providerLinkedIn: "LinkedIn",
+    disconnect: "Odłącz",
+    disconnecting: "Odłączanie...",
+    emptyLinkedIn: "Brak połączonego konta LinkedIn.",
+  },
   myCampaigns: {
     title: "Moje kampanie",
     subtitle: "Wróć do zapisanych szkiców i otwórz je ponownie w studio.",

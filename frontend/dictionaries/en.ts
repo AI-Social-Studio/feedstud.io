@@ -231,6 +231,15 @@ export const en: Dictionary = {
     emptyState: "You don't have any campaigns yet. Start a new one above.",
     noDescription: "No description",
   },
+  socialConnections: {
+    title: "Connected accounts",
+    subtitle: "Manage social accounts used for direct publishing.",
+    connectLinkedIn: "Connect LinkedIn",
+    providerLinkedIn: "LinkedIn",
+    disconnect: "Disconnect",
+    disconnecting: "Disconnecting...",
+    emptyLinkedIn: "No LinkedIn account connected.",
+  },
   myCampaigns: {
     title: "My Campaigns",
     subtitle: "Return to saved drafts and reopen them in the studio.",

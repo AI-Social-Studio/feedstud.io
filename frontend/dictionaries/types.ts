@@ -92,6 +92,15 @@ export type Dictionary = {
     emptyState: string;
     noDescription: string;
   };
+  socialConnections: {
+    title: string;
+    subtitle: string;
+    connectLinkedIn: string;
+    providerLinkedIn: string;
+    disconnect: string;
+    disconnecting: string;
+    emptyLinkedIn: string;
+  };
   myCampaigns: {
     title: string;
     subtitle: string;
