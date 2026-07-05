@@ -501,7 +501,9 @@ export function CampaignStudio({
       return;
     }
 
-    const savedDraft = !draftId || hasUnsavedChanges ? await saveDraftState() : null;
+    const saveWasRequired = !draftId || hasUnsavedChanges;
+    const savedDraft = saveWasRequired ? await saveDraftState() : null;
+    if (saveWasRequired && !savedDraft) return;
     const savedDraftId = savedDraft?.id ?? draftId;
     if (!savedDraftId) return;
 
