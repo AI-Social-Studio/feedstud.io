@@ -144,6 +144,7 @@ export function BlockA({
                 {tag}
                 <button
                   type="button"
+                  aria-label={`Remove ${tag}`}
                   onClick={() => removeTag(tag)}
                   className="rounded-full p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors dark:hover:bg-gray-700 dark:hover:text-gray-100"
                 >
