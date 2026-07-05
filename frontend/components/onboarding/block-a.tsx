@@ -89,7 +89,10 @@ export function BlockA({
               selected={isSelected}
               onClick={() => {
                 if (profile.id === "other") {
-                  onChange({ self_description: "other" });
+                  if (!isSelected) {
+                    const hasCustomText = data.self_description && !isKnownId && data.self_description !== "other";
+                    onChange({ self_description: hasCustomText ? data.self_description : "other" });
+                  }
                 } else {
                   onChange({ self_description: profile.id });
                 }
