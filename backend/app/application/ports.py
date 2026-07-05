@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import BinaryIO
 from uuid import UUID
 
-from app.domain.entities import AiExecution, Draft, GenerateJob, GeneratedPostResult, UploadedFile
+from app.domain.entities import AiExecution, Draft, GenerateJob, GeneratedPostResult, UploadedFile, UserMemory
 from app.domain.value_objects import Platform, RefineAction
 
 
@@ -45,6 +45,7 @@ class ContentGenerator(ABC):
         platform: Platform,
         raw_text: str,
         image_urls: list[str],
+        memory_context: str = "",
     ) -> GeneratedPostResult: ...
 
     @abstractmethod
@@ -149,3 +150,11 @@ class DraftRepository(ABC):
 
     @abstractmethod
     async def list_recent(self, limit: int = 50) -> list[Draft]: ...
+
+
+class UserMemoryRepository(ABC):
+    @abstractmethod
+    async def upsert(self, memory: UserMemory) -> None: ...
+
+    @abstractmethod
+    async def get_by_user_id(self, user_id: str) -> UserMemory | None: ...
