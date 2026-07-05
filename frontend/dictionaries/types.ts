@@ -347,4 +347,78 @@ export type Dictionary = {
       x: { subtitle: string; audience: string };
     };
   };
+  onboarding: {
+    header: {
+      title: string;
+      stepXofY: (step: number, total: number) => string;
+    };
+    steps: {
+      identity: string;
+      audience: string;
+      goals: string;
+    };
+    navigation: {
+      skip: string;
+      back: string;
+      next: string;
+      finish: string;
+    };
+    blockA: {
+      titleIdentity: string;
+      subtitleIdentity: string;
+      profiles: {
+        student: { label: string; description: string };
+        employee: { label: string; description: string };
+        business_owner: { label: string; description: string };
+        creator: { label: string; description: string };
+        job_seeker: { label: string; description: string };
+        ngo: { label: string; description: string };
+        hobbyist: { label: string; description: string };
+        other: { label: string; description: string };
+      };
+      otherIdentityLabel: string;
+      otherIdentityPlaceholder: string;
+      titleTags: string;
+      subtitleTags: string;
+      tagsPlaceholderEmpty: string;
+      tagsPlaceholderMore: string;
+      charLimit: (current: number, max: number) => string;
+      tagLimit: (current: number, max: number) => string;
+    };
+    blockB: {
+      titlePlatforms: string;
+      subtitlePlatforms: string;
+      platforms: {
+        linkedin: string;
+        instagram: string;
+        x: string;
+        unknown: string;
+      };
+      titleAudience: string;
+      subtitleAudience: string;
+      audiences: {
+        employers: string;
+        same_interests: string;
+        friends: string;
+        customers: string;
+        broad_reach: string;
+        other: string;
+      };
+      otherAudienceLabel: string;
+      otherAudiencePlaceholder: string;
+    };
+    blockC: {
+      titleGoals: string;
+      subtitleGoals: string;
+      goals: {
+        awareness: { label: string; description: string };
+        inbound_contact: { label: string; description: string };
+        engagement: { label: string; description: string };
+        credibility: { label: string; description: string };
+        networking: { label: string; description: string };
+        sales: { label: string; description: string };
+      };
+      maxGoalsReached: string;
+    };
+  };
 };

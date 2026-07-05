@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { NewCampaignButton } from "@/components/dashboard/new-campaign-button";
 import { PlatformIconBadge } from "@/components/ui/platform-icon-badge";
+import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
 import type { AppRole } from "@/lib/auth/roles";
 import { useLanguage } from "@/lib/i18n";
 import type { DraftSummary } from "@/lib/drafts-api";
@@ -27,9 +29,19 @@ export function HomeView({
   recentDrafts,
 }: Props) {
   const { locale, dict } = useLanguage();
+  const [showOnboarding, setShowOnboarding] = useState(true);
 
   return (
     <DashboardShell role={role} initialCollapsed={initialSidebarCollapsed}>
+      {showOnboarding && (
+        <OnboardingModal
+          onComplete={(_data) => {
+            // TODO: Send data to api
+            setShowOnboarding(false);
+          }}
+          onSkip={() => setShowOnboarding(false)}
+        />
+      )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-50">
