@@ -139,6 +139,7 @@ class LinkedInPublisher(SocialPublisher):
                 "POST",
                 LINKEDIN_POSTS_URL,
                 operation="LinkedIn post creation",
+                retry_delays_seconds=(),
                 json=payload,
                 headers=_linkedin_headers(access_token, self._api_version),
             )
@@ -192,10 +193,11 @@ async def _request_with_retry(
     url: str,
     *,
     operation: str,
+    retry_delays_seconds: tuple[float, ...] = LINKEDIN_RETRY_DELAYS_SECONDS,
     **kwargs: object,
 ) -> httpx.Response:
     last_error: Exception | None = None
-    for attempt, delay_seconds in enumerate((0.0, *LINKEDIN_RETRY_DELAYS_SECONDS), start=1):
+    for attempt, delay_seconds in enumerate((0.0, *retry_delays_seconds), start=1):
         if delay_seconds > 0:
             await asyncio.sleep(delay_seconds)
 
@@ -203,14 +205,14 @@ async def _request_with_retry(
             response = await client.request(method, url, **kwargs)
         except httpx.RequestError as exc:
             last_error = exc
-            if attempt > len(LINKEDIN_RETRY_DELAYS_SECONDS):
+            if attempt > len(retry_delays_seconds):
                 raise SocialPublishError(
                     f"{operation} request failed: {exc}",
                     public_message="LinkedIn publication failed",
                 ) from exc
             continue
 
-        if not _is_retryable_status(response.status_code) or attempt > len(LINKEDIN_RETRY_DELAYS_SECONDS):
+        if not _is_retryable_status(response.status_code) or attempt > len(retry_delays_seconds):
             return response
 
         last_error = None
