@@ -4,7 +4,8 @@ from typing import Any
 from uuid import UUID
 
 from app.application.dto import ErrorView, GenerateJobAcceptedView, GenerateJobView
-from app.application.ports import FileRepository, GenerateJobQueue, GenerateJobRepository
+from app.application.ports import FileRepository, GenerateJobQueue, GenerateJobRepository, UserMemoryRepository
+from app.application.prompts.platform_prompts import build_memory_context
 from app.application.use_cases.generate_posts import GeneratePostsInput, GeneratePostsUseCase
 from app.domain.entities import GenerateJob
 from app.domain.error_codes import ErrorCode
@@ -71,9 +72,15 @@ class GetGenerateJobUseCase:
 
 
 class ProcessGenerateJobUseCase:
-    def __init__(self, jobs: GenerateJobRepository, generator: GeneratePostsUseCase) -> None:
+    def __init__(
+        self,
+        jobs: GenerateJobRepository,
+        generator: GeneratePostsUseCase,
+        memory: UserMemoryRepository | None = None,
+    ) -> None:
         self._jobs = jobs
         self._generator = generator
+        self._memory = memory
 
     async def execute(self, job_id: UUID) -> None:
         job = await self._jobs.get(job_id)
@@ -83,12 +90,18 @@ class ProcessGenerateJobUseCase:
             return
 
         try:
+            memory_ctx = ""
+            if self._memory is not None and job.actor_user_id:
+                user_memory = await self._memory.get_by_user_id(job.actor_user_id)
+                memory_ctx = build_memory_context(user_memory)
+
             result = await self._generator.execute(
                 GeneratePostsInput(
                     raw_text=job.raw_text,
                     platforms=job.selected_platforms,
                     file_ids=job.file_ids,
                     actor_user_id=job.actor_user_id,
+                    memory_context=memory_ctx,
                 )
             )
         except DomainError as exc:

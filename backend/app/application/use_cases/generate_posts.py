@@ -19,6 +19,7 @@ class GeneratePostsInput:
     platforms: list[Platform]
     file_ids: list[UUID]
     actor_user_id: str | None = None
+    memory_context: str = ""
 
 
 @dataclass
@@ -57,7 +58,7 @@ class GeneratePostsUseCase:
 
         results = await asyncio.gather(
             *(
-                self._generator.generate(p, payload.raw_text, image_urls)
+                self._generator.generate(p, payload.raw_text, image_urls, payload.memory_context)
                 for p in payload.platforms
             ),
             return_exceptions=True,
