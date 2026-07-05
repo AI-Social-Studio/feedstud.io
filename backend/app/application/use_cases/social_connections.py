@@ -87,7 +87,8 @@ class CompleteLinkedInConnectUseCase:
         existing.provider_account_urn = resolved.provider_account_urn
         existing.provider_account_name = resolved.provider_account_name
         existing.access_token_encrypted = encrypted_access_token
-        existing.refresh_token_encrypted = encrypted_refresh_token
+        if encrypted_refresh_token is not None:
+            existing.refresh_token_encrypted = encrypted_refresh_token
         existing.expires_at = resolved.expires_at
         existing.scopes = resolved.scopes
         existing.status = "active"
