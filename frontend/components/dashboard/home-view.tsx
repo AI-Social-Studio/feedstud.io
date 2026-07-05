@@ -10,6 +10,7 @@ import type { AppRole } from "@/lib/auth/roles";
 import { useLanguage } from "@/lib/i18n";
 import type { DraftSummary } from "@/lib/drafts-api";
 import type { Platform } from "@/components/studio/content-engine";
+import { upsertUserMemory } from "@/lib/memory-api";
 
 type Props = {
   role: AppRole;
@@ -35,9 +36,11 @@ export function HomeView({
     <DashboardShell role={role} initialCollapsed={initialSidebarCollapsed}>
       {showOnboarding && (
         <OnboardingModal
-          onComplete={(_data) => {
-            // TODO: Send data to api
+          onComplete={(data) => {
             setShowOnboarding(false);
+            upsertUserMemory(data).catch((err: unknown) => {
+              console.error("Failed to save onboarding memory:", err);
+            });
           }}
           onSkip={() => setShowOnboarding(false)}
         />
