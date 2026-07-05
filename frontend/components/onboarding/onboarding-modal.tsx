@@ -50,7 +50,7 @@ export function OnboardingModal({
   };
 
   return createPortal(
-    <div className="animate-page-in fixed inset-0 z-[999] bg-gray-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="animate-page-in fixed inset-0 z-999 bg-gray-950/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="animate-in fade-in zoom-in-95 duration-300 w-full max-w-3xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-950">
         
         {/* Header */}
@@ -104,7 +104,7 @@ export function OnboardingModal({
         </div>
 
         {/* Content Area */}
-        <div className="relative px-8 py-6 min-h-[440px] bg-white dark:bg-gray-950">
+        <div className="relative px-8 py-6 min-h-110 bg-white dark:bg-gray-950">
           {step === 1 && (
             <BlockA data={data} onChange={(updates) => setData({ ...data, ...updates })} />
           )}

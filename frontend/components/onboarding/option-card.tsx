@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { CheckCircle } from "@phosphor-icons/react/dist/ssr";
+import {CheckCircleIcon} from "@phosphor-icons/react/dist/ssr";
 
 export function OptionCard({
   icon: Icon,
@@ -55,7 +55,7 @@ export function OptionCard({
           selected ? "scale-100 opacity-100 text-blue-600 dark:text-blue-500" : "scale-50 opacity-0 text-gray-300"
         )}
       >
-        <CheckCircle size={20} weight="fill" />
+        <CheckCircleIcon size={20} weight="fill" />
       </div>
     </button>
   );
