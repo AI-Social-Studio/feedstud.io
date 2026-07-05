@@ -36,6 +36,7 @@ async def create_publication(
             text=payload.text,
             file_ids=payload.file_ids,
             asset_order=payload.asset_order,
+            asset_alt_texts=payload.asset_alt_texts,
         )
     )
     return _to_response(view)

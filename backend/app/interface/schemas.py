@@ -223,6 +223,7 @@ class CreatePublicationRequest(BaseModel):
     text: str = Field(..., min_length=1)
     file_ids: list[UUID] = Field(default_factory=list)
     asset_order: list[UUID] = Field(default_factory=list)
+    asset_alt_texts: dict[UUID, str] = Field(default_factory=dict)
 
 
 class PublicationResponse(BaseModel):

@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass
+from time import perf_counter
 from uuid import UUID
 
 from app.application.dto import PublicationAssetView, PublicationView
@@ -16,7 +17,14 @@ from app.application.ports import (
 )
 from app.domain.entities import Publication, PublicationAsset
 from app.domain.error_codes import ErrorCode
-from app.domain.exceptions import DomainError, InvalidPublicationInputError
+from app.domain.exceptions import (
+    DomainError,
+    InvalidPublicationInputError,
+    ProviderRateLimitedError,
+    SocialConnectionInvalidError,
+    TooManyPublicationAssetsError,
+    UnsupportedPublicationAssetTypeError,
+)
 from app.domain.value_objects import Platform
 
 logger = logging.getLogger(__name__)
@@ -33,6 +41,7 @@ class SubmitPublicationJobInput:
     text: str
     file_ids: list[UUID]
     asset_order: list[UUID]
+    asset_alt_texts: dict[UUID, str]
 
 
 class SubmitPublicationJobUseCase:
@@ -72,13 +81,14 @@ class SubmitPublicationJobUseCase:
             app_user_id=payload.app_user_id,
         )
         if connection is None or connection.provider != Platform.LINKEDIN.value:
-            raise InvalidPublicationInputError("LinkedIn social connection not found")
+            raise SocialConnectionInvalidError("LinkedIn social connection not found")
         if connection.status != "active":
-            raise InvalidPublicationInputError("LinkedIn social connection is not active")
+            raise SocialConnectionInvalidError("LinkedIn social connection is not active")
 
         ordered_file_ids = _resolve_asset_order(payload.file_ids, payload.asset_order)
-        if len(ordered_file_ids) > 1:
-            raise InvalidPublicationInputError("LinkedIn MVP supports at most one image per post")
+        if len(ordered_file_ids) > 20:
+            raise TooManyPublicationAssetsError(max_assets=20, received=len(ordered_file_ids))
+        _validate_asset_alt_texts(payload.asset_alt_texts, ordered_file_ids)
 
         validated_file_ids: list[UUID] = []
         for file_id in ordered_file_ids:
@@ -86,9 +96,9 @@ class SubmitPublicationJobUseCase:
             if file is None or file.content_type is None:
                 raise InvalidPublicationInputError(f"File '{file_id}' not found")
             if file.content_type.value not in LINKEDIN_ALLOWED_IMAGE_TYPES:
-                raise InvalidPublicationInputError(
-                    "LinkedIn supports JPG, PNG, and GIF images only",
-                    meta={"file_id": str(file_id), "content_type": file.content_type.value},
+                raise UnsupportedPublicationAssetTypeError(
+                    file.content_type.value,
+                    file_id=str(file_id),
                 )
             validated_file_ids.append(file_id)
 
@@ -103,6 +113,11 @@ class SubmitPublicationJobUseCase:
             platform_payload={
                 "file_ids": [str(file_id) for file_id in ordered_file_ids],
                 "asset_order": [str(file_id) for file_id in ordered_file_ids],
+                "asset_alt_texts": {
+                    str(file_id): _normalize_alt_text(payload.asset_alt_texts.get(file_id))
+                    for file_id in ordered_file_ids
+                    if _normalize_alt_text(payload.asset_alt_texts.get(file_id)) is not None
+                },
             },
         )
         publication.assets = [
@@ -110,6 +125,7 @@ class SubmitPublicationJobUseCase:
                 publication_id=publication.id,
                 uploaded_file_id=file_id,
                 sort_order=sort_order,
+                alt_text=_normalize_alt_text(payload.asset_alt_texts.get(file_id)),
             )
             for sort_order, file_id in enumerate(validated_file_ids)
         ]
@@ -167,11 +183,22 @@ class ProcessPublicationJobUseCase:
         self._publisher = publisher
 
     async def execute(self, publication_id: UUID) -> None:
+        started_at = perf_counter()
         publication = await self._publications.get(publication_id)
         if publication is None or publication.status in {"completed", "failed"}:
             return
         if not await self._publications.mark_processing(publication_id):
             return
+
+        logger.info(
+            "Publication job started",
+            extra={
+                "publication_id": str(publication_id),
+                "provider": publication.provider,
+                "draft_id": str(publication.draft_id),
+                "asset_count": len(publication.assets),
+            },
+        )
 
         try:
             connection = await self._connections.get(
@@ -179,7 +206,7 @@ class ProcessPublicationJobUseCase:
                 app_user_id=publication.app_user_id,
             )
             if connection is None:
-                raise InvalidPublicationInputError("LinkedIn social connection not found")
+                raise SocialConnectionInvalidError("LinkedIn social connection not found")
 
             access_token = self._cipher.decrypt(connection.access_token_encrypted)
             for asset in publication.assets:
@@ -202,8 +229,7 @@ class ProcessPublicationJobUseCase:
                 access_token=access_token,
                 author_urn=connection.provider_account_urn,
                 text=publication.platform_text,
-                asset_urn=publication.assets[0].provider_asset_urn if publication.assets else None,
-                alt_text=publication.assets[0].alt_text if publication.assets else None,
+                assets=publication.assets,
             )
         except DomainError as exc:
             await self._publications.fail(
@@ -211,6 +237,18 @@ class ProcessPublicationJobUseCase:
                 from_status="processing",
                 code=exc.code.value,
                 detail=exc.public_message,
+            )
+            logger.log(
+                logging.WARNING if isinstance(exc, ProviderRateLimitedError) else logging.INFO,
+                "Publication job failed",
+                extra={
+                    "publication_id": str(publication_id),
+                    "provider": publication.provider,
+                    "draft_id": str(publication.draft_id),
+                    "asset_count": len(publication.assets),
+                    "error_code": exc.code.value,
+                    "latency_ms": int((perf_counter() - started_at) * 1000),
+                },
             )
             return
         except Exception:
@@ -231,6 +269,16 @@ class ProcessPublicationJobUseCase:
             external_post_url=published.external_post_url,
             published_at=published.published_at,
         )
+        logger.info(
+            "Publication job completed",
+            extra={
+                "publication_id": str(publication_id),
+                "provider": publication.provider,
+                "draft_id": str(publication.draft_id),
+                "asset_count": len(publication.assets),
+                "latency_ms": int((perf_counter() - started_at) * 1000),
+            },
+        )
 
 
 def _resolve_asset_order(file_ids: list[UUID], asset_order: list[UUID]) -> list[UUID]:
@@ -240,6 +288,19 @@ def _resolve_asset_order(file_ids: list[UUID], asset_order: list[UUID]) -> list[
     if set(ordered) != set(file_ids):
         raise InvalidPublicationInputError("Asset order must match selected files")
     return ordered
+
+
+def _validate_asset_alt_texts(asset_alt_texts: dict[UUID, str], ordered_file_ids: list[UUID]) -> None:
+    unexpected_file_ids = set(asset_alt_texts) - set(ordered_file_ids)
+    if unexpected_file_ids:
+        raise InvalidPublicationInputError("Asset alt texts must match selected files")
+
+
+def _normalize_alt_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = value.strip()
+    return normalized or None
 
 
 def _to_view(publication: Publication) -> PublicationView:

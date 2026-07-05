@@ -175,8 +175,7 @@ class SocialPublisher(ABC):
         access_token: str,
         author_urn: str,
         text: str,
-        asset_urn: str | None = None,
-        alt_text: str | None = None,
+        assets: list[PublicationAsset],
     ) -> "PublishedPostData": ...
 
 

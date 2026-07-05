@@ -40,6 +40,7 @@ export type CreatePublicationRequest = {
   text: string;
   file_ids: string[];
   asset_order: string[];
+  asset_alt_texts: Record<string, string>;
 };
 
 export async function createPublication(payload: CreatePublicationRequest): Promise<Publication> {
