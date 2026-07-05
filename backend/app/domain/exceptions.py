@@ -79,6 +79,32 @@ class InvalidGenerateInputError(DomainError):
         )
 
 
+class InvalidPublicationInputError(DomainError):
+    def __init__(self, reason: str, *, meta: dict[str, str | int] | None = None) -> None:
+        super().__init__(
+            reason,
+            code=ErrorCode.INVALID_PUBLICATION_INPUT,
+            public_message=reason,
+            meta=meta,
+        )
+
+
+class SocialPublishError(DomainError):
+    def __init__(
+        self,
+        reason: str,
+        *,
+        public_message: str = "Social publication failed",
+        meta: dict[str, str | int] | None = None,
+    ) -> None:
+        super().__init__(
+            reason,
+            code=ErrorCode.SOCIAL_PUBLISH_FAILED,
+            public_message=public_message,
+            meta=meta,
+        )
+
+
 class ContentGenerationError(DomainError):
     def __init__(
         self,

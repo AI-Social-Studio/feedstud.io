@@ -10,6 +10,8 @@ from app.domain.entities import (
     Draft,
     GenerateJob,
     GeneratedPostResult,
+    Publication,
+    PublicationAsset,
     SocialConnection,
     UploadedFile,
 )
@@ -28,6 +30,9 @@ class ObjectStorage(ABC):
 
     @abstractmethod
     async def presigned_get_url(self, key: str, expires_seconds: int = 3600) -> str: ...
+
+    @abstractmethod
+    async def get(self, key: str) -> bytes: ...
 
     @abstractmethod
     async def delete(self, key: str) -> None: ...
@@ -102,6 +107,77 @@ class SocialOAuthClient(ABC):
         redirect_uri: str,
         app_user_id: UUID,
     ) -> SocialOAuthConnectionData: ...
+
+
+class PublicationRepository(ABC):
+    @abstractmethod
+    async def add(self, publication: Publication) -> None: ...
+
+    @abstractmethod
+    async def get(
+        self, publication_id: UUID, *, app_user_id: UUID | None = None
+    ) -> Publication | None: ...
+
+    @abstractmethod
+    async def list_by_draft(self, *, draft_id: UUID, app_user_id: UUID) -> list[Publication]: ...
+
+    @abstractmethod
+    async def mark_processing(self, publication_id: UUID) -> bool: ...
+
+    @abstractmethod
+    async def update_assets(self, publication_id: UUID, assets: list[PublicationAsset]) -> bool: ...
+
+    @abstractmethod
+    async def complete(
+        self,
+        publication_id: UUID,
+        *,
+        from_status: str,
+        external_post_id: str,
+        external_post_urn: str,
+        external_post_url: str | None,
+        published_at: datetime | None,
+    ) -> bool: ...
+
+    @abstractmethod
+    async def fail(
+        self,
+        publication_id: UUID,
+        *,
+        from_status: str,
+        code: str,
+        detail: str,
+    ) -> bool: ...
+
+
+class PublicationJobQueue(ABC):
+    @abstractmethod
+    async def publish(self, publication_id: UUID) -> None: ...
+
+
+class SocialAssetPreparer(ABC):
+    @abstractmethod
+    async def prepare_image(
+        self,
+        *,
+        access_token: str,
+        author_urn: str,
+        file: UploadedFile,
+        data: bytes,
+    ) -> "PreparedSocialAssetData": ...
+
+
+class SocialPublisher(ABC):
+    @abstractmethod
+    async def publish_post(
+        self,
+        *,
+        access_token: str,
+        author_urn: str,
+        text: str,
+        asset_urn: str | None = None,
+        alt_text: str | None = None,
+    ) -> "PublishedPostData": ...
 
 
 class ContentGenerator(ABC):

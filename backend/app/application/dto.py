@@ -56,6 +56,51 @@ class SocialOAuthConnectionData:
 
 
 @dataclass
+class PublishedPostData:
+    external_post_id: str
+    external_post_urn: str
+    external_post_url: str | None
+    published_at: datetime | None = None
+
+
+@dataclass
+class PreparedSocialAssetData:
+    provider_asset_id: str
+    provider_asset_urn: str
+
+
+@dataclass
+class PublicationAssetView:
+    id: UUID
+    uploaded_file_id: UUID
+    sort_order: int
+    provider_asset_id: str | None
+    provider_asset_urn: str | None
+    alt_text: str | None
+    created_at: datetime
+
+
+@dataclass
+class PublicationView:
+    id: UUID
+    draft_id: UUID
+    provider: str
+    social_connection_id: UUID
+    status: str
+    mode: str
+    platform_text: str
+    external_post_id: str | None
+    external_post_urn: str | None
+    external_post_url: str | None
+    error_code: str | None
+    error_detail: str | None
+    created_at: datetime
+    updated_at: datetime
+    published_at: datetime | None
+    assets: list[PublicationAssetView]
+
+
+@dataclass
 class ErrorView:
     code: ErrorCode
     detail: str

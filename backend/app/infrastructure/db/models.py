@@ -82,6 +82,57 @@ class SocialConnectionModel(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class PublicationModel(Base):
+    __tablename__ = "publications"
+    __table_args__ = (
+        Index("ix_publications_app_user_id", "app_user_id"),
+        Index("ix_publications_draft_id", "draft_id"),
+        Index("ix_publications_status", "status"),
+        Index("ix_publications_created_at", "created_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    app_user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    draft_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    provider: Mapped[str] = mapped_column(String(32), nullable=False)
+    social_connection_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    mode: Mapped[str] = mapped_column(String(32), nullable=False)
+    platform_text: Mapped[str] = mapped_column(Text, nullable=False)
+    platform_payload: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False, default=dict)
+    external_post_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    external_post_urn: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    external_post_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class PublicationAssetModel(Base):
+    __tablename__ = "publication_assets"
+    __table_args__ = (
+        Index("ix_publication_assets_publication_id", "publication_id"),
+        Index("ix_publication_assets_uploaded_file_id", "uploaded_file_id"),
+        Index(
+            "ix_publication_assets_publication_sort_order",
+            "publication_id",
+            "sort_order",
+            unique=True,
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    publication_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    uploaded_file_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    sort_order: Mapped[int] = mapped_column(nullable=False)
+    provider_asset_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    provider_asset_urn: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    alt_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class AiExecutionModel(Base):
     __tablename__ = "ai_executions"
     __table_args__ = (

@@ -37,11 +37,13 @@ class Settings(BaseSettings):
 
     rabbitmq_url: str
     rabbitmq_generate_queue: str = "generate_posts"
+    rabbitmq_publication_queue: str = "publish_posts"
     rabbitmq_prefetch_count: int = Field(default=10, ge=1, le=100)
 
     linkedin_client_id: str = ""
     linkedin_client_secret: str = ""
     linkedin_oauth_state_secret: str = ""
+    linkedin_api_version: str = "202606"
     secret_cipher_key: str = ""
 
     @property

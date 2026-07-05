@@ -36,6 +36,40 @@ class SocialConnection:
 
 
 @dataclass
+class PublicationAsset:
+    publication_id: UUID
+    uploaded_file_id: UUID
+    sort_order: int
+    id: UUID = field(default_factory=uuid4)
+    provider_asset_id: str | None = None
+    provider_asset_urn: str | None = None
+    alt_text: str | None = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
+class Publication:
+    app_user_id: UUID
+    draft_id: UUID
+    provider: str
+    social_connection_id: UUID
+    status: str
+    mode: str
+    platform_text: str
+    platform_payload: dict[str, Any]
+    id: UUID = field(default_factory=uuid4)
+    external_post_id: str | None = None
+    external_post_urn: str | None = None
+    external_post_url: str | None = None
+    error_code: str | None = None
+    error_detail: str | None = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    published_at: datetime | None = None
+    assets: list[PublicationAsset] = field(default_factory=list)
+
+
+@dataclass
 class UploadedFile:
     app_user_id: UUID
     id: UUID = field(default_factory=uuid4)

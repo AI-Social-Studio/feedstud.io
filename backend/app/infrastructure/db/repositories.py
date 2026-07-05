@@ -10,11 +10,30 @@ from app.application.ports import (
     DraftRepository,
     FileRepository,
     GenerateJobRepository,
+    PublicationRepository,
     SocialConnectionRepository,
 )
-from app.domain.entities import AiExecution, AppUser, Draft, GenerateJob, SocialConnection, UploadedFile
+from app.domain.entities import (
+    AiExecution,
+    AppUser,
+    Draft,
+    GenerateJob,
+    Publication,
+    PublicationAsset,
+    SocialConnection,
+    UploadedFile,
+)
 from app.domain.value_objects import ImageContentType, Platform
-from app.infrastructure.db.models import AiExecutionModel, AppUserModel, DraftModel, GenerateJobModel, SocialConnectionModel, UploadedFileModel
+from app.infrastructure.db.models import (
+    AiExecutionModel,
+    AppUserModel,
+    DraftModel,
+    GenerateJobModel,
+    PublicationAssetModel,
+    PublicationModel,
+    SocialConnectionModel,
+    UploadedFileModel,
+)
 
 STALE_JOB_TIMEOUT = timedelta(minutes=15)
 
@@ -210,6 +229,197 @@ class SqlAlchemySocialConnectionRepository(SocialConnectionRepository):
             status=model.status,
             created_at=model.created_at,
             updated_at=model.updated_at,
+        )
+
+
+class SqlAlchemyPublicationRepository(PublicationRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, publication: Publication) -> None:
+        self._session.add(self._to_model(publication))
+        self._session.add_all(self._to_asset_model(asset) for asset in publication.assets)
+        await self._session.commit()
+
+    async def get(self, publication_id: UUID, *, app_user_id: UUID | None = None) -> Publication | None:
+        stmt = select(PublicationModel).where(PublicationModel.id == publication_id)
+        if app_user_id is not None:
+            stmt = stmt.where(PublicationModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+        if model is None:
+            return None
+        assets = await self._get_assets(publication_id)
+        return self._to_entity(model, assets)
+
+    async def list_by_draft(self, *, draft_id: UUID, app_user_id: UUID) -> list[Publication]:
+        result = await self._session.execute(
+            select(PublicationModel)
+            .where(PublicationModel.draft_id == draft_id)
+            .where(PublicationModel.app_user_id == app_user_id)
+            .order_by(PublicationModel.created_at.desc())
+        )
+        models = result.scalars().all()
+        publications: list[Publication] = []
+        for model in models:
+            publications.append(self._to_entity(model, await self._get_assets(model.id)))
+        return publications
+
+    async def mark_processing(self, publication_id: UUID) -> bool:
+        result = await self._session.execute(
+            update(PublicationModel)
+            .where(PublicationModel.id == publication_id)
+            .where(PublicationModel.status == "queued")
+            .values(status="processing", updated_at=datetime.now(timezone.utc))
+        )
+        await self._session.commit()
+        return result.rowcount > 0
+
+    async def update_assets(self, publication_id: UUID, assets: list[PublicationAsset]) -> bool:
+        models_result = await self._session.execute(
+            select(PublicationAssetModel).where(PublicationAssetModel.publication_id == publication_id)
+        )
+        models = {model.id: model for model in models_result.scalars().all()}
+        updated = False
+        for asset in assets:
+            model = models.get(asset.id)
+            if model is None:
+                continue
+            model.provider_asset_id = asset.provider_asset_id
+            model.provider_asset_urn = asset.provider_asset_urn
+            model.alt_text = asset.alt_text
+            updated = True
+        if updated:
+            await self._session.commit()
+        return updated
+
+    async def complete(
+        self,
+        publication_id: UUID,
+        *,
+        from_status: str,
+        external_post_id: str,
+        external_post_urn: str,
+        external_post_url: str | None,
+        published_at: datetime | None,
+    ) -> bool:
+        now = datetime.now(timezone.utc)
+        result = await self._session.execute(
+            update(PublicationModel)
+            .where(PublicationModel.id == publication_id)
+            .where(PublicationModel.status == from_status)
+            .values(
+                status="completed",
+                external_post_id=external_post_id,
+                external_post_urn=external_post_urn,
+                external_post_url=external_post_url,
+                error_code=None,
+                error_detail=None,
+                published_at=published_at or now,
+                updated_at=now,
+            )
+        )
+        await self._session.commit()
+        return result.rowcount > 0
+
+    async def fail(
+        self,
+        publication_id: UUID,
+        *,
+        from_status: str,
+        code: str,
+        detail: str,
+    ) -> bool:
+        result = await self._session.execute(
+            update(PublicationModel)
+            .where(PublicationModel.id == publication_id)
+            .where(PublicationModel.status == from_status)
+            .values(
+                status="failed",
+                error_code=code,
+                error_detail=detail,
+                updated_at=datetime.now(timezone.utc),
+            )
+        )
+        await self._session.commit()
+        return result.rowcount > 0
+
+    async def _get_assets(self, publication_id: UUID) -> list[PublicationAssetModel]:
+        result = await self._session.execute(
+            select(PublicationAssetModel)
+            .where(PublicationAssetModel.publication_id == publication_id)
+            .order_by(PublicationAssetModel.sort_order.asc())
+        )
+        return list(result.scalars().all())
+
+    @staticmethod
+    def _to_model(publication: Publication) -> PublicationModel:
+        return PublicationModel(
+            id=publication.id,
+            app_user_id=publication.app_user_id,
+            draft_id=publication.draft_id,
+            provider=publication.provider,
+            social_connection_id=publication.social_connection_id,
+            status=publication.status,
+            mode=publication.mode,
+            platform_text=publication.platform_text,
+            platform_payload=publication.platform_payload,
+            external_post_id=publication.external_post_id,
+            external_post_urn=publication.external_post_urn,
+            external_post_url=publication.external_post_url,
+            error_code=publication.error_code,
+            error_detail=publication.error_detail,
+            created_at=publication.created_at,
+            updated_at=publication.updated_at,
+            published_at=publication.published_at,
+        )
+
+    @staticmethod
+    def _to_asset_model(asset: PublicationAsset) -> PublicationAssetModel:
+        return PublicationAssetModel(
+            id=asset.id,
+            publication_id=asset.publication_id,
+            uploaded_file_id=asset.uploaded_file_id,
+            sort_order=asset.sort_order,
+            provider_asset_id=asset.provider_asset_id,
+            provider_asset_urn=asset.provider_asset_urn,
+            alt_text=asset.alt_text,
+            created_at=asset.created_at,
+        )
+
+    @staticmethod
+    def _to_entity(model: PublicationModel, asset_models: list[PublicationAssetModel]) -> Publication:
+        return Publication(
+            id=model.id,
+            app_user_id=model.app_user_id,
+            draft_id=model.draft_id,
+            provider=model.provider,
+            social_connection_id=model.social_connection_id,
+            status=model.status,
+            mode=model.mode,
+            platform_text=model.platform_text,
+            platform_payload=model.platform_payload,
+            external_post_id=model.external_post_id,
+            external_post_urn=model.external_post_urn,
+            external_post_url=model.external_post_url,
+            error_code=model.error_code,
+            error_detail=model.error_detail,
+            created_at=model.created_at,
+            updated_at=model.updated_at,
+            published_at=model.published_at,
+            assets=[
+                PublicationAsset(
+                    id=asset_model.id,
+                    publication_id=asset_model.publication_id,
+                    uploaded_file_id=asset_model.uploaded_file_id,
+                    sort_order=asset_model.sort_order,
+                    provider_asset_id=asset_model.provider_asset_id,
+                    provider_asset_urn=asset_model.provider_asset_urn,
+                    alt_text=asset_model.alt_text,
+                    created_at=asset_model.created_at,
+                )
+                for asset_model in asset_models
+            ],
         )
 
 

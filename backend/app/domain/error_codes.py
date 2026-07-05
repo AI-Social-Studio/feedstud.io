@@ -21,5 +21,8 @@ class ErrorCode(StrEnum):
     SOCIAL_AUTH_NOT_CONFIGURED = "social_auth_not_configured"
     SOCIAL_CONNECTION_NOT_FOUND = "social_connection_not_found"
     SOCIAL_CONNECTION_CONFLICT = "social_connection_conflict"
+    INVALID_PUBLICATION_INPUT = "invalid_publication_input"
+    PUBLICATION_NOT_FOUND = "publication_not_found"
+    SOCIAL_PUBLISH_FAILED = "social_publish_failed"
     AI_EXECUTION_NOT_FOUND = "ai_execution_not_found"
     INTERNAL_SERVER_ERROR = "internal_server_error"
