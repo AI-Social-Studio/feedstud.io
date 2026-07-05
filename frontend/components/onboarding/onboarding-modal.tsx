@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight as ArrowRightIcon, Check as CheckIcon } from "@phosphor-icons/react/dist/ssr";
 import { BlockA } from "./block-a";
@@ -49,14 +49,29 @@ export function OnboardingModal({
     }
   };
 
+  const titleId = useId();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onSkip();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onSkip]);
+
   return createPortal(
-    <div className="animate-page-in fixed inset-0 z-999 bg-gray-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      className="animate-page-in fixed inset-0 z-999 bg-gray-950/60 backdrop-blur-sm flex items-center justify-center p-4"
+    >
       <div className="animate-in fade-in zoom-in-95 duration-300 w-full max-w-3xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-950">
         
         {/* Header */}
         <div className="flex flex-col gap-5 px-8 pt-8 pb-5 border-b border-gray-100 dark:border-gray-900 bg-gray-50/30 dark:bg-gray-900/10">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h1 id={titleId} className="text-xl font-semibold text-gray-900 dark:text-white">
               {dict.header.title}
             </h1>
             <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
