@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { NewCampaignButton } from "@/components/dashboard/new-campaign-button";
@@ -11,6 +11,8 @@ import { useLanguage } from "@/lib/i18n";
 import type { DraftSummary } from "@/lib/drafts-api";
 import type { Platform } from "@/components/studio/content-engine";
 import { upsertUserMemory } from "@/lib/memory-api";
+
+const ONBOARDING_DISMISSED_KEY = "feedstudio:onboarding_dismissed";
 
 type Props = {
   role: AppRole;
@@ -30,19 +32,27 @@ export function HomeView({
   recentDrafts,
 }: Props) {
   const { locale, dict } = useLanguage();
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(ONBOARDING_DISMISSED_KEY) !== "1";
+  });
+
+  const dismissOnboarding = useCallback(() => {
+    setShowOnboarding(false);
+    localStorage.setItem(ONBOARDING_DISMISSED_KEY, "1");
+  }, []);
 
   return (
     <DashboardShell role={role} initialCollapsed={initialSidebarCollapsed}>
       {showOnboarding && (
         <OnboardingModal
           onComplete={(data) => {
-            setShowOnboarding(false);
+            dismissOnboarding();
             upsertUserMemory(data).catch((err: unknown) => {
               console.error("Failed to save onboarding memory:", err);
             });
           }}
-          onSkip={() => setShowOnboarding(false)}
+          onSkip={dismissOnboarding}
         />
       )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
