@@ -12,6 +12,7 @@ from app.application.ports import (
     GenerateJobQueue,
     GenerateJobRepository,
     ObjectStorage,
+    UserMemoryRepository,
 )
 from app.application.use_cases.drafts import GetDraftUseCase, ListDraftsUseCase, SaveDraftUseCase
 from app.application.use_cases.admin_ai_usage import (
@@ -30,6 +31,7 @@ from app.application.use_cases.upload_files import (
     UploadFilesUseCase,
     UploadLimits,
 )
+from app.application.use_cases.user_memory import GetUserMemoryUseCase, UpsertUserMemoryUseCase
 from app.core.config import Settings, get_settings
 from app.domain.error_codes import ErrorCode
 from app.infrastructure.ai.openrouter_client import OpenRouterContentGenerator
@@ -38,6 +40,7 @@ from app.infrastructure.db.repositories import (
     SqlAlchemyDraftRepository,
     SqlAlchemyFileRepository,
     SqlAlchemyGenerateJobRepository,
+    SqlAlchemyUserMemoryRepository,
 )
 from app.infrastructure.messaging.rabbitmq import RabbitMqGenerateJobQueue
 from app.infrastructure.db.session import Database
@@ -248,3 +251,21 @@ def get_get_draft_use_case(
     storage: ObjectStorage = Depends(get_object_storage),
 ) -> GetDraftUseCase:
     return GetDraftUseCase(drafts=drafts, files=files, storage=storage)
+
+
+def get_user_memory_repository(
+    session: AsyncSession = Depends(get_session),
+) -> UserMemoryRepository:
+    return SqlAlchemyUserMemoryRepository(session)
+
+
+def get_upsert_user_memory_use_case(
+    repo: UserMemoryRepository = Depends(get_user_memory_repository),
+) -> UpsertUserMemoryUseCase:
+    return UpsertUserMemoryUseCase(repository=repo)
+
+
+def get_get_user_memory_use_case(
+    repo: UserMemoryRepository = Depends(get_user_memory_repository),
+) -> GetUserMemoryUseCase:
+    return GetUserMemoryUseCase(repository=repo)
