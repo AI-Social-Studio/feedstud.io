@@ -124,7 +124,13 @@ export const pl: Dictionary = {
           { label: "Platformy", href: "/#platforms" },
         ],
       },
-      { title: "Firma", links: [{ label: "Kontakt", href: "/contact" }] },
+      {
+        title: "Firma",
+        links: [
+          { label: "Kontakt", href: "/contact" },
+          { label: "Autorzy", href: "/authors" },
+        ],
+      },
       {
         title: "Prawne",
         links: [
@@ -214,6 +220,19 @@ export const pl: Dictionary = {
       description:
         "Masz pytania, uwagi albo coś nie działa tak, jak powinno? Napisz do nas e-mail, a odpowiemy najszybciej jak to możliwe.",
     },
+  },
+  authors: {
+    title: "Autorzy",
+    subtitle: "Poznaj zespół, który tworzy feedstud.io.",
+    cofounders: "Współzałożyciele",
+    roles: {
+      norbert: "Full-stack Developer",
+      bartlomiej: "UI/UX Designer & Frontend Developer",
+      szymon: "Backend Engineer",
+    },
+    visitWebsite: "Odwiedź stronę",
+    githubProfile: "Profil GitHub",
+    linkedinProfile: "Profil LinkedIn",
   },
   nav: {
     mainMenu: "Menu główne",

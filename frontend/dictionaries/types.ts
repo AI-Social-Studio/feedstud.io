@@ -71,6 +71,19 @@ export type Dictionary = {
       description: string;
     };
   };
+  authors: {
+    title: string;
+    subtitle: string;
+    cofounders: string;
+    roles: {
+      norbert: string;
+      bartlomiej: string;
+      szymon: string;
+    };
+    visitWebsite: string;
+    githubProfile: string;
+    linkedinProfile: string;
+  };
   nav: {
     mainMenu: string;
     home: string;
