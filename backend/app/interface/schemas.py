@@ -186,3 +186,43 @@ class AiExecutionDetailResponse(BaseModel):
     raw_generation_response: dict | None
     error_message: str | None
     error_json: dict | None
+
+
+class UserMemoryRequest(BaseModel):
+    self_description: str | None = Field(
+        default=None,
+        max_length=120,
+        description="Short free-text identity label",
+    )
+    interests_tags: list[str] = Field(
+        default_factory=list,
+        max_length=5,
+        description="Up to 5 topic keywords",
+    )
+    primary_platforms: list[str] = Field(
+        default_factory=list,
+        description="Platform IDs the user targets",
+    )
+    target_audience_intents: list[str] = Field(
+        default_factory=list,
+        description="Audience segment IDs or custom free-text",
+    )
+    post_goals: list[str] = Field(
+        default_factory=list,
+        max_length=2,
+        description="Up to 2 goal IDs",
+    )
+
+
+class UserMemoryResponse(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: UUID
+    user_id: str
+    self_description: str | None
+    interests_tags: list[str]
+    primary_platforms: list[str]
+    target_audience_intents: list[str]
+    post_goals: list[str]
+    created_at: datetime
+    updated_at: datetime
