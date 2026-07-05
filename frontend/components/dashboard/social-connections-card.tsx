@@ -64,7 +64,8 @@ export function SocialConnectionsCard({ connections: initialConnections }: Props
                 {dict.socialConnections.providerLinkedIn}
               </div>
               <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {linkedinConnection.provider_account_name || linkedinConnection.provider_account_urn}
+                {linkedinConnection.provider_account_name ||
+                  linkedinConnection.provider_account_urn}
               </div>
             </div>
             <button

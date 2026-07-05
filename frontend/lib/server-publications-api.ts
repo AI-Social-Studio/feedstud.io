@@ -6,9 +6,12 @@ export async function listPublicationsServer(draftId: string): Promise<Publicati
   const { userId } = await auth();
   if (!userId) return [];
   try {
-    return await backendJson<Publication[]>(`/publications?draft_id=${encodeURIComponent(draftId)}`, {
-      headers: { "X-Actor-Id": userId },
-    });
+    return await backendJson<Publication[]>(
+      `/publications?draft_id=${encodeURIComponent(draftId)}`,
+      {
+        headers: { "X-Actor-Id": userId },
+      },
+    );
   } catch {
     return [];
   }
