@@ -26,7 +26,7 @@ export function Hero() {
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="hero-grid absolute -inset-8" />
       </div>
-      <nav className="relative z-10 flex flex-col gap-3 border-b border-gray-100 bg-white/80 px-4 py-3 backdrop-blur-sm sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:gap-0 sm:px-8 sm:py-0 dark:border-gray-800 dark:bg-gray-950/80">
+      <nav className="relative z-20 flex flex-col gap-3 border-b border-gray-100 bg-white/80 px-4 py-3 backdrop-blur-sm sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:gap-0 sm:px-8 sm:py-0 dark:border-gray-800 dark:bg-gray-950/80">
         <div className="flex items-center justify-between">
           <Image
             src="/feedstudio.png"
