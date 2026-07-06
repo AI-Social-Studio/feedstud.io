@@ -567,6 +567,7 @@ export const pl: Dictionary = {
       tagsPlaceholderMore: "Dodaj kolejne...",
       charLimit: (current, max) => `${current}/${max}`,
       tagLimit: (current, max) => `${current}/${max}`,
+      removeTagLabel: (tag) => `Usuń ${tag}`,
     },
     blockB: {
       titlePlatforms: "Gdzie chcesz publikować?",

@@ -384,6 +384,7 @@ export type Dictionary = {
       tagsPlaceholderMore: string;
       charLimit: (current: number, max: number) => string;
       tagLimit: (current: number, max: number) => string;
+      removeTagLabel: (tag: string) => string;
     };
     blockB: {
       titlePlatforms: string;

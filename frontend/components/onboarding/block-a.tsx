@@ -197,7 +197,7 @@ export function BlockA({
                 {tag}
                 <button
                   type="button"
-                  aria-label={`Remove ${tag}`}
+                  aria-label={dict.removeTagLabel(tag)}
                   onClick={() => removeTag(tag)}
                   className="rounded-full p-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100"
                 >
