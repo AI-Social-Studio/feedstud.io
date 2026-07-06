@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 
 PlatformLiteral = Literal["linkedin", "instagram", "x"]
@@ -188,28 +188,33 @@ class AiExecutionDetailResponse(BaseModel):
     error_json: dict | None
 
 
+# Constrained string types for per-item validation in list fields
+_ShortId = Annotated[str, StringConstraints(max_length=50)]
+_FreeText = Annotated[str, StringConstraints(max_length=60)]
+
+
 class UserMemoryRequest(BaseModel):
     self_description: str | None = Field(
         default=None,
         max_length=120,
         description="Short free-text identity label",
     )
-    interests_tags: list[str] = Field(
+    interests_tags: list[_FreeText] = Field(
         default_factory=list,
         max_length=5,
         description="Up to 5 topic keywords",
     )
-    primary_platforms: list[str] = Field(
+    primary_platforms: list[_ShortId] = Field(
         default_factory=list,
         max_length=5,
         description="Platform IDs the user targets",
     )
-    target_audience_intents: list[str] = Field(
+    target_audience_intents: list[_FreeText] = Field(
         default_factory=list,
         max_length=5,
         description="Audience segment IDs or custom free-text",
     )
-    post_goals: list[str] = Field(
+    post_goals: list[_ShortId] = Field(
         default_factory=list,
         max_length=2,
         description="Up to 2 goal IDs",
