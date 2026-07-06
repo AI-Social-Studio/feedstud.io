@@ -64,6 +64,17 @@ export function BlockB({
 
   const toggleAudience = (id: string) => {
     const current = data.target_audience_intents || [];
+    const knownIds = audiences.map((a) => a.id).filter((a) => a !== "other");
+
+    if (id === "other") {
+      if (isAudienceSelected("other")) {
+        onChange({ target_audience_intents: current.filter((item) => knownIds.includes(item)) });
+      } else {
+        onChange({ target_audience_intents: [...current, "other"] });
+      }
+      return;
+    }
+
     if (current.includes(id)) {
       onChange({ target_audience_intents: current.filter((a) => a !== id) });
     } else {
@@ -124,33 +135,15 @@ export function BlockB({
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{dict.titleAudience}</h2>
         <p className="mt-1.5 text-base text-gray-500 dark:text-gray-400">{dict.subtitleAudience}</p>
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {audiences.map((audience) => {
-            const selected = isAudienceSelected(audience.id);
-            return (
-              <OptionCard
-                key={audience.id}
-                icon={audience.icon}
-                title={audience.label}
-                selected={selected}
-                onClick={() => {
-                  if (audience.id === "other") {
-                    if (selected) {
-                      const current = data.target_audience_intents || [];
-                      const knownIds = audiences.map((a) => a.id).filter((a) => a !== "other");
-                      onChange({
-                        target_audience_intents: current.filter((item) => knownIds.includes(item)),
-                      });
-                    } else {
-                      const current = data.target_audience_intents || [];
-                      onChange({ target_audience_intents: [...current, "other"] });
-                    }
-                  } else {
-                    toggleAudience(audience.id);
-                  }
-                }}
-              />
-            );
-          })}
+          {audiences.map((audience) => (
+            <OptionCard
+              key={audience.id}
+              icon={audience.icon}
+              title={audience.label}
+              selected={isAudienceSelected(audience.id)}
+              onClick={() => toggleAudience(audience.id)}
+            />
+          ))}
         </div>
       </div>
 
