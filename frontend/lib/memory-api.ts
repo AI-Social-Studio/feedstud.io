@@ -1,6 +1,12 @@
-import type { UserMemory } from "@/types/memory";
+type UpsertMemoryPayload = {
+  self_description?: string | null;
+  interests_tags?: string[];
+  primary_platforms?: string[];
+  target_audience_intents?: string[];
+  post_goals?: string[];
+};
 
-export async function upsertUserMemory(data: Partial<UserMemory>): Promise<void> {
+export async function upsertUserMemory(data: UpsertMemoryPayload): Promise<void> {
   const response = await fetch("/api/memory/upsert", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
