@@ -92,6 +92,7 @@ export type Dictionary = {
     draft: string;
     adminSection: string;
     admin: string;
+    profile: string;
   };
   home: {
     title: string;
@@ -420,6 +421,43 @@ export type Dictionary = {
         sales: { label: string; description: string };
       };
       maxGoalsReached: string;
+    };
+  };
+  profile: {
+    title: string;
+    subtitle: string;
+    reRunWizard: string;
+    reRunWizardDescription: string;
+    saveChanges: string;
+    saving: string;
+    savedToast: string;
+    errorToast: string;
+    identitySection: {
+      title: string;
+      subtitle: string;
+      label: string;
+      placeholder: string;
+    };
+    topicsSection: {
+      title: string;
+      subtitle: string;
+      inputPlaceholder: string;
+      addBtn: string;
+      emptyState: string;
+    };
+    platformsSection: {
+      title: string;
+      subtitle: string;
+    };
+    audienceSection: {
+      title: string;
+      subtitle: string;
+      emptyState: string;
+    };
+    goalsSection: {
+      title: string;
+      subtitle: string;
+      emptyState: string;
     };
   };
 };

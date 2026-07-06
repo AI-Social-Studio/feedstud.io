@@ -237,6 +237,7 @@ export const en: Dictionary = {
     draft: "Draft",
     adminSection: "Admin",
     admin: "Admin Workspace",
+    profile: "AI Profile",
   },
   home: {
     title: "Home",
@@ -577,6 +578,44 @@ export const en: Dictionary = {
         sales: { label: "Sales", description: "I want to sell my products or services" },
       },
       maxGoalsReached: "2 goals selected. Uncheck one to choose another.",
+    },
+  },
+  profile: {
+    title: "AI Profile",
+    subtitle: "Manage your personal information and tailor the AI memory to your evolving goals.",
+    reRunWizard: "Re-run Onboarding Wizard",
+    reRunWizardDescription:
+      "Prefer a guided step-by-step setup? Launch the onboarding wizard pre-filled with your current data.",
+    saveChanges: "Save Changes",
+    saving: "Saving...",
+    savedToast: "AI Profile successfully updated!",
+    errorToast: "Failed to save changes to AI Profile.",
+    identitySection: {
+      title: "Identity & Tone",
+      subtitle: "A short description of who you are or what you do to help AI match your voice.",
+      label: "Role / Activity description",
+      placeholder: "E.g. AI Startup Founder, Software Engineer, Video Creator...",
+    },
+    topicsSection: {
+      title: "Topics & Interests",
+      subtitle: "Key themes you frequently create content about (max 5).",
+      inputPlaceholder: "Type topic and press Enter...",
+      addBtn: "Add",
+      emptyState: "No topics added yet.",
+    },
+    platformsSection: {
+      title: "Primary Platforms",
+      subtitle: "The main social media networks where you publish content.",
+    },
+    audienceSection: {
+      title: "Target Audience",
+      subtitle: "The audience groups you want your content to reach.",
+      emptyState: "No target audience defined.",
+    },
+    goalsSection: {
+      title: "Content Goals",
+      subtitle: "The primary outcomes you want to achieve with your posts.",
+      emptyState: "No goals defined.",
     },
   },
 };

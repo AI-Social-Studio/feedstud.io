@@ -242,6 +242,7 @@ export const pl: Dictionary = {
     draft: "Szkic",
     adminSection: "Administracja",
     admin: "Panel administratora",
+    profile: "Profil AI",
   },
   home: {
     title: "Główna",
@@ -610,6 +611,44 @@ export const pl: Dictionary = {
         sales: { label: "Sprzedaż", description: "Chcę sprzedawać swoje produkty lub usługi" },
       },
       maxGoalsReached: "Wybrano 2 cele. Odznacz jeden z nich, aby wybrać inny.",
+    },
+  },
+  profile: {
+    title: "Profil AI",
+    subtitle: "Zarządzaj informacjami o sobie i dostosuj pamięć AI do swoich aktualnych potrzeb.",
+    reRunWizard: "Przejdź kreator ponownie",
+    reRunWizardDescription:
+      "Chcesz przejść krok po kroku przez proces konfiguracji? Uruchom kreator onboardingu z wczytanymi obecnymi danymi.",
+    saveChanges: "Zapisz zmiany",
+    saving: "Zapisywanie...",
+    savedToast: "Profil AI został zaktualizowany!",
+    errorToast: "Nie udało się zapisać zmian w profilu AI.",
+    identitySection: {
+      title: "Tożsamość i styl",
+      subtitle: "Krótki opis tego, kim jesteś lub co robisz, pomagający AI dobrać odpowiedni ton.",
+      label: "Opis działalności / rola",
+      placeholder: "Np. Założyciel startupu AI, Programista, Twórca wideo...",
+    },
+    topicsSection: {
+      title: "Tematy i zainteresowania",
+      subtitle: "Kluczowe zagadnienia, o których najczęściej tworzysz treści (max 5).",
+      inputPlaceholder: "Wpisz temat i naciśnij Enter...",
+      addBtn: "Dodaj",
+      emptyState: "Brak dodanych tematów.",
+    },
+    platformsSection: {
+      title: "Preferowane platformy",
+      subtitle: "Główne kanały społecznościowe, na których publikujesz.",
+    },
+    audienceSection: {
+      title: "Docelowi odbiorcy",
+      subtitle: "Grupy odbiorców, do których kierujesz swój przekaz.",
+      emptyState: "Brak zdefiniowanych grup odbiorców.",
+    },
+    goalsSection: {
+      title: "Cele publikacji",
+      subtitle: "Główne rezultaty, jakie chcesz osiągnąć poprzez swoje posty.",
+      emptyState: "Brak zdefiniowanych celów.",
     },
   },
 };

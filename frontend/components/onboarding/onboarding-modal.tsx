@@ -11,18 +11,21 @@ import { useDictionary } from "@/lib/i18n";
 export function OnboardingModal({
   onComplete,
   onSkip,
+  initialData,
 }: {
   onComplete: (data: Partial<UserMemory>) => void;
   onSkip: () => void;
+  initialData?: Partial<UserMemory>;
 }) {
   const dict = useDictionary().onboarding;
   const [step, setStep] = useState(1);
-  const [data, setData] = useState<Partial<UserMemory>>({
+  const [data, setData] = useState<Partial<UserMemory>>(() => ({
     interests_tags: [],
     primary_platforms: [],
     target_audience_intents: [],
     post_goals: [],
-  });
+    ...initialData,
+  }));
 
   const STEPS = [
     { id: 1, title: dict.steps.identity },

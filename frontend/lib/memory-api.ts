@@ -1,3 +1,5 @@
+import type { UserMemory } from "@/types/memory";
+
 type UpsertMemoryPayload = {
   self_description?: string | null;
   interests_tags?: string[];
@@ -22,4 +24,18 @@ export async function upsertUserMemory(data: UpsertMemoryPayload): Promise<void>
   if (!response.ok) {
     throw new Error(`Failed to save memory profile: ${response.status}`);
   }
+}
+
+export async function getUserMemory(): Promise<UserMemory | null> {
+  const response = await fetch("/api/memory/me", {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) return null;
+    throw new Error(`Failed to fetch user memory: ${response.status}`);
+  }
+
+  const data = (await response.json()) as UserMemory | null;
+  return data;
 }
