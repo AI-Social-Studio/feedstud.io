@@ -128,7 +128,6 @@ class GenerateJobModel(Base):
 
 class UserMemoryModel(Base):
     __tablename__ = "user_memories"
-    __table_args__ = (Index("ix_user_memories_user_id", "user_id", unique=True),)
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
     user_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
