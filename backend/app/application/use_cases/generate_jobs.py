@@ -97,6 +97,7 @@ class ProcessGenerateJobUseCase:
             except Exception:
                 logger.warning(
                     "Failed to load user memory, proceeding without context",
+                    exc_info=True,
                     extra={"job_id": str(job_id), "user_id": job.actor_user_id},
                 )
 
