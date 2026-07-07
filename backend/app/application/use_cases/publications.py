@@ -229,19 +229,30 @@ class ProcessPublicationJobUseCase:
     async def execute(self, publication_id: UUID) -> None:
         started_at = perf_counter()
         publication = await self._publications.get(publication_id)
-        if publication is None or publication.status in {"completed", "failed"}:
+        if publication is None:
+            return
+        if publication.status in {"completed", "failed"}:
+            logger.info(
+                "Publication job skipped",
+                extra=_publication_log_context(publication, current_status=publication.status, skip_reason="terminal_status"),
+            )
+            return
+        if publication.status != "queued":
+            logger.info(
+                "Publication job skipped",
+                extra=_publication_log_context(publication, current_status=publication.status, skip_reason="not_queued"),
+            )
             return
         if not await self._publications.mark_processing(publication_id):
+            logger.info(
+                "Publication job skipped",
+                extra=_publication_log_context(publication, current_status=publication.status, skip_reason="already_claimed"),
+            )
             return
 
         logger.info(
             "Publication job started",
-            extra={
-                "publication_id": str(publication_id),
-                "provider": publication.provider,
-                "draft_id": str(publication.draft_id),
-                "asset_count": len(publication.assets),
-            },
+            extra=_publication_log_context(publication, current_status="processing"),
         )
 
         connection = None
@@ -289,14 +300,12 @@ class ProcessPublicationJobUseCase:
             )
             logger.info(
                 "Publication job failed",
-                extra={
-                    "publication_id": str(publication_id),
-                    "provider": publication.provider,
-                    "draft_id": str(publication.draft_id),
-                    "asset_count": len(publication.assets),
-                    "error_code": exc.code.value,
-                    "latency_ms": int((perf_counter() - started_at) * 1000),
-                },
+                extra=_publication_log_context(
+                    publication,
+                    current_status="failed",
+                    error_code=exc.code.value,
+                    latency_ms=int((perf_counter() - started_at) * 1000),
+                ),
             )
             return
         except DomainError as exc:
@@ -309,18 +318,19 @@ class ProcessPublicationJobUseCase:
             logger.log(
                 logging.WARNING if isinstance(exc, ProviderRateLimitedError) else logging.INFO,
                 "Publication job failed",
-                extra={
-                    "publication_id": str(publication_id),
-                    "provider": publication.provider,
-                    "draft_id": str(publication.draft_id),
-                    "asset_count": len(publication.assets),
-                    "error_code": exc.code.value,
-                    "latency_ms": int((perf_counter() - started_at) * 1000),
-                },
+                extra=_publication_log_context(
+                    publication,
+                    current_status="failed",
+                    error_code=exc.code.value,
+                    latency_ms=int((perf_counter() - started_at) * 1000),
+                ),
             )
             return
         except Exception:
-            logger.exception("Publication job execution failed", extra={"publication_id": str(publication_id)})
+            logger.exception(
+                "Publication job execution failed",
+                extra=_publication_log_context(publication, current_status="failed"),
+            )
             await self._publications.fail(
                 publication_id,
                 from_status="processing",
@@ -339,13 +349,11 @@ class ProcessPublicationJobUseCase:
         )
         logger.info(
             "Publication job completed",
-            extra={
-                "publication_id": str(publication_id),
-                "provider": publication.provider,
-                "draft_id": str(publication.draft_id),
-                "asset_count": len(publication.assets),
-                "latency_ms": int((perf_counter() - started_at) * 1000),
-            },
+            extra=_publication_log_context(
+                publication,
+                current_status="completed",
+                latency_ms=int((perf_counter() - started_at) * 1000),
+            ),
         )
 
 
@@ -390,6 +398,37 @@ def _validate_publication_timing(payload: SubmitPublicationJobInput) -> datetime
     if scheduled_for < minimum_scheduled_for:
         raise InvalidPublicationInputError("Scheduled publication time must be at least 1 minute in the future")
     return scheduled_for
+
+
+def _publication_log_context(
+    publication: Publication,
+    *,
+    current_status: str,
+    skip_reason: str | None = None,
+    error_code: str | None = None,
+    latency_ms: int | None = None,
+) -> dict[str, object]:
+    context: dict[str, object] = {
+        "publication_id": str(publication.id),
+        "app_user_id": str(publication.app_user_id),
+        "provider": publication.provider,
+        "draft_id": str(publication.draft_id),
+        "mode": publication.mode,
+        "current_status": current_status,
+        "asset_count": len(publication.assets),
+        "scheduled_for": publication.scheduled_for.isoformat() if publication.scheduled_for else None,
+        "queued_at": publication.queued_at.isoformat() if publication.queued_at else None,
+        "schedule_released_at": (
+            publication.schedule_released_at.isoformat() if publication.schedule_released_at else None
+        ),
+    }
+    if skip_reason is not None:
+        context["skip_reason"] = skip_reason
+    if error_code is not None:
+        context["error_code"] = error_code
+    if latency_ms is not None:
+        context["latency_ms"] = latency_ms
+    return context
 
 
 def _to_view(publication: Publication) -> PublicationView:
