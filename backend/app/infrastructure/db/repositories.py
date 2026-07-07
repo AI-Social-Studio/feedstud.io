@@ -317,9 +317,16 @@ class SqlAlchemyPublicationRepository(PublicationRepository):
         models = list(result.scalars().all())
         await self._session.commit()
 
+        if not models:
+            return []
+
+        assets_by_publication_id = await self._get_assets_by_publication_ids(
+            [model.id for model in models]
+        )
+
         publications: list[Publication] = []
         for model in models:
-            publications.append(self._to_entity(model, await self._get_assets(model.id)))
+            publications.append(self._to_entity(model, assets_by_publication_id.get(model.id, [])))
         return publications
 
     async def restore_scheduled(self, publication_id: UUID) -> bool:
@@ -474,6 +481,22 @@ class SqlAlchemyPublicationRepository(PublicationRepository):
             .order_by(PublicationAssetModel.sort_order.asc())
         )
         return list(result.scalars().all())
+
+    async def _get_assets_by_publication_ids(
+        self, publication_ids: list[UUID]
+    ) -> dict[UUID, list[PublicationAssetModel]]:
+        result = await self._session.execute(
+            select(PublicationAssetModel)
+            .where(PublicationAssetModel.publication_id.in_(publication_ids))
+            .order_by(
+                PublicationAssetModel.publication_id.asc(),
+                PublicationAssetModel.sort_order.asc(),
+            )
+        )
+        assets_by_publication_id: dict[UUID, list[PublicationAssetModel]] = {}
+        for asset in result.scalars().all():
+            assets_by_publication_id.setdefault(asset.publication_id, []).append(asset)
+        return assets_by_publication_id
 
     @staticmethod
     def _to_model(publication: Publication) -> PublicationModel:
