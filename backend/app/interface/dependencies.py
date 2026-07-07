@@ -69,17 +69,12 @@ from app.infrastructure.db.repositories import (
     SqlAlchemyUserMemoryRepository,
 )
 from app.infrastructure.messaging.rabbitmq import RabbitMqGenerateJobQueue, RabbitMqPublicationJobQueue
-from app.infrastructure.db.session import Database
+from app.infrastructure.db.session import Database, get_database as get_shared_database
 from app.infrastructure.security.fernet_cipher import FernetSecretCipher
 from app.infrastructure.social.linkedin_oauth import LinkedInOAuthClient
 from app.infrastructure.social.linkedin_publishing import LinkedInAssetPreparer, LinkedInPublisher
 from app.infrastructure.storage.minio_storage import MinioObjectStorage
 from app.interface.errors import api_error
-
-
-@lru_cache
-def _database() -> Database:
-    return Database(get_settings().database_url)
 
 
 @lru_cache
@@ -96,7 +91,7 @@ def _storage() -> MinioObjectStorage:
 
 
 def get_database() -> Database:
-    return _database()
+    return get_shared_database()
 
 
 def get_object_storage() -> ObjectStorage:
@@ -104,7 +99,7 @@ def get_object_storage() -> ObjectStorage:
 
 
 async def get_session() -> AsyncIterator[AsyncSession]:
-    async for session in _database().session():
+    async for session in get_shared_database().session():
         yield session
 
 

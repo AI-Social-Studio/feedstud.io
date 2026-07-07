@@ -7,6 +7,7 @@ from app.application.use_cases.generate_posts import GeneratePostsUseCase
 from app.application.use_cases.publications import ProcessPublicationJobUseCase
 from app.core.config import get_settings
 from app.infrastructure.db.models import Base
+from app.infrastructure.db.session import get_database
 from app.infrastructure.db.repositories import (
     SqlAlchemyAiExecutionRepository,
     SqlAlchemyFileRepository,
@@ -18,7 +19,6 @@ from app.infrastructure.db.repositories import (
 from app.infrastructure.messaging.rabbitmq import RabbitMqGenerateJobQueue, RabbitMqPublicationJobQueue
 from app.interface.dependencies import (
     _content_generator,
-    _database,
     _linkedin_asset_preparer,
     _linkedin_publisher,
     _secret_cipher,
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 async def main() -> None:
     settings = get_settings()
-    db = _database()
+    db = get_database()
     await db.create_all(Base.metadata)
     await _storage().ensure_bucket()
 
@@ -49,7 +49,7 @@ async def main() -> None:
 
 
 async def _process_generate_job(job_id: UUID) -> None:
-    async for session in _database().session():
+    async for session in get_database().session():
         jobs = SqlAlchemyGenerateJobRepository(session)
         generate = GeneratePostsUseCase(
             generator=_content_generator(),
@@ -67,7 +67,7 @@ async def _process_generate_job(job_id: UUID) -> None:
 
 
 async def _process_publication_job(publication_id: UUID) -> None:
-    async for session in _database().session():
+    async for session in get_database().session():
         publications = SqlAlchemyPublicationRepository(session)
         files = SqlAlchemyFileRepository(session)
         connections = SqlAlchemySocialConnectionRepository(session)

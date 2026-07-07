@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from functools import lru_cache
 
 from sqlalchemy import inspect
 from sqlalchemy.ext.asyncio import (
@@ -6,6 +7,8 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+
+from app.core.config import get_settings
 
 
 class Database:
@@ -37,3 +40,8 @@ def _sync_has_tables(connection) -> bool:
 
     async def dispose(self) -> None:
         await self._engine.dispose()
+
+
+@lru_cache
+def get_database() -> Database:
+    return Database(get_settings().database_url)

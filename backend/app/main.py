@@ -9,11 +9,12 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import get_settings
 from app.domain.error_codes import ErrorCode
+from app.infrastructure.db.session import get_database
 from app.domain.exceptions import DomainError
 from app.infrastructure.db.models import Base
 from app.infrastructure.db.repositories import SqlAlchemyAiExecutionRepository
 from app.interface.api.v1.router import api_router
-from app.interface.dependencies import _database, _storage
+from app.interface.dependencies import _storage
 from app.interface.errors import HTTP_STATUS_BY_ERROR_CODE, domain_error_response, error_payload
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     settings = get_settings()
-    db = _database()
+    db = get_database()
     if settings.db_reset_on_start:
         await db.drop_all(Base.metadata)
     elif not await db.has_tables():
