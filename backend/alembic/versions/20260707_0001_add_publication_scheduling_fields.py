@@ -23,6 +23,16 @@ def upgrade() -> None:
         "publications",
         sa.Column("schedule_released_at", sa.DateTime(timezone=True), nullable=True),
     )
+    if op.get_context().dialect.name == "postgresql":
+        with op.get_context().autocommit_block():
+            op.create_index(
+                "ix_publications_status_scheduled_for",
+                "publications",
+                ["status", "scheduled_for"],
+                unique=False,
+                postgresql_concurrently=True,
+            )
+        return
     op.create_index(
         "ix_publications_status_scheduled_for",
         "publications",
@@ -32,7 +42,15 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_publications_status_scheduled_for", table_name="publications")
+    if op.get_context().dialect.name == "postgresql":
+        with op.get_context().autocommit_block():
+            op.drop_index(
+                "ix_publications_status_scheduled_for",
+                table_name="publications",
+                postgresql_concurrently=True,
+            )
+    else:
+        op.drop_index("ix_publications_status_scheduled_for", table_name="publications")
     op.drop_column("publications", "schedule_released_at")
     op.drop_column("publications", "queued_at")
     op.drop_column("publications", "scheduled_for")
