@@ -14,6 +14,8 @@ RUN apt-get update \
 COPY pyproject.toml ./
 RUN pip install --upgrade pip && pip install .
 
+COPY alembic.ini ./
+COPY alembic ./alembic
 COPY app ./app
 
 EXPOSE 4000
