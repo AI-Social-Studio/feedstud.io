@@ -30,10 +30,6 @@ class Database:
         async with self._engine.connect() as conn:
             return await conn.run_sync(_sync_has_tables)
 
-
-def _sync_has_tables(connection) -> bool:
-    return bool(inspect(connection).get_table_names())
-
     async def drop_all(self, metadata) -> None:
         async with self._engine.begin() as conn:
             await conn.run_sync(metadata.drop_all)
@@ -42,6 +38,14 @@ def _sync_has_tables(connection) -> bool:
         await self._engine.dispose()
 
 
+def _sync_has_tables(connection) -> bool:
+    return bool(inspect(connection).get_table_names())
+
+
 @lru_cache
 def get_database() -> Database:
     return Database(get_settings().database_url)
+
+
+def reset_database() -> None:
+    get_database.cache_clear()

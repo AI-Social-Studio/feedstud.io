@@ -197,7 +197,9 @@ export function CampaignStudio({
   const [removingFileIds, setRemovingFileIds] = useState<string[]>([]);
   const [refining, setRefining] = useState<Partial<Record<Platform, boolean>>>({});
   const [regenerating, setRegenerating] = useState<Partial<Record<Platform, boolean>>>({});
-  const [reschedulePerPublication, setReschedulePerPublication] = useState<Record<string, string>>({});
+  const [reschedulePerPublication, setReschedulePerPublication] = useState<Record<string, string>>(
+    {},
+  );
   const [toasts, setToasts] = useState<Toast[]>([]);
   const socialConnections = initialSocialConnections;
   const [publications, setPublications] = useState<Publication[]>(initialPublications);
@@ -275,7 +277,9 @@ export function CampaignStudio({
   }
 
   function getRescheduleValue(publication: Publication) {
-    return reschedulePerPublication[publication.id] ?? toDateTimeInputValue(publication.scheduled_for);
+    return (
+      reschedulePerPublication[publication.id] ?? toDateTimeInputValue(publication.scheduled_for)
+    );
   }
 
   function resolveScheduledFor(value: string) {
