@@ -32,6 +32,7 @@ import {
   waitForPublication,
 } from "@/lib/publications-api";
 import type { SocialConnection } from "@/lib/social-connections-api";
+import { useHasMounted } from "@/lib/use-has-mounted";
 import { PlatformPreview } from "./platform-preview";
 import { PLATFORM_META, PLATFORM_ORDER, type Platform, type RefineAction } from "./content-engine";
 import { createDraft, type Draft, type UploadedFile, updateDraft } from "@/lib/drafts-api";
@@ -143,6 +144,7 @@ export function CampaignStudio({
   initialSocialConnections,
   initialPublications,
 }: Props) {
+  const hasMounted = useHasMounted();
   const dict = useDictionary();
   const refineActions = buildRefineActions(dict.studio.refineActions);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
@@ -1333,7 +1335,7 @@ export function CampaignStudio({
         </div>
       ) : null}
 
-      {typeof document !== "undefined"
+      {hasMounted
         ? createPortal(
             <div className="fixed right-4 bottom-4 z-50 flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2">
               {toasts.map((toast) => (

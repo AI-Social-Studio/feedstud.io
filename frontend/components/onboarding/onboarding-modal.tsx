@@ -2,6 +2,7 @@ import React, { useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRightIcon, CheckIcon } from "@phosphor-icons/react/dist/ssr";
 import { useDictionary } from "@/lib/i18n";
+import { useHasMounted } from "@/lib/use-has-mounted";
 import { useMountEffect } from "@/lib/use-mount-effect";
 import { cn } from "@/lib/utils";
 import type { UserMemory } from "@/types/memory";
@@ -18,6 +19,7 @@ export function OnboardingModal({
   onSkip: () => void;
   initialData?: Partial<UserMemory>;
 }) {
+  const hasMounted = useHasMounted();
   const dict = useDictionary().onboarding;
   const [step, setStep] = useState(1);
   const [data, setData] = useState<Partial<UserMemory>>(() => ({
@@ -68,6 +70,8 @@ export function OnboardingModal({
     }
     onComplete(data);
   }
+
+  if (!hasMounted) return null;
 
   return createPortal(
     <div

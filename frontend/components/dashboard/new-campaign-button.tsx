@@ -5,10 +5,12 @@ import { createPortal } from "react-dom";
 import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
 import { useDictionary } from "@/lib/i18n";
+import { useHasMounted } from "@/lib/use-has-mounted";
 
 export function NewCampaignButton({ label }: { label: string }) {
   const dict = useDictionary();
   const router = useRouter();
+  const hasMounted = useHasMounted();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
 
@@ -35,7 +37,7 @@ export function NewCampaignButton({ label }: { label: string }) {
         {label}
       </button>
 
-      {open && typeof document !== "undefined"
+      {open && hasMounted
         ? createPortal(
             <div className="animate-page-in fixed inset-0 z-[999] bg-gray-950/60 backdrop-blur-md">
               <div className="flex min-h-screen items-center justify-center p-4">

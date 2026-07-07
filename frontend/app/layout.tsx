@@ -49,8 +49,8 @@ export default async function RootLayout({
       className={`${inter.variable} ${geistMono.variable} min-h-full antialiased`}
     >
       <head>
-        <InlineScript html={THEME_INIT_SCRIPT} />
-        <InlineScript html={LOCALE_INIT_SCRIPT} />
+        <InlineScript id="theme-init" html={THEME_INIT_SCRIPT} />
+        <InlineScript id="locale-init" html={LOCALE_INIT_SCRIPT} />
       </head>
       <body className="min-h-screen">
         <LanguageProvider initialLocale={initialLocale}>

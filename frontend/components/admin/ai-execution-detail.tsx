@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { AiExecutionDetail } from "@/lib/admin-ai-telemetry";
 import { useLanguage } from "@/lib/i18n";
+import { useHasMounted } from "@/lib/use-has-mounted";
 import { useMountEffect } from "@/lib/use-mount-effect";
 import {
   formatTelemetryCurrency,
@@ -23,6 +24,7 @@ export function AiExecutionDetailPanel({
 }) {
   const { locale, dict } = useLanguage();
   const router = useRouter();
+  const hasMounted = useHasMounted();
   const [activeTab, setActiveTab] = useState<"overview" | "prompts" | "payloads">("overview");
   const [copiedBlock, setCopiedBlock] = useState<string | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -341,7 +343,7 @@ export function AiExecutionDetailPanel({
     </>
   );
 
-  if (typeof document === "undefined") return null;
+  if (!hasMounted) return null;
   return createPortal(content, document.body);
 }
 
