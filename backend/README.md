@@ -15,7 +15,7 @@ Services:
 - MinIO Console: http://localhost:9001 (login `feedstudio` / `feedstudio-secret`)
 - Postgres: localhost:5433 (`feedstudio` / `feedstudio` / db `feedstudio`)
 
-Bucket `feedstudio-uploads` is auto-created on startup. DB schema is auto-created via `Base.metadata.create_all` in the lifespan; set `DB_RESET_ON_START=true` in `.env` to drop+recreate on every boot (local dev mode).
+Bucket `feedstudio-uploads` is auto-created on startup. In Docker local dev, the `backend` service now runs `alembic upgrade head` before starting Uvicorn, so existing local databases pick up schema changes instead of staying on the old shape. `Base.metadata.create_all` still bootstraps a brand-new empty DB. Set `DB_RESET_ON_START=true` in `.env` to drop+recreate on every boot when you explicitly want a clean local reset.
 
 ## Required env
 
