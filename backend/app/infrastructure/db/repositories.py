@@ -291,6 +291,52 @@ class SqlAlchemyPublicationRepository(PublicationRepository):
             publications.append(self._to_entity(model, await self._get_assets(model.id)))
         return publications
 
+    async def claim_due_scheduled(self, *, now: datetime, limit: int) -> list[Publication]:
+        due_publication_ids = (
+            select(PublicationModel.id)
+            .where(PublicationModel.status == "scheduled")
+            .where(PublicationModel.scheduled_for.is_not(None))
+            .where(PublicationModel.scheduled_for <= now)
+            .order_by(PublicationModel.scheduled_for.asc(), PublicationModel.created_at.asc())
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+            .cte("due_publication_ids")
+        )
+
+        result = await self._session.execute(
+            update(PublicationModel)
+            .where(PublicationModel.id.in_(select(due_publication_ids.c.id)))
+            .values(
+                status="queued",
+                queued_at=now,
+                schedule_released_at=now,
+                updated_at=now,
+            )
+            .returning(PublicationModel)
+        )
+        models = list(result.scalars().all())
+        await self._session.commit()
+
+        publications: list[Publication] = []
+        for model in models:
+            publications.append(self._to_entity(model, await self._get_assets(model.id)))
+        return publications
+
+    async def restore_scheduled(self, publication_id: UUID) -> bool:
+        result = await self._session.execute(
+            update(PublicationModel)
+            .where(PublicationModel.id == publication_id)
+            .where(PublicationModel.status == "queued")
+            .values(
+                status="scheduled",
+                queued_at=None,
+                schedule_released_at=None,
+                updated_at=datetime.now(timezone.utc),
+            )
+        )
+        await self._session.commit()
+        return result.rowcount > 0
+
     async def mark_processing(self, publication_id: UUID) -> bool:
         result = await self._session.execute(
             update(PublicationModel)
