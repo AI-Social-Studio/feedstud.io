@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     rabbitmq_generate_queue: str = "generate_posts"
     rabbitmq_publication_queue: str = "publish_posts"
     rabbitmq_prefetch_count: int = Field(default=10, ge=1, le=100)
+    publication_scheduler_poll_seconds: int = Field(default=10, ge=1, le=300)
+    publication_scheduler_batch_size: int = Field(default=50, ge=1, le=500)
 
     linkedin_client_id: str = ""
     linkedin_client_secret: str = ""

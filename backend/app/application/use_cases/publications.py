@@ -171,6 +171,41 @@ class ListPublicationsUseCase:
         return [_to_view(publication) for publication in publications]
 
 
+class ReleaseScheduledPublicationsUseCase:
+    def __init__(
+        self,
+        *,
+        publications: PublicationRepository,
+        queue: PublicationJobQueue,
+    ) -> None:
+        self._publications = publications
+        self._queue = queue
+
+    async def execute(self, *, now: datetime, limit: int) -> int:
+        claimed_publications = await self._publications.claim_due_scheduled(now=now, limit=limit)
+        released_publication_ids: list[str] = []
+        for publication in claimed_publications:
+            try:
+                await self._queue.publish(publication.id)
+                released_publication_ids.append(str(publication.id))
+            except Exception:
+                await self._publications.restore_scheduled(publication.id)
+                logger.exception(
+                    "Failed to release scheduled publication",
+                    extra={"publication_id": str(publication.id)},
+                )
+
+        if released_publication_ids:
+            logger.info(
+                "Released scheduled publications",
+                extra={
+                    "count": len(released_publication_ids),
+                    "publication_ids": released_publication_ids,
+                },
+            )
+        return len(released_publication_ids)
+
+
 class ProcessPublicationJobUseCase:
     def __init__(
         self,
