@@ -1484,6 +1484,7 @@ function getPublicationScheduledMessage(publication: Publication, dict: Dictiona
 function toScheduledPublicationDate(value: string): string | null {
   const scheduledAt = new Date(value);
   if (Number.isNaN(scheduledAt.getTime())) return null;
+  if (scheduledAt.getTime() <= Date.now()) return null;
   return scheduledAt.toISOString();
 }
 
