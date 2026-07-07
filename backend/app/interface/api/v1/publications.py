@@ -3,8 +3,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 
 from app.application.use_cases.publications import (
+    CancelScheduledPublicationUseCase,
     GetPublicationUseCase,
     ListPublicationsUseCase,
+    ReschedulePublicationUseCase,
     SubmitPublicationJobInput,
     SubmitPublicationJobUseCase,
 )
@@ -13,10 +15,17 @@ from app.interface.dependencies import (
     get_current_app_user_id,
     get_get_publication_use_case,
     get_list_publications_use_case,
+    get_cancel_scheduled_publication_use_case,
+    get_reschedule_publication_use_case,
     get_submit_publication_job_use_case,
 )
 from app.interface.errors import api_error
-from app.interface.schemas import CreatePublicationRequest, PublicationAssetResponse, PublicationResponse
+from app.interface.schemas import (
+    CreatePublicationRequest,
+    PublicationAssetResponse,
+    PublicationResponse,
+    ReschedulePublicationRequest,
+)
 
 router = APIRouter(prefix="/publications", tags=["publications"])
 
@@ -61,6 +70,45 @@ async def get_publication(
     use_case: GetPublicationUseCase = Depends(get_get_publication_use_case),
 ) -> PublicationResponse:
     view = await use_case.execute(publication_id, app_user_id=app_user_id)
+    if view is None:
+        raise api_error(
+            status.HTTP_404_NOT_FOUND,
+            ErrorCode.PUBLICATION_NOT_FOUND,
+            "Publication not found",
+            {"publication_id": str(publication_id)},
+        )
+    return _to_response(view)
+
+
+@router.post("/{publication_id}/cancel", response_model=PublicationResponse)
+async def cancel_publication(
+    publication_id: UUID,
+    app_user_id: UUID = Depends(get_current_app_user_id),
+    use_case: CancelScheduledPublicationUseCase = Depends(get_cancel_scheduled_publication_use_case),
+) -> PublicationResponse:
+    view = await use_case.execute(publication_id, app_user_id=app_user_id)
+    if view is None:
+        raise api_error(
+            status.HTTP_404_NOT_FOUND,
+            ErrorCode.PUBLICATION_NOT_FOUND,
+            "Publication not found",
+            {"publication_id": str(publication_id)},
+        )
+    return _to_response(view)
+
+
+@router.post("/{publication_id}/reschedule", response_model=PublicationResponse)
+async def reschedule_publication(
+    publication_id: UUID,
+    payload: ReschedulePublicationRequest,
+    app_user_id: UUID = Depends(get_current_app_user_id),
+    use_case: ReschedulePublicationUseCase = Depends(get_reschedule_publication_use_case),
+) -> PublicationResponse:
+    view = await use_case.execute(
+        publication_id,
+        app_user_id=app_user_id,
+        scheduled_for=payload.scheduled_for,
+    )
     if view is None:
         raise api_error(
             status.HTTP_404_NOT_FOUND,

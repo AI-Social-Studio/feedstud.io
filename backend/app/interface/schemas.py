@@ -276,12 +276,16 @@ class CreatePublicationRequest(BaseModel):
     scheduled_for: datetime | None = None
 
 
+class ReschedulePublicationRequest(BaseModel):
+    scheduled_for: datetime
+
+
 class PublicationResponse(BaseModel):
     id: UUID
     draft_id: UUID
     provider: Literal["linkedin"]
     social_connection_id: UUID
-    status: Literal["scheduled", "queued", "processing", "completed", "failed"]
+    status: Literal["scheduled", "queued", "processing", "completed", "failed", "cancelled"]
     mode: Literal["publish_now", "schedule"]
     platform_text: str
     external_post_id: str | None

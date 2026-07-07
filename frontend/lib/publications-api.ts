@@ -19,7 +19,7 @@ export type Publication = {
   draft_id: string;
   provider: "linkedin";
   social_connection_id: string;
-  status: "scheduled" | "queued" | "processing" | "completed" | "failed";
+  status: "scheduled" | "queued" | "processing" | "completed" | "failed" | "cancelled";
   mode: "publish_now" | "schedule";
   platform_text: string;
   external_post_id: string | null;
@@ -55,6 +55,26 @@ export async function createPublication(payload: CreatePublicationRequest): Prom
 
 export async function getPublication(publicationId: string): Promise<Publication> {
   const response = await publicationsApi.get<Publication>(`/api/publications/${publicationId}`);
+  return response.data;
+}
+
+export async function cancelPublication(publicationId: string): Promise<Publication> {
+  const response = await publicationsApi.post<Publication>(
+    `/api/publications/${publicationId}/cancel`,
+  );
+  return response.data;
+}
+
+export async function reschedulePublication(
+  publicationId: string,
+  scheduledFor: string,
+): Promise<Publication> {
+  const response = await publicationsApi.post<Publication>(
+    `/api/publications/${publicationId}/reschedule`,
+    {
+      scheduled_for: scheduledFor,
+    },
+  );
   return response.data;
 }
 

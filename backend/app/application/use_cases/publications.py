@@ -206,6 +206,51 @@ class ReleaseScheduledPublicationsUseCase:
         return len(released_publication_ids)
 
 
+class CancelScheduledPublicationUseCase:
+    def __init__(self, publications: PublicationRepository) -> None:
+        self._publications = publications
+
+    async def execute(self, publication_id: UUID, *, app_user_id: UUID) -> PublicationView | None:
+        publication = await self._publications.get(publication_id, app_user_id=app_user_id)
+        if publication is None:
+            return None
+        if publication.status != "scheduled":
+            raise InvalidPublicationInputError("Only scheduled publications can be cancelled")
+
+        cancelled = await self._publications.cancel_scheduled(
+            publication_id,
+            app_user_id=app_user_id,
+            now=datetime.now(timezone.utc),
+        )
+        return _to_view(cancelled) if cancelled is not None else None
+
+
+class ReschedulePublicationUseCase:
+    def __init__(self, publications: PublicationRepository) -> None:
+        self._publications = publications
+
+    async def execute(
+        self,
+        publication_id: UUID,
+        *,
+        app_user_id: UUID,
+        scheduled_for: datetime,
+    ) -> PublicationView | None:
+        publication = await self._publications.get(publication_id, app_user_id=app_user_id)
+        if publication is None:
+            return None
+        if publication.status != "scheduled":
+            raise InvalidPublicationInputError("Only scheduled publications can be rescheduled")
+
+        rescheduled = await self._publications.reschedule(
+            publication_id,
+            app_user_id=app_user_id,
+            scheduled_for=_normalize_future_scheduled_for(scheduled_for),
+            now=datetime.now(timezone.utc),
+        )
+        return _to_view(rescheduled) if rescheduled is not None else None
+
+
 class ProcessPublicationJobUseCase:
     def __init__(
         self,
@@ -231,7 +276,7 @@ class ProcessPublicationJobUseCase:
         publication = await self._publications.get(publication_id)
         if publication is None:
             return
-        if publication.status in {"completed", "failed"}:
+        if publication.status in {"completed", "failed", "cancelled"}:
             logger.info(
                 "Publication job skipped",
                 extra=_publication_log_context(publication, current_status=publication.status, skip_reason="terminal_status"),
@@ -390,10 +435,14 @@ def _validate_publication_timing(payload: SubmitPublicationJobInput) -> datetime
 
     if payload.scheduled_for is None:
         raise InvalidPublicationInputError("Scheduled publications require scheduled time")
-    if payload.scheduled_for.tzinfo is None or payload.scheduled_for.utcoffset() is None:
+    return _normalize_future_scheduled_for(payload.scheduled_for)
+
+
+def _normalize_future_scheduled_for(value: datetime) -> datetime:
+    if value.tzinfo is None or value.utcoffset() is None:
         raise InvalidPublicationInputError("Scheduled publication time must include timezone")
 
-    scheduled_for = payload.scheduled_for.astimezone(timezone.utc)
+    scheduled_for = value.astimezone(timezone.utc)
     minimum_scheduled_for = datetime.now(timezone.utc) + timedelta(minutes=1)
     if scheduled_for < minimum_scheduled_for:
         raise InvalidPublicationInputError("Scheduled publication time must be at least 1 minute in the future")
