@@ -93,9 +93,15 @@ class ProcessGenerateJobUseCase:
 
         memory_context = ""
         if self._memory is not None:
-            memory_context = build_memory_context(
-                await self._memory.get_by_app_user_id(job.app_user_id)
-            )
+            try:
+                user_memory = await self._memory.get_by_app_user_id(job.app_user_id)
+                memory_context = build_memory_context(user_memory)
+            except Exception:
+                logger.warning(
+                    "Failed to load user memory, proceeding without context",
+                    exc_info=True,
+                    extra={"job_id": str(job_id), "app_user_id": str(job.app_user_id)},
+                )
 
         try:
             result = await self._generator.execute(

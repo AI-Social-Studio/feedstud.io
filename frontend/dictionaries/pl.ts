@@ -124,7 +124,13 @@ export const pl: Dictionary = {
           { label: "Platformy", href: "/#platforms" },
         ],
       },
-      { title: "Firma", links: [{ label: "Kontakt", href: "/contact" }] },
+      {
+        title: "Firma",
+        links: [
+          { label: "Kontakt", href: "/contact" },
+          { label: "Autorzy", href: "/authors" },
+        ],
+      },
       {
         title: "Prawne",
         links: [
@@ -214,6 +220,19 @@ export const pl: Dictionary = {
       description:
         "Masz pytania, uwagi albo coś nie działa tak, jak powinno? Napisz do nas e-mail, a odpowiemy najszybciej jak to możliwe.",
     },
+  },
+  authors: {
+    title: "Autorzy",
+    subtitle: "Poznaj zespół, który tworzy feedstud.io.",
+    cofounders: "Współzałożyciele",
+    roles: {
+      norbert: "Full-stack Developer",
+      bartlomiej: "UI/UX Designer & Frontend Developer",
+      szymon: "Backend Engineer",
+    },
+    visitWebsite: "Odwiedź stronę",
+    githubProfile: "Profil GitHub",
+    linkedinProfile: "Profil LinkedIn",
   },
   nav: {
     mainMenu: "Menu główne",
@@ -637,6 +656,132 @@ export const pl: Dictionary = {
         audience: "Lifestyle i klimat",
       },
       x: { subtitle: "Krótka forma, newsy, trendy", audience: "Szybki feed, przegląd na szybko" },
+    },
+  },
+  onboarding: {
+    header: {
+      title: "Personalizacja profilu",
+      stepXofY: (step, total) => `Krok ${step} z ${total}`,
+    },
+    steps: {
+      identity: "Tożsamość",
+      audience: "Odbiorcy",
+      goals: "Cele",
+    },
+    navigation: {
+      skip: "Pomiń na razie",
+      back: "Wstecz",
+      next: "Dalej",
+      finish: "Zakończ",
+    },
+    blockA: {
+      titleIdentity: "Kim jesteś?",
+      subtitleIdentity: "Wybierz opcję, która najlepiej opisuje Twój obecny status.",
+      profiles: {
+        student: { label: "Uczę się / studiuję", description: "" },
+        employee: { label: "Pracuję na etacie", description: "Chcę być bardziej widoczny/a" },
+        business_owner: {
+          label: "Prowadzę własną firmę",
+          description: "Lub działalność gospodarczą",
+        },
+        creator: { label: "Jestem twórcą", description: "Tworzę treści w internecie" },
+        job_seeker: { label: "Szukam pracy", description: "Lub zmieniam branżę" },
+        ngo: {
+          label: "Działam społecznie",
+          description: "W organizacjach charytatywnych lub fundacjach",
+        },
+        hobbyist: { label: "Rozwijam pasję", description: "Dzielę się swoim hobby" },
+        other: { label: "Coś innego", description: "" },
+      },
+      otherIdentityLabel: "Napisz kim jesteś",
+      otherIdentityPlaceholder: "Np. instruktor jogi, radca prawny...",
+      titleTags: "Czym się zajmujesz?",
+      subtitleTags: "Wpisz słowa kluczowe (np. marketing). Naciśnij Enter, aby dodać.",
+      tagsPlaceholderEmpty: "Np. sport...",
+      tagsPlaceholderMore: "Dodaj kolejne...",
+      charLimit: (current, max) => `${current}/${max}`,
+      tagLimit: (current, max) => `${current}/${max}`,
+      removeTagLabel: (tag) => `Usuń ${tag}`,
+    },
+    blockB: {
+      titlePlatforms: "Gdzie chcesz publikować?",
+      subtitlePlatforms: "Możesz wybrać kilka opcji.",
+      platforms: {
+        linkedin: "LinkedIn",
+        instagram: "Instagram",
+        x: "X / Twitter",
+        unknown: "Jeszcze nie wiem",
+      },
+      titleAudience: "Kto ma Cię czytać?",
+      subtitleAudience: "Do kogo chcesz dotrzeć ze swoimi treściami? (Możesz wybrać kilka)",
+      audiences: {
+        employers: "Przyszli pracodawcy / zleceniodawcy",
+        same_interests: "Osoby o podobnych zainteresowaniach",
+        friends: "Moi znajomi i otoczenie",
+        customers: "Klienci na moje usługi/produkty",
+        broad_reach: "Jak najszersza publiczność",
+        other: "Własna grupa / społeczność",
+      },
+      otherAudienceLabel: "Napisz do kogo chcesz docierać",
+      otherAudiencePlaceholder: "Np. inżynierowie devops, mamy na macierzyńskim...",
+    },
+    blockC: {
+      titleGoals: "Co chcesz osiągnąć swoimi postami?",
+      subtitleGoals:
+        "Wybierz max 2 najważniejsze cele. To kluczowe, aby AI mogło dobrze dopasować treść.",
+      goals: {
+        awareness: { label: "Rozpoznawalność", description: "Chcę, żeby więcej osób mnie znało" },
+        inbound_contact: {
+          label: "Nowe kontakty",
+          description: "Chcę, żeby ludzie do mnie pisali / zgłaszali się",
+        },
+        engagement: { label: "Zaangażowanie", description: "Chcę udostępnień i komentarzy" },
+        credibility: {
+          label: "Wiarygodność",
+          description: "Chcę pokazać, że wiem co robię (autorytet)",
+        },
+        networking: { label: "Networking", description: "Chcę poznawać nowe osoby" },
+        sales: { label: "Sprzedaż", description: "Chcę sprzedawać swoje produkty lub usługi" },
+      },
+      maxGoalsReached: "Wybrano 2 cele. Odznacz jeden z nich, aby wybrać inny.",
+    },
+  },
+  profile: {
+    title: "Profil AI",
+    subtitle: "Zarządzaj informacjami o sobie i dostosuj pamięć AI do swoich aktualnych potrzeb.",
+    reRunWizard: "Przejdź kreator ponownie",
+    reRunWizardDescription:
+      "Chcesz przejść krok po kroku przez proces konfiguracji? Uruchom kreator onboardingu z wczytanymi obecnymi danymi.",
+    saveChanges: "Zapisz zmiany",
+    saving: "Zapisywanie...",
+    savedToast: "Profil AI został zaktualizowany!",
+    errorToast: "Nie udało się zapisać zmian w profilu AI.",
+    identitySection: {
+      title: "Tożsamość i styl",
+      subtitle: "Krótki opis tego, kim jesteś lub co robisz, pomagający AI dobrać odpowiedni ton.",
+      label: "Opis działalności / rola",
+      placeholder: "Np. Założyciel startupu AI, Programista, Twórca wideo...",
+    },
+    topicsSection: {
+      title: "Tematy i zainteresowania",
+      subtitle: "Kluczowe zagadnienia, o których najczęściej tworzysz treści (max 5).",
+      inputPlaceholder: "Wpisz temat i naciśnij Enter...",
+      addBtn: "Dodaj",
+      emptyState: "Brak dodanych tematów.",
+    },
+    platformsSection: {
+      title: "Preferowane platformy",
+      subtitle: "Główne kanały społecznościowe, na których publikujesz.",
+    },
+    audienceSection: {
+      title: "Docelowi odbiorcy",
+      subtitle: "Grupy odbiorców, do których kierujesz swój przekaz.",
+      emptyState: "Brak zdefiniowanych grup odbiorców.",
+    },
+    goalsSection: {
+      title: "Cele publikacji",
+      subtitle: "Główne rezultaty, jakie chcesz osiągnąć poprzez swoje posty.",
+      emptyState: "Brak zdefiniowanych celów.",
     },
   },
 };

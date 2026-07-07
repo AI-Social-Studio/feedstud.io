@@ -5,6 +5,8 @@ from sqlalchemy import case, delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+
 from app.application.ports import (
     AiExecutionRepository,
     AppUserRepository,
@@ -920,8 +922,8 @@ class SqlAlchemyUserMemoryRepository(UserMemoryRepository):
         self._session = session
 
     async def upsert(self, memory: UserMemory) -> None:
-        await self._session.execute(
-            insert(UserMemoryModel)
+        stmt = (
+            pg_insert(UserMemoryModel)
             .values(
                 id=memory.id,
                 app_user_id=memory.app_user_id,
@@ -945,6 +947,7 @@ class SqlAlchemyUserMemoryRepository(UserMemoryRepository):
                 },
             )
         )
+        await self._session.execute(stmt)
         await self._session.commit()
 
     async def get_by_app_user_id(self, app_user_id: UUID) -> UserMemory | None:
@@ -952,8 +955,10 @@ class SqlAlchemyUserMemoryRepository(UserMemoryRepository):
             select(UserMemoryModel).where(UserMemoryModel.app_user_id == app_user_id)
         )
         model = result.scalar_one_or_none()
-        if model is None:
-            return None
+        return self._to_entity(model) if model else None
+
+    @staticmethod
+    def _to_entity(model: UserMemoryModel) -> UserMemory:
         return UserMemory(
             id=model.id,
             app_user_id=model.app_user_id,
@@ -965,4 +970,3 @@ class SqlAlchemyUserMemoryRepository(UserMemoryRepository):
             created_at=model.created_at,
             updated_at=model.updated_at,
         )
-

@@ -119,7 +119,13 @@ export const en: Dictionary = {
           { label: "Platforms", href: "/#platforms" },
         ],
       },
-      { title: "Company", links: [{ label: "Contact", href: "/contact" }] },
+      {
+        title: "Company",
+        links: [
+          { label: "Contact", href: "/contact" },
+          { label: "Authors", href: "/authors" },
+        ],
+      },
       {
         title: "Legal",
         links: [
@@ -209,6 +215,19 @@ export const en: Dictionary = {
       description:
         "Questions, feedback, or something not working the way it should? Send us an email and we'll get back to you.",
     },
+  },
+  authors: {
+    title: "Authors",
+    subtitle: "The makers behind feedstud.io. Connect with us.",
+    cofounders: "Co-founders",
+    roles: {
+      norbert: "Full-stack Developer",
+      bartlomiej: "Full-stack Developer",
+      szymon: "Full-stack Developer",
+    },
+    visitWebsite: "Visit website",
+    githubProfile: "GitHub profile",
+    linkedinProfile: "LinkedIn profile",
   },
   nav: {
     mainMenu: "Main menu",
@@ -599,8 +618,127 @@ export const en: Dictionary = {
     },
     platforms: {
       linkedin: { subtitle: "B2B, Professional, Networking", audience: "Tech Professionals" },
-      instagram: { subtitle: "Visual, Lifestyle, Engagement", audience: "Lifestyle & Vibe" },
-      x: { subtitle: "Short-form, News, Trends", audience: "Fast, skim-first feed" },
+      instagram: {
+        subtitle: "Visual, lifestyle, engagement",
+        audience: "Lifestyle & vibes",
+      },
+      x: { subtitle: "Short form, news, trends", audience: "Quick feed, skimming" },
+    },
+  },
+  onboarding: {
+    header: {
+      title: "Profile Personalization",
+      stepXofY: (step, total) => `Step ${step} of ${total}`,
+    },
+    steps: {
+      identity: "Identity",
+      audience: "Audience",
+      goals: "Goals",
+    },
+    navigation: {
+      skip: "Skip for now",
+      back: "Back",
+      next: "Next",
+      finish: "Finish",
+    },
+    blockA: {
+      titleIdentity: "Who are you?",
+      subtitleIdentity: "Choose the option that best describes your current status.",
+      profiles: {
+        student: { label: "I am a student", description: "" },
+        employee: { label: "I am an employee", description: "I want to be more visible" },
+        business_owner: { label: "I run my own business", description: "Or own a company" },
+        creator: { label: "I am a creator", description: "I create content online" },
+        job_seeker: { label: "I am looking for a job", description: "Or changing careers" },
+        ngo: { label: "I act socially", description: "In charities or foundations" },
+        hobbyist: { label: "I develop a passion", description: "Sharing my hobby" },
+        other: { label: "Something else", description: "" },
+      },
+      otherIdentityLabel: "Write who you are",
+      otherIdentityPlaceholder: "E.g. yoga instructor, legal advisor...",
+      titleTags: "What do you do?",
+      subtitleTags: "Enter keywords (e.g. marketing). Press Enter to add.",
+      tagsPlaceholderEmpty: "E.g. sports...",
+      tagsPlaceholderMore: "Add more...",
+      charLimit: (current, max) => `${current}/${max}`,
+      tagLimit: (current, max) => `${current}/${max}`,
+      removeTagLabel: (tag) => `Remove ${tag}`,
+    },
+    blockB: {
+      titlePlatforms: "Where do you want to publish?",
+      subtitlePlatforms: "You can select multiple options.",
+      platforms: {
+        linkedin: "LinkedIn",
+        instagram: "Instagram",
+        x: "X / Twitter",
+        unknown: "I don't know yet",
+      },
+      titleAudience: "Who should read you?",
+      subtitleAudience: "Who do you want to reach with your content? (You can select multiple)",
+      audiences: {
+        employers: "Future employers / clients",
+        same_interests: "People with similar interests",
+        friends: "My friends and surroundings",
+        customers: "Customers for my services/products",
+        broad_reach: "As broad an audience as possible",
+        other: "Custom group / community",
+      },
+      otherAudienceLabel: "Write who you want to reach",
+      otherAudiencePlaceholder: "E.g. devops engineers, moms on maternity leave...",
+    },
+    blockC: {
+      titleGoals: "What do you want to achieve with your posts?",
+      subtitleGoals: "Choose up to 2 main goals. This is crucial for the AI to tailor the content.",
+      goals: {
+        awareness: { label: "Awareness", description: "I want more people to know me" },
+        inbound_contact: { label: "New contacts", description: "I want people to message me" },
+        engagement: { label: "Engagement", description: "I want shares and comments" },
+        credibility: {
+          label: "Credibility",
+          description: "I want to show my expertise (authority)",
+        },
+        networking: { label: "Networking", description: "I want to meet new people" },
+        sales: { label: "Sales", description: "I want to sell my products or services" },
+      },
+      maxGoalsReached: "2 goals selected. Uncheck one to choose another.",
+    },
+  },
+  profile: {
+    title: "AI Profile",
+    subtitle: "Manage your personal information and tailor the AI memory to your evolving goals.",
+    reRunWizard: "Re-run Onboarding Wizard",
+    reRunWizardDescription:
+      "Prefer a guided step-by-step setup? Launch the onboarding wizard pre-filled with your current data.",
+    saveChanges: "Save Changes",
+    saving: "Saving...",
+    savedToast: "AI Profile successfully updated!",
+    errorToast: "Failed to save changes to AI Profile.",
+    identitySection: {
+      title: "Identity & Tone",
+      subtitle: "A short description of who you are or what you do to help AI match your voice.",
+      label: "Role / Activity description",
+      placeholder: "E.g. AI Startup Founder, Software Engineer, Video Creator...",
+    },
+    topicsSection: {
+      title: "Topics & Interests",
+      subtitle: "Key themes you frequently create content about (max 5).",
+      inputPlaceholder: "Type topic and press Enter...",
+      addBtn: "Add",
+      emptyState: "No topics added yet.",
+    },
+    platformsSection: {
+      title: "Primary Platforms",
+      subtitle: "The main social media networks where you publish content.",
+    },
+    audienceSection: {
+      title: "Target Audience",
+      subtitle: "The audience groups you want your content to reach.",
+      emptyState: "No target audience defined.",
+    },
+    goalsSection: {
+      title: "Content Goals",
+      subtitle: "The primary outcomes you want to achieve with your posts.",
+      emptyState: "No goals defined.",
     },
   },
 };
