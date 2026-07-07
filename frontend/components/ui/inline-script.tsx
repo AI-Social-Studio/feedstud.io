@@ -1,3 +1,9 @@
-export function InlineScript({ html }: { html: string }) {
-  return <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: html }} />;
+import Script from "next/script";
+
+export function InlineScript({ id, html }: { id: string; html: string }) {
+  return (
+    <Script id={id} strategy="afterInteractive">
+      {html}
+    </Script>
+  );
 }
