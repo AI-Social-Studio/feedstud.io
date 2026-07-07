@@ -197,6 +197,7 @@ export function CampaignStudio({
   const [removingFileIds, setRemovingFileIds] = useState<string[]>([]);
   const [refining, setRefining] = useState<Partial<Record<Platform, boolean>>>({});
   const [regenerating, setRegenerating] = useState<Partial<Record<Platform, boolean>>>({});
+  const [reschedulePerPublication, setReschedulePerPublication] = useState<Record<string, string>>({});
   const [toasts, setToasts] = useState<Toast[]>([]);
   const socialConnections = initialSocialConnections;
   const [publications, setPublications] = useState<Publication[]>(initialPublications);
@@ -271,6 +272,10 @@ export function CampaignStudio({
     window.setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, 4500);
+  }
+
+  function getRescheduleValue(publication: Publication) {
+    return reschedulePerPublication[publication.id] ?? toDateTimeInputValue(publication.scheduled_for);
   }
 
   function formatGenerationError(error: GenerateResponse["errors"][Platform] | undefined) {
@@ -590,10 +595,10 @@ export function CampaignStudio({
     }
   }
 
-  async function updateScheduledPublication(publication: Publication) {
+  async function updateScheduledPublication(publication: Publication, scheduledAt: string) {
     if (publication.status !== "scheduled") return;
 
-    const scheduledFor = toScheduledPublicationDate(linkedinScheduledAt);
+    const scheduledFor = toScheduledPublicationDate(scheduledAt);
     if (!scheduledFor) {
       pushToast("error", dict.studio.toasts.scheduleInvalidDateTime);
       return;
@@ -1141,25 +1146,45 @@ export function CampaignStudio({
                       </a>
                     ) : null}
                     {latestPublication.status === "scheduled" ? (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => updateScheduledPublication(latestPublication)}
-                          disabled={
-                            isPublishing || !toScheduledPublicationDate(linkedinScheduledAt)
+                      <div className="mt-3 space-y-3">
+                        <DateTimePicker
+                          value={getRescheduleValue(latestPublication)}
+                          onChange={(value) =>
+                            setReschedulePerPublication((prev) => ({
+                              ...prev,
+                              [latestPublication.id]: value,
+                            }))
                           }
-                          className="inline-flex rounded-md border border-current px-3 py-1.5 text-xs font-semibold transition-opacity disabled:pointer-events-none disabled:opacity-60"
-                        >
-                          {dict.studio.reschedulePublication}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => cancelScheduledPublication(latestPublication)}
-                          disabled={isPublishing}
-                          className="inline-flex rounded-md border border-current px-3 py-1.5 text-xs font-semibold transition-opacity disabled:pointer-events-none disabled:opacity-60"
-                        >
-                          {dict.studio.cancelScheduledPublication}
-                        </button>
+                          placeholder={dict.studio.scheduleDatePlaceholder}
+                          timeLabel={dict.studio.scheduleTimeLabel}
+                          fullWidth
+                        />
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateScheduledPublication(
+                                latestPublication,
+                                getRescheduleValue(latestPublication),
+                              )
+                            }
+                            disabled={
+                              isPublishing ||
+                              !toScheduledPublicationDate(getRescheduleValue(latestPublication))
+                            }
+                            className="inline-flex rounded-md border border-current px-3 py-1.5 text-xs font-semibold transition-opacity disabled:pointer-events-none disabled:opacity-60"
+                          >
+                            {dict.studio.reschedulePublication}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => cancelScheduledPublication(latestPublication)}
+                            disabled={isPublishing}
+                            className="inline-flex rounded-md border border-current px-3 py-1.5 text-xs font-semibold transition-opacity disabled:pointer-events-none disabled:opacity-60"
+                          >
+                            {dict.studio.cancelScheduledPublication}
+                          </button>
+                        </div>
                       </div>
                     ) : null}
                     {latestPublication.status === "failed" ? (
@@ -1214,11 +1239,31 @@ export function CampaignStudio({
                             ) : null}
                             {publication.status === "scheduled" ? (
                               <>
+                                <div className="w-full">
+                                  <DateTimePicker
+                                    value={getRescheduleValue(publication)}
+                                    onChange={(value) =>
+                                      setReschedulePerPublication((prev) => ({
+                                        ...prev,
+                                        [publication.id]: value,
+                                      }))
+                                    }
+                                    placeholder={dict.studio.scheduleDatePlaceholder}
+                                    timeLabel={dict.studio.scheduleTimeLabel}
+                                    fullWidth
+                                  />
+                                </div>
                                 <button
                                   type="button"
-                                  onClick={() => updateScheduledPublication(publication)}
+                                  onClick={() =>
+                                    updateScheduledPublication(
+                                      publication,
+                                      getRescheduleValue(publication),
+                                    )
+                                  }
                                   disabled={
-                                    isPublishing || !toScheduledPublicationDate(linkedinScheduledAt)
+                                    isPublishing ||
+                                    !toScheduledPublicationDate(getRescheduleValue(publication))
                                   }
                                   className="inline-flex rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-blue-300 hover:text-blue-700 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:border-blue-700 dark:hover:text-blue-400"
                                 >
@@ -1503,6 +1548,18 @@ function formatDateTime24Hour(value: string) {
     timeStyle: "short",
     hour12: false,
   }).format(new Date(value));
+}
+
+function toDateTimeInputValue(value: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
 function buildSnapshot(
