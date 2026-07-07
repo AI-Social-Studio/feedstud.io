@@ -89,6 +89,7 @@ class PublicationModel(Base):
         Index("ix_publications_draft_id", "draft_id"),
         Index("ix_publications_status", "status"),
         Index("ix_publications_created_at", "created_at"),
+        Index("ix_publications_status_scheduled_for", "status", "scheduled_for"),
     )
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
@@ -108,6 +109,9 @@ class PublicationModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    scheduled_for: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    queued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    schedule_released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class PublicationAssetModel(Base):

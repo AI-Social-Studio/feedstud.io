@@ -345,6 +345,9 @@ def _to_view(publication: Publication) -> PublicationView:
         created_at=publication.created_at,
         updated_at=publication.updated_at,
         published_at=publication.published_at,
+        scheduled_for=publication.scheduled_for,
+        queued_at=publication.queued_at,
+        schedule_released_at=publication.schedule_released_at,
         assets=[
             PublicationAssetView(
                 id=asset.id,

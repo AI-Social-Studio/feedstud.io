@@ -66,6 +66,9 @@ class Publication:
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     published_at: datetime | None = None
+    scheduled_for: datetime | None = None
+    queued_at: datetime | None = None
+    schedule_released_at: datetime | None = None
     assets: list[PublicationAsset] = field(default_factory=list)
 
 

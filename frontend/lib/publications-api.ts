@@ -30,6 +30,9 @@ export type Publication = {
   created_at: string;
   updated_at: string;
   published_at: string | null;
+  scheduled_for: string | null;
+  queued_at: string | null;
+  schedule_released_at: string | null;
   assets: PublicationAsset[];
 };
 
