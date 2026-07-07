@@ -31,6 +31,7 @@ class SocialConnectionView:
     provider_account_id: str
     provider_account_urn: str
     provider_account_name: str | None
+    provider_profile_image_url: str | None
     expires_at: datetime | None
     scopes: list[str]
     status: str
@@ -53,6 +54,14 @@ class SocialOAuthConnectionData:
     expires_at: datetime | None
     scopes: list[str]
     provider_account_name: str | None = None
+    provider_profile_image_url: str | None = None
+
+
+@dataclass
+class SocialOAuthProfileData:
+    provider_account_id: str
+    provider_account_name: str | None = None
+    provider_profile_image_url: str | None = None
 
 
 @dataclass

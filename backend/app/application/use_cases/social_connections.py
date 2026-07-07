@@ -87,14 +87,20 @@ class CompleteLinkedInConnectUseCase:
                 provider_account_id=resolved.provider_account_id,
             )
             if persisted is None:
-                return _to_view(connection)
+                return _to_view(
+                    connection,
+                    provider_profile_image_url=resolved.provider_profile_image_url,
+                )
             if persisted.app_user_id != payload.app_user_id:
                 raise DomainError(
                     "Social account already connected to another user",
                     code=ErrorCode.SOCIAL_CONNECTION_CONFLICT,
                     public_message="Social account is already connected",
                 )
-            return _to_view(persisted)
+            return _to_view(
+                persisted,
+                provider_profile_image_url=resolved.provider_profile_image_url,
+            )
 
         existing.provider_account_urn = resolved.provider_account_urn
         existing.provider_account_name = resolved.provider_account_name
@@ -106,15 +112,49 @@ class CompleteLinkedInConnectUseCase:
         existing.status = "active"
         existing.updated_at = datetime.now(timezone.utc)
         await self._connections.update(existing)
-        return _to_view(existing)
+        return _to_view(existing, provider_profile_image_url=resolved.provider_profile_image_url)
 
 
 class ListSocialConnectionsUseCase:
-    def __init__(self, connections: SocialConnectionRepository) -> None:
+    def __init__(
+        self,
+        connections: SocialConnectionRepository,
+        oauth_client: SocialOAuthClient | None,
+        cipher: SecretCipher | None,
+    ) -> None:
         self._connections = connections
+        self._oauth_client = oauth_client
+        self._cipher = cipher
 
     async def execute(self, *, app_user_id: UUID) -> list[SocialConnectionView]:
-        return [_to_view(connection) for connection in await self._connections.list_by_user(app_user_id=app_user_id)]
+        views: list[SocialConnectionView] = []
+        for connection in await self._connections.list_by_user(app_user_id=app_user_id):
+            profile_image_url: str | None = None
+            profile_name: str | None = None
+            if (
+                connection.provider == "linkedin"
+                and connection.status == "active"
+                and self._oauth_client is not None
+                and self._cipher is not None
+            ):
+                try:
+                    profile = await self._oauth_client.get_profile(
+                        access_token=self._cipher.decrypt(connection.access_token_encrypted)
+                    )
+                    if profile.provider_account_id == connection.provider_account_id:
+                        profile_image_url = profile.provider_profile_image_url
+                        profile_name = profile.provider_account_name
+                except Exception:
+                    profile_image_url = None
+
+            views.append(
+                _to_view(
+                    connection,
+                    provider_account_name=profile_name,
+                    provider_profile_image_url=profile_image_url,
+                )
+            )
+        return views
 
 
 class DisconnectSocialConnectionUseCase:
@@ -125,13 +165,19 @@ class DisconnectSocialConnectionUseCase:
         return await self._connections.delete(connection_id, app_user_id=app_user_id)
 
 
-def _to_view(connection: SocialConnection) -> SocialConnectionView:
+def _to_view(
+    connection: SocialConnection,
+    *,
+    provider_account_name: str | None = None,
+    provider_profile_image_url: str | None = None,
+) -> SocialConnectionView:
     return SocialConnectionView(
         id=connection.id,
         provider=connection.provider,
         provider_account_id=connection.provider_account_id,
         provider_account_urn=connection.provider_account_urn,
-        provider_account_name=connection.provider_account_name,
+        provider_account_name=provider_account_name or connection.provider_account_name,
+        provider_profile_image_url=provider_profile_image_url,
         expires_at=connection.expires_at,
         scopes=connection.scopes,
         status=connection.status,

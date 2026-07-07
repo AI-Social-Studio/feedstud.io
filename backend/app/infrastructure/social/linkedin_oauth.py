@@ -10,7 +10,7 @@ from uuid import UUID
 
 import httpx
 
-from app.application.dto import SocialOAuthConnectionData
+from app.application.dto import SocialOAuthConnectionData, SocialOAuthProfileData
 from app.application.ports import SocialOAuthClient
 from app.domain.error_codes import ErrorCode
 from app.domain.exceptions import DomainError
@@ -79,18 +79,7 @@ class LinkedInOAuthClient(SocialOAuthClient):
                     public_message="LinkedIn authorization failed",
                 )
 
-            userinfo_response = await client.get(
-                LINKEDIN_USERINFO_URL,
-                headers={"Authorization": f"Bearer {access_token}"},
-            )
-            if userinfo_response.status_code >= 400:
-                raise DomainError(
-                    "LinkedIn userinfo fetch failed",
-                    code=ErrorCode.CLIENT_ERROR,
-                    public_message="LinkedIn authorization failed",
-                )
-
-        userinfo = userinfo_response.json()
+            userinfo = await _fetch_userinfo(client, access_token=access_token)
         account_id = str(userinfo.get("sub") or "")
         if not account_id:
             raise DomainError(
@@ -115,7 +104,47 @@ class LinkedInOAuthClient(SocialOAuthClient):
             refresh_token=token_payload.get("refresh_token"),
             expires_at=expires_at,
             scopes=scope_text.split(),
+            provider_profile_image_url=_resolve_profile_image_url(userinfo),
         )
+
+    async def get_profile(self, *, access_token: str) -> SocialOAuthProfileData:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            userinfo = await _fetch_userinfo(client, access_token=access_token)
+
+        account_id = str(userinfo.get("sub") or "")
+        if not account_id:
+            raise DomainError(
+                "LinkedIn account id missing",
+                code=ErrorCode.CLIENT_ERROR,
+                public_message="LinkedIn authorization failed",
+            )
+
+        return SocialOAuthProfileData(
+            provider_account_id=account_id,
+            provider_account_name=_resolve_display_name(userinfo),
+            provider_profile_image_url=_resolve_profile_image_url(userinfo),
+        )
+
+
+async def _fetch_userinfo(client: httpx.AsyncClient, *, access_token: str) -> dict:
+    userinfo_response = await client.get(
+        LINKEDIN_USERINFO_URL,
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    if userinfo_response.status_code >= 400:
+        raise DomainError(
+            "LinkedIn userinfo fetch failed",
+            code=ErrorCode.CLIENT_ERROR,
+            public_message="LinkedIn authorization failed",
+        )
+    payload = userinfo_response.json()
+    if not isinstance(payload, dict):
+        raise DomainError(
+            "LinkedIn userinfo payload is invalid",
+            code=ErrorCode.CLIENT_ERROR,
+            public_message="LinkedIn authorization failed",
+        )
+    return payload
 
 
 def _resolve_display_name(userinfo: dict) -> str | None:
@@ -126,6 +155,13 @@ def _resolve_display_name(userinfo: dict) -> str | None:
     family_name = str(userinfo.get("family_name") or "").strip()
     display_name = " ".join(part for part in [given_name, family_name] if part)
     return display_name or None
+
+
+def _resolve_profile_image_url(userinfo: dict) -> str | None:
+    picture = userinfo.get("picture")
+    if isinstance(picture, str) and picture.strip():
+        return picture.strip()
+    return None
 
 
 def _sign_state(*, app_user_id: UUID, secret: bytes) -> str:

@@ -70,11 +70,4 @@ async def disconnect_social_connection(
     app_user_id: UUID = Depends(get_current_app_user_id),
     use_case: DisconnectSocialConnectionUseCase = Depends(get_disconnect_social_connection_use_case),
 ) -> None:
-    deleted = await use_case.execute(connection_id=connection_id, app_user_id=app_user_id)
-    if not deleted:
-        raise api_error(
-            status.HTTP_404_NOT_FOUND,
-            ErrorCode.SOCIAL_CONNECTION_NOT_FOUND,
-            "Social connection not found",
-            {"connection_id": str(connection_id)},
-        )
+    await use_case.execute(connection_id=connection_id, app_user_id=app_user_id)

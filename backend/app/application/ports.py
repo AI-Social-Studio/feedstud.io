@@ -7,6 +7,7 @@ from app.application.dto import (
     PreparedSocialAssetData,
     PublishedPostData,
     SocialOAuthConnectionData,
+    SocialOAuthProfileData,
 )
 from app.domain.entities import (
     AppUser,
@@ -112,6 +113,9 @@ class SocialOAuthClient(ABC):
         redirect_uri: str,
         app_user_id: UUID,
     ) -> SocialOAuthConnectionData: ...
+
+    @abstractmethod
+    async def get_profile(self, *, access_token: str) -> SocialOAuthProfileData: ...
 
 
 class PublicationRepository(ABC):

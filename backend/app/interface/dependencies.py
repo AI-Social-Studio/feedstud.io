@@ -231,6 +231,12 @@ def get_secret_cipher(_: Settings = Depends(get_settings)) -> SecretCipher:
     return _secret_cipher()
 
 
+def get_optional_secret_cipher(settings: Settings = Depends(get_settings)) -> SecretCipher | None:
+    if not settings.secret_cipher_key:
+        return None
+    return _secret_cipher()
+
+
 def get_linkedin_oauth_client(settings: Settings = Depends(get_settings)) -> SocialOAuthClient:
     if (
         not settings.linkedin_client_id
@@ -247,6 +253,18 @@ def get_linkedin_oauth_client(settings: Settings = Depends(get_settings)) -> Soc
         client_secret=settings.linkedin_client_secret,
         state_secret=settings.linkedin_oauth_state_secret,
     )
+
+
+def get_optional_linkedin_oauth_client(
+    settings: Settings = Depends(get_settings),
+) -> SocialOAuthClient | None:
+    if (
+        not settings.linkedin_client_id
+        or not settings.linkedin_client_secret
+        or not settings.linkedin_oauth_state_secret
+    ):
+        return None
+    return get_linkedin_oauth_client(settings)
 
 
 def get_start_linkedin_connect_use_case(
@@ -269,8 +287,14 @@ def get_complete_linkedin_connect_use_case(
 
 def get_list_social_connections_use_case(
     connections: SocialConnectionRepository = Depends(get_social_connection_repository),
+    oauth_client: SocialOAuthClient | None = Depends(get_optional_linkedin_oauth_client),
+    cipher: SecretCipher | None = Depends(get_optional_secret_cipher),
 ) -> ListSocialConnectionsUseCase:
-    return ListSocialConnectionsUseCase(connections=connections)
+    return ListSocialConnectionsUseCase(
+        connections=connections,
+        oauth_client=oauth_client,
+        cipher=cipher,
+    )
 
 
 def get_disconnect_social_connection_use_case(
