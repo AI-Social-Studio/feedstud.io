@@ -71,7 +71,10 @@ export function SocialConnectionsCard({ connections: initialConnections }: Props
               {linkedinConnection.provider_profile_image_url && !linkedinImageFailed ? (
                 <img
                   src={linkedinConnection.provider_profile_image_url}
-                  alt={linkedinConnection.provider_account_name ?? dict.socialConnections.providerLinkedIn}
+                  alt={
+                    linkedinConnection.provider_account_name ??
+                    dict.socialConnections.providerLinkedIn
+                  }
                   className="h-12 w-12 rounded-full border border-gray-200 object-cover dark:border-gray-700"
                   onError={() => setLinkedinImageFailed(true)}
                 />
@@ -118,5 +121,7 @@ export function SocialConnectionsCard({ connections: initialConnections }: Props
 
 function isSocialConnectionMissingError(error: unknown): boolean {
   if (!axios.isAxiosError<{ code?: string }>(error)) return false;
-  return error.response?.status === 404 && error.response.data?.code === "social_connection_not_found";
+  return (
+    error.response?.status === 404 && error.response.data?.code === "social_connection_not_found"
+  );
 }
