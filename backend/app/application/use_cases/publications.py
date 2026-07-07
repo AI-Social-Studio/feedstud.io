@@ -138,6 +138,10 @@ class SubmitPublicationJobUseCase:
 
         await self._publications.add(publication)
         if payload.mode == "schedule":
+            logger.info(
+                "Publication scheduled",
+                extra=_publication_log_context(publication, current_status="scheduled"),
+            )
             return _to_view(publication)
 
         try:
@@ -150,6 +154,10 @@ class SubmitPublicationJobUseCase:
                 detail="Failed to enqueue publication job",
             )
             raise
+        logger.info(
+            "Publication queued",
+            extra=_publication_log_context(publication, current_status="queued"),
+        )
         return _to_view(publication)
 
 
@@ -222,6 +230,11 @@ class CancelScheduledPublicationUseCase:
             app_user_id=app_user_id,
             now=datetime.now(timezone.utc),
         )
+        if cancelled is not None:
+            logger.info(
+                "Publication cancelled",
+                extra=_publication_log_context(cancelled, current_status="cancelled"),
+            )
         return _to_view(cancelled) if cancelled is not None else None
 
 
@@ -248,6 +261,11 @@ class ReschedulePublicationUseCase:
             scheduled_for=_normalize_future_scheduled_for(scheduled_for),
             now=datetime.now(timezone.utc),
         )
+        if rescheduled is not None:
+            logger.info(
+                "Publication rescheduled",
+                extra=_publication_log_context(rescheduled, current_status="scheduled"),
+            )
         return _to_view(rescheduled) if rescheduled is not None else None
 
 
