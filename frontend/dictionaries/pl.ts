@@ -542,7 +542,7 @@ export const pl: Dictionary = {
     noFilesYet: "Nie masz jeszcze wrzuconych plików",
     noFilesHint: "Dodaj obrazki, żeby AI mogło wykorzystać je przy generowaniu posta.",
     demoAssetsHint:
-      "Powyżej widzisz przykładowe assety. Po pierwszym uploadzie znikną z tego widoku.",
+      "Powyżej widzisz przykładowe assety tylko do podglądu. Nic nie trafi do publikacji, dopóki nie wrzucisz własnych plików.",
     assetOrder: "Kolejność obrazów na LinkedIn",
     assetOrderHint: "Post zostanie opublikowany w tej kolejności.",
     moveAssetEarlier: "Wcześniej",

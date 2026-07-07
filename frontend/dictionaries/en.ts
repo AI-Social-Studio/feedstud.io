@@ -525,7 +525,8 @@ export const en: Dictionary = {
     uploading: "Uploading",
     noFilesYet: "You haven't uploaded any files yet",
     noFilesHint: "Add images so the AI can use them when generating your post.",
-    demoAssetsHint: "You're seeing sample assets above. They'll disappear after your first upload.",
+    demoAssetsHint:
+      "You're seeing sample assets above for preview only. Nothing is published unless you upload your own files.",
     assetOrder: "LinkedIn image order",
     assetOrderHint: "The publish order follows this list.",
     moveAssetEarlier: "Earlier",
