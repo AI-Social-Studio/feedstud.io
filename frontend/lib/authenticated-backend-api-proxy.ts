@@ -5,6 +5,28 @@ import { backendFetch } from "@/lib/backend-api-client";
 
 type ProxyMethod = "GET" | "POST" | "PUT" | "DELETE";
 
+function expectsJsonBody(method: ProxyMethod): boolean {
+  return method === "POST" || method === "PUT";
+}
+
+function isBodylessStatus(status: number): boolean {
+  return status === 204 || status === 205 || status === 304;
+}
+
+async function toProxyResponse(response: Response): Promise<NextResponse> {
+  if (isBodylessStatus(response.status)) {
+    return new NextResponse(null, { status: response.status });
+  }
+
+  const text = await response.text();
+  return new NextResponse(text, {
+    status: response.status,
+    headers: {
+      "Content-Type": response.headers.get("Content-Type") ?? "application/json",
+    },
+  });
+}
+
 export async function createAuthedBackendProxy(
   request: NextRequest,
   path: string,
@@ -16,7 +38,7 @@ export async function createAuthedBackendProxy(
   }
 
   let payload: unknown;
-  if (method !== "GET" && request.body !== null) {
+  if (expectsJsonBody(method) && request.body !== null) {
     try {
       payload = await request.json();
     } catch {
@@ -45,13 +67,7 @@ export async function createAuthedBackendProxy(
     );
   }
 
-  const text = await response.text();
-  return new NextResponse(text, {
-    status: response.status,
-    headers: {
-      "Content-Type": response.headers.get("Content-Type") ?? "application/json",
-    },
-  });
+  return toProxyResponse(response);
 }
 
 export async function createAuthedBackendMultipartProxy(
@@ -92,11 +108,5 @@ export async function createAuthedBackendMultipartProxy(
     );
   }
 
-  const text = await response.text();
-  return new NextResponse(text, {
-    status: response.status,
-    headers: {
-      "Content-Type": response.headers.get("Content-Type") ?? "application/json",
-    },
-  });
+  return toProxyResponse(response);
 }

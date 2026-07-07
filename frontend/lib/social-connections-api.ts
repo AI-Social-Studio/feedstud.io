@@ -10,6 +10,7 @@ export type SocialConnection = {
   provider_account_id: string;
   provider_account_urn: string;
   provider_account_name: string | null;
+  provider_profile_image_url: string | null;
   expires_at: string | null;
   scopes: string[];
   status: string;

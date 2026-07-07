@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import Link from "next/link";
 import { startTransition, useState } from "react";
 import { useLanguage } from "@/lib/i18n";
@@ -15,6 +16,7 @@ export function SocialConnectionsCard({ connections: initialConnections }: Props
   const [connections, setConnections] = useState(initialConnections);
   const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
   const [disconnectError, setDisconnectError] = useState<string | null>(null);
+  const [linkedinImageFailed, setLinkedinImageFailed] = useState(false);
   const linkedinConnection =
     connections.find(
       (connection) => connection.provider === "linkedin" && connection.status === "active",
@@ -29,6 +31,12 @@ export function SocialConnectionsCard({ connections: initialConnections }: Props
         setConnections((prev) => prev.filter((connection) => connection.id !== connectionId));
       });
     } catch (error) {
+      if (isSocialConnectionMissingError(error)) {
+        startTransition(() => {
+          setConnections((prev) => prev.filter((connection) => connection.id !== connectionId));
+        });
+        return;
+      }
       setDisconnectError(getApiErrorMessage(error));
     } finally {
       setDisconnectingId(null);
@@ -59,13 +67,27 @@ export function SocialConnectionsCard({ connections: initialConnections }: Props
       {linkedinConnection ? (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/60">
           <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                {dict.socialConnections.providerLinkedIn}
-              </div>
-              <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {linkedinConnection.provider_account_name ||
-                  linkedinConnection.provider_account_urn}
+            <div className="flex items-center gap-3">
+              {linkedinConnection.provider_profile_image_url && !linkedinImageFailed ? (
+                <img
+                  src={linkedinConnection.provider_profile_image_url}
+                  alt={linkedinConnection.provider_account_name ?? dict.socialConnections.providerLinkedIn}
+                  className="h-12 w-12 rounded-full border border-gray-200 object-cover dark:border-gray-700"
+                  onError={() => setLinkedinImageFailed(true)}
+                />
+              ) : (
+                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white text-sm font-semibold text-[#0a66c2] dark:border-gray-700 dark:bg-gray-900">
+                  in
+                </div>
+              )}
+              <div>
+                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  {dict.socialConnections.providerLinkedIn}
+                </div>
+                <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {linkedinConnection.provider_account_name ||
+                    linkedinConnection.provider_account_urn}
+                </div>
               </div>
             </div>
             <button
@@ -92,4 +114,9 @@ export function SocialConnectionsCard({ connections: initialConnections }: Props
       )}
     </div>
   );
+}
+
+function isSocialConnectionMissingError(error: unknown): boolean {
+  if (!axios.isAxiosError<{ code?: string }>(error)) return false;
+  return error.response?.status === 404 && error.response.data?.code === "social_connection_not_found";
 }
