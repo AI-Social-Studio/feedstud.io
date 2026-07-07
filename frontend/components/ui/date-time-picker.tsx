@@ -51,6 +51,7 @@ export function formatDateValue(value: string, locale: string): string | null {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      hour12: false,
     }).format(date);
   } catch {
     return value;

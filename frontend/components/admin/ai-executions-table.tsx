@@ -338,6 +338,7 @@ function formatDatePart(value: string, locale: string): string {
 function formatTimePart(value: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, {
     timeStyle: "short",
+    hour12: false,
   }).format(new Date(value));
 }
 
