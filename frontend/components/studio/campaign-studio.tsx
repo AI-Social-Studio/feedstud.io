@@ -133,7 +133,12 @@ function buildRefineActions(
 function nowDatetimeLocal(): string {
   const now = new Date();
   now.setSeconds(0, 0);
-  return now.toISOString().slice(0, 16);
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
 const LINKEDIN_ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/gif"]);
@@ -1473,7 +1478,7 @@ function getPublicationErrorMessage(publication: Publication, dict: Dictionary) 
 
 function getPublicationScheduledMessage(publication: Publication, dict: Dictionary) {
   if (!publication.scheduled_for) return dict.studio.publicationScheduled;
-  return dict.studio.publicationScheduledFor(new Date(publication.scheduled_for).toLocaleString());
+  return dict.studio.publicationScheduledFor(formatDateTime24Hour(publication.scheduled_for));
 }
 
 function toScheduledPublicationDate(value: string): string | null {
@@ -1488,7 +1493,15 @@ function formatPublicationTimestamp(publication: Publication) {
     publication.published_at ??
     publication.updated_at ??
     publication.created_at;
-  return new Date(value).toLocaleString();
+  return formatDateTime24Hour(value);
+}
+
+function formatDateTime24Hour(value: string) {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+    hour12: false,
+  }).format(new Date(value));
 }
 
 function buildSnapshot(
