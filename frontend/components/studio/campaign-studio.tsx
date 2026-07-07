@@ -278,6 +278,15 @@ export function CampaignStudio({
     return reschedulePerPublication[publication.id] ?? toDateTimeInputValue(publication.scheduled_for);
   }
 
+  function resolveScheduledFor(value: string) {
+    const scheduledFor = toScheduledPublicationDate(value);
+    if (!scheduledFor) {
+      pushToast("error", dict.studio.toasts.scheduleInvalidDateTime);
+      return null;
+    }
+    return scheduledFor;
+  }
+
   function formatGenerationError(error: GenerateResponse["errors"][Platform] | undefined) {
     if (!error) return dict.studio.toasts.noBackendContentPlatform;
     if (error.code === "invalid_model_output" || error.code === "model_empty_output") {
@@ -598,11 +607,8 @@ export function CampaignStudio({
   async function updateScheduledPublication(publication: Publication, scheduledAt: string) {
     if (publication.status !== "scheduled") return;
 
-    const scheduledFor = toScheduledPublicationDate(scheduledAt);
-    if (!scheduledFor) {
-      pushToast("error", dict.studio.toasts.scheduleInvalidDateTime);
-      return;
-    }
+    const scheduledFor = resolveScheduledFor(scheduledAt);
+    if (!scheduledFor) return;
 
     setIsPublishing(true);
     try {
@@ -642,11 +648,8 @@ export function CampaignStudio({
       return;
     }
 
-    const scheduledFor = toScheduledPublicationDate(linkedinScheduledAt);
-    if (!scheduledFor) {
-      pushToast("error", dict.studio.toasts.scheduleInvalidDateTime);
-      return;
-    }
+    const scheduledFor = resolveScheduledFor(linkedinScheduledAt);
+    if (!scheduledFor) return;
 
     const saveWasRequired = !draftId || hasUnsavedChanges;
     const savedDraft = saveWasRequired ? await saveDraftState() : null;
