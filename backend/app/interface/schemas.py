@@ -266,12 +266,14 @@ class PublicationAssetResponse(BaseModel):
 
 class CreatePublicationRequest(BaseModel):
     provider: Literal["linkedin"]
+    mode: Literal["publish_now", "schedule"]
     draft_id: UUID
     social_connection_id: UUID
     text: str = Field(..., min_length=1)
     file_ids: list[UUID] = Field(default_factory=list)
     asset_order: list[UUID] = Field(default_factory=list)
     asset_alt_texts: dict[UUID, str] = Field(default_factory=dict)
+    scheduled_for: datetime | None = None
 
 
 class PublicationResponse(BaseModel):
@@ -279,8 +281,8 @@ class PublicationResponse(BaseModel):
     draft_id: UUID
     provider: Literal["linkedin"]
     social_connection_id: UUID
-    status: Literal["queued", "processing", "completed", "failed"]
-    mode: str
+    status: Literal["scheduled", "queued", "processing", "completed", "failed"]
+    mode: Literal["publish_now", "schedule"]
     platform_text: str
     external_post_id: str | None
     external_post_urn: str | None

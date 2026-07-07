@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import logging
 from dataclasses import dataclass
 from time import perf_counter
@@ -38,12 +38,14 @@ LINKEDIN_ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif"}
 class SubmitPublicationJobInput:
     app_user_id: UUID
     provider: str
+    mode: str
     draft_id: UUID
     social_connection_id: UUID
     text: str
     file_ids: list[UUID]
     asset_order: list[UUID]
     asset_alt_texts: dict[UUID, str]
+    scheduled_for: datetime | None
 
 
 class SubmitPublicationJobUseCase:
@@ -63,6 +65,7 @@ class SubmitPublicationJobUseCase:
         self._queue = queue
 
     async def execute(self, payload: SubmitPublicationJobInput) -> PublicationView:
+        scheduled_for = _validate_publication_timing(payload)
         text = payload.text.strip()
         if payload.provider != Platform.LINKEDIN.value:
             raise InvalidPublicationInputError("Only LinkedIn publishing is supported right now")
@@ -109,8 +112,8 @@ class SubmitPublicationJobUseCase:
             draft_id=payload.draft_id,
             provider=payload.provider,
             social_connection_id=payload.social_connection_id,
-            status="queued",
-            mode="publish_now",
+            status="scheduled" if payload.mode == "schedule" else "queued",
+            mode=payload.mode,
             platform_text=text,
             platform_payload={
                 "file_ids": [str(file_id) for file_id in ordered_file_ids],
@@ -120,6 +123,8 @@ class SubmitPublicationJobUseCase:
                     if _normalize_alt_text(payload.asset_alt_texts.get(file_id)) is not None
                 },
             },
+            scheduled_for=scheduled_for,
+            queued_at=datetime.now(timezone.utc) if payload.mode == "publish_now" else None,
         )
         publication.assets = [
             PublicationAsset(
@@ -132,6 +137,9 @@ class SubmitPublicationJobUseCase:
         ]
 
         await self._publications.add(publication)
+        if payload.mode == "schedule":
+            return _to_view(publication)
+
         try:
             await self._queue.publish(publication.id)
         except Exception:
@@ -326,6 +334,27 @@ def _normalize_alt_text(value: str | None) -> str | None:
         return None
     normalized = value.strip()
     return normalized or None
+
+
+def _validate_publication_timing(payload: SubmitPublicationJobInput) -> datetime | None:
+    if payload.mode not in {"publish_now", "schedule"}:
+        raise InvalidPublicationInputError("Unsupported publication mode")
+
+    if payload.mode == "publish_now":
+        if payload.scheduled_for is not None:
+            raise InvalidPublicationInputError("Publish-now publications cannot define scheduled time")
+        return None
+
+    if payload.scheduled_for is None:
+        raise InvalidPublicationInputError("Scheduled publications require scheduled time")
+    if payload.scheduled_for.tzinfo is None or payload.scheduled_for.utcoffset() is None:
+        raise InvalidPublicationInputError("Scheduled publication time must include timezone")
+
+    scheduled_for = payload.scheduled_for.astimezone(timezone.utc)
+    minimum_scheduled_for = datetime.now(timezone.utc) + timedelta(minutes=1)
+    if scheduled_for < minimum_scheduled_for:
+        raise InvalidPublicationInputError("Scheduled publication time must be at least 1 minute in the future")
+    return scheduled_for
 
 
 def _to_view(publication: Publication) -> PublicationView:
