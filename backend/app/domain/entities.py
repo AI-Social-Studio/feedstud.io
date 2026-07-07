@@ -155,7 +155,21 @@ class GeneratedPostResult:
 
 
 @dataclass
+class UserMemory:
+    app_user_id: UUID
+    self_description: str | None = None
+    interests_tags: list[str] = field(default_factory=list)
+    primary_platforms: list[str] = field(default_factory=list)
+    target_audience_intents: list[str] = field(default_factory=list)
+    post_goals: list[str] = field(default_factory=list)
+    id: UUID = field(default_factory=uuid4)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass
 class GenerateJob:
+    app_user_id: UUID
     raw_text: str
     selected_platforms: list[Platform]
     file_ids: list[UUID]

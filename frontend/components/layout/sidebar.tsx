@@ -2,6 +2,7 @@
 
 import { UserButton } from "@clerk/nextjs";
 import {
+  BrainIcon,
   CaretDoubleLeftIcon,
   HouseIcon,
   ListIcon,
@@ -98,6 +99,13 @@ export function Sidebar({
               pathname.startsWith("/dashboard/drafts/") ||
               pathname === "/dashboard/new"
             }
+            collapsed={effectiveCollapsed}
+          />
+          <SidebarNavItem
+            href="/dashboard/profile"
+            icon={<BrainIcon size={18} weight="fill" />}
+            label={dict.nav.profile}
+            active={pathname === "/dashboard/profile"}
             collapsed={effectiveCollapsed}
           />
           {isAdmin ? (

@@ -79,6 +79,7 @@ export type Dictionary = {
     draft: string;
     adminSection: string;
     admin: string;
+    profile: string;
   };
   home: {
     title: string;
@@ -100,6 +101,86 @@ export type Dictionary = {
     disconnect: string;
     disconnecting: string;
     emptyLinkedIn: string;
+  };
+  onboarding: {
+    header: {
+      title: string;
+      stepXofY: (step: number, total: number) => string;
+    };
+    steps: {
+      identity: string;
+      audience: string;
+      goals: string;
+    };
+    navigation: {
+      skip: string;
+      back: string;
+      next: string;
+      finish: string;
+    };
+    blockA: {
+      titleIdentity: string;
+      subtitleIdentity: string;
+      profiles: Record<
+        | "student"
+        | "employee"
+        | "business_owner"
+        | "creator"
+        | "job_seeker"
+        | "ngo"
+        | "hobbyist"
+        | "other",
+        { label: string; description: string }
+      >;
+      otherIdentityLabel: string;
+      otherIdentityPlaceholder: string;
+      titleTags: string;
+      subtitleTags: string;
+      tagsPlaceholderEmpty: string;
+      tagsPlaceholderMore: string;
+      charLimit: (current: number, max: number) => string;
+      tagLimit: (current: number, max: number) => string;
+      removeTagLabel: (tag: string) => string;
+    };
+    blockB: {
+      titlePlatforms: string;
+      subtitlePlatforms: string;
+      platforms: {
+        linkedin: string;
+        instagram: string;
+        x: string;
+        unknown: string;
+      };
+      titleAudience: string;
+      subtitleAudience: string;
+      audiences: {
+        employers: string;
+        same_interests: string;
+        friends: string;
+        customers: string;
+        broad_reach: string;
+        other: string;
+      };
+      otherAudienceLabel: string;
+      otherAudiencePlaceholder: string;
+    };
+    blockC: {
+      titleGoals: string;
+      subtitleGoals: string;
+      goals: Record<
+        "awareness" | "inbound_contact" | "engagement" | "credibility" | "networking" | "sales",
+        { label: string; description: string }
+      >;
+      maxGoalsReached: string;
+    };
+  };
+  profile: {
+    title: string;
+    subtitle: string;
+    reRunWizard: string;
+    savedToast: string;
+    errorToast: string;
+    emptyState: string;
   };
   myCampaigns: {
     title: string;

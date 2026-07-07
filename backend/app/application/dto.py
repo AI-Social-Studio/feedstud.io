@@ -122,11 +122,25 @@ class GenerateJobAcceptedView:
 @dataclass
 class GenerateJobView:
     job_id: UUID
+    app_user_id: UUID
     actor_user_id: str | None
     status: str
     posts: dict[str, str]
     errors: dict[str, ErrorView]
     error: ErrorView | None
+    created_at: datetime
+    updated_at: datetime
+
+
+@dataclass
+class UserMemoryView:
+    id: UUID
+    app_user_id: UUID
+    self_description: str | None
+    interests_tags: list[str]
+    primary_platforms: list[str]
+    target_audience_intents: list[str]
+    post_goals: list[str]
     created_at: datetime
     updated_at: datetime
 

@@ -13,6 +13,7 @@ from app.application.ports import (
     GenerateJobRepository,
     PublicationRepository,
     SocialConnectionRepository,
+    UserMemoryRepository,
 )
 from app.domain.entities import (
     AiExecution,
@@ -23,6 +24,7 @@ from app.domain.entities import (
     PublicationAsset,
     SocialConnection,
     UploadedFile,
+    UserMemory,
 )
 from app.domain.value_objects import ImageContentType, Platform
 from app.infrastructure.db.models import (
@@ -34,6 +36,7 @@ from app.infrastructure.db.models import (
     PublicationModel,
     SocialConnectionModel,
     UploadedFileModel,
+    UserMemoryModel,
 )
 
 STALE_JOB_TIMEOUT = timedelta(minutes=15)
@@ -877,6 +880,7 @@ class SqlAlchemyGenerateJobRepository(GenerateJobRepository):
     def _to_model(job: GenerateJob) -> GenerateJobModel:
         return GenerateJobModel(
             id=job.id,
+            app_user_id=job.app_user_id,
             raw_text=job.raw_text,
             selected_platforms=[platform.value for platform in job.selected_platforms],
             file_ids=[str(file_id) for file_id in job.file_ids],
@@ -895,6 +899,7 @@ class SqlAlchemyGenerateJobRepository(GenerateJobRepository):
     def _to_entity(model: GenerateJobModel) -> GenerateJob:
         return GenerateJob(
             id=model.id,
+            app_user_id=model.app_user_id,
             raw_text=model.raw_text,
             selected_platforms=[Platform(platform) for platform in model.selected_platforms],
             file_ids=[UUID(file_id) for file_id in model.file_ids],
@@ -905,6 +910,58 @@ class SqlAlchemyGenerateJobRepository(GenerateJobRepository):
             error_code=model.error_code,
             error_detail=model.error_detail,
             error_meta=model.error_meta,
+            created_at=model.created_at,
+            updated_at=model.updated_at,
+        )
+
+
+class SqlAlchemyUserMemoryRepository(UserMemoryRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def upsert(self, memory: UserMemory) -> None:
+        await self._session.execute(
+            insert(UserMemoryModel)
+            .values(
+                id=memory.id,
+                app_user_id=memory.app_user_id,
+                self_description=memory.self_description,
+                interests_tags=memory.interests_tags,
+                primary_platforms=memory.primary_platforms,
+                target_audience_intents=memory.target_audience_intents,
+                post_goals=memory.post_goals,
+                created_at=memory.created_at,
+                updated_at=memory.updated_at,
+            )
+            .on_conflict_do_update(
+                index_elements=["app_user_id"],
+                set_={
+                    "self_description": memory.self_description,
+                    "interests_tags": memory.interests_tags,
+                    "primary_platforms": memory.primary_platforms,
+                    "target_audience_intents": memory.target_audience_intents,
+                    "post_goals": memory.post_goals,
+                    "updated_at": memory.updated_at,
+                },
+            )
+        )
+        await self._session.commit()
+
+    async def get_by_app_user_id(self, app_user_id: UUID) -> UserMemory | None:
+        result = await self._session.execute(
+            select(UserMemoryModel).where(UserMemoryModel.app_user_id == app_user_id)
+        )
+        model = result.scalar_one_or_none()
+        if model is None:
+            return None
+        return UserMemory(
+            id=model.id,
+            app_user_id=model.app_user_id,
+            self_description=model.self_description,
+            interests_tags=model.interests_tags,
+            primary_platforms=model.primary_platforms,
+            target_audience_intents=model.target_audience_intents,
+            post_goals=model.post_goals,
             created_at=model.created_at,
             updated_at=model.updated_at,
         )

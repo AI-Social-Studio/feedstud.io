@@ -19,6 +19,8 @@ class GeneratePostsInput:
     platforms: list[Platform]
     file_ids: list[UUID]
     actor_user_id: str | None = None
+    app_user_id: UUID | None = None
+    memory_context: str = ""
 
 
 @dataclass
@@ -50,14 +52,14 @@ class GeneratePostsUseCase:
 
         image_urls: list[str] = []
         for fid in payload.file_ids:
-            entity = await self._files.get(fid)
+            entity = await self._files.get(fid, app_user_id=payload.app_user_id)
             if entity is None:
                 raise InvalidGenerateInputError(f"Plik '{fid}' nie istnieje")
             image_urls.append(await self._storage.presigned_get_url(entity.storage_key))
 
         results = await asyncio.gather(
             *(
-                self._generator.generate(p, payload.raw_text, image_urls)
+                self._generator.generate(p, payload.raw_text, image_urls, payload.memory_context)
                 for p in payload.platforms
             ),
             return_exceptions=True,

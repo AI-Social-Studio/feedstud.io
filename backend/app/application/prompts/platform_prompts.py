@@ -1,3 +1,4 @@
+from app.domain.entities import UserMemory
 from app.domain.value_objects import Platform
 
 
@@ -51,8 +52,47 @@ DŁUGOŚĆ: BEZWZGLĘDNY MAX 280 znaków łącznie dla całego "text" (z hashtag
 Emoji: 0-1, tylko jeśli zarabia na swoje miejsce.""",
 }
 
+_GOAL_LABELS: dict[str, str] = {
+    "awareness": "szerokie dotarcie i rozpoznawalność",
+    "inbound_contact": "generowanie inboundu - chcę, żeby ludzie pisali do mnie",
+    "engagement": "maksymalne zaangażowanie (komentarze, udostępnienia)",
+    "credibility": "budowanie autorytetu i wiarygodności eksperta",
+    "networking": "nawiązywanie nowych relacji zawodowych",
+    "sales": "sprzedaż produktów lub usług",
+}
 
-def build_generate_prompt(raw_text: str, image_urls: list[str], platform: Platform) -> str:
+
+def build_memory_context(memory: UserMemory | None) -> str:
+    if memory is None:
+        return ""
+
+    lines: list[str] = ["--- PROFIL AUTORA ---"]
+    if memory.self_description:
+        lines.append(f"Kim jest: {memory.self_description}")
+    if memory.interests_tags:
+        lines.append(f"Tematy: {', '.join(memory.interests_tags)}")
+    if memory.primary_platforms:
+        lines.append(f"Preferowane platformy: {', '.join(memory.primary_platforms)}")
+    if memory.target_audience_intents:
+        lines.append(f"Docelowi odbiorcy: {', '.join(memory.target_audience_intents)}")
+    if memory.post_goals:
+        lines.append(
+            f"Cel postów: {'; '.join(_GOAL_LABELS.get(goal, goal) for goal in memory.post_goals)}"
+        )
+    lines.append(
+        "Dostosuj styl, tone of voice i dobór treści do powyższego profilu. "
+        "Zachowaj spójność z platformą i celem autora."
+    )
+    lines.append("---")
+    return "\n".join(lines)
+
+
+def build_generate_prompt(
+    raw_text: str,
+    image_urls: list[str],
+    platform: Platform,
+    memory_context: str = "",
+) -> str:
     images_block = (
         "\n".join(f"- {url}" for url in image_urls) if image_urls else "(brak obrazów)"
     )
@@ -66,6 +106,8 @@ BRIEF (surowy input użytkownika, po polsku):
 ---
 OBRAZY (URL-e, których nie widzisz, ale możesz się do nich odwołać):
 {images_block}
+
+{memory_context}
 
 ---
 Wygeneruj post po polsku. Zwróć ŚCIŚLE JSON: {{"text": "..."}}.

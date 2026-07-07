@@ -201,6 +201,7 @@ class AiExecutionModel(Base):
 class GenerateJobModel(Base):
     __tablename__ = "generate_jobs"
     __table_args__ = (
+        Index("ix_generate_jobs_app_user_id", "app_user_id"),
         Index("ix_generate_jobs_status", "status"),
         Index("ix_generate_jobs_created_at", "created_at"),
         CheckConstraint(
@@ -210,6 +211,7 @@ class GenerateJobModel(Base):
     )
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    app_user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
     selected_platforms: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     file_ids: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
@@ -220,5 +222,20 @@ class GenerateJobModel(Base):
     error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
     error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
     error_meta: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class UserMemoryModel(Base):
+    __tablename__ = "user_memories"
+    __table_args__ = (Index("ix_user_memories_app_user_id", "app_user_id", unique=True),)
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    app_user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    self_description: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    interests_tags: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    primary_platforms: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    target_audience_intents: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    post_goals: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

@@ -18,6 +18,7 @@ from app.domain.entities import (
     PublicationAsset,
     SocialConnection,
     UploadedFile,
+    UserMemory,
 )
 from app.domain.value_objects import Platform, RefineAction
 
@@ -190,6 +191,7 @@ class ContentGenerator(ABC):
         platform: Platform,
         raw_text: str,
         image_urls: list[str],
+        memory_context: str = "",
     ) -> GeneratedPostResult: ...
 
     @abstractmethod
@@ -294,3 +296,11 @@ class DraftRepository(ABC):
 
     @abstractmethod
     async def list_recent(self, limit: int = 50, *, app_user_id: UUID | None = None) -> list[Draft]: ...
+
+
+class UserMemoryRepository(ABC):
+    @abstractmethod
+    async def upsert(self, memory: UserMemory) -> None: ...
+
+    @abstractmethod
+    async def get_by_app_user_id(self, app_user_id: UUID) -> UserMemory | None: ...

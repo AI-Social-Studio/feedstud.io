@@ -21,6 +21,7 @@ from app.application.ports import (
     SocialConnectionRepository,
     SocialOAuthClient,
     SocialPublisher,
+    UserMemoryRepository,
 )
 from app.application.use_cases.app_users import EnsureAppUserInput, EnsureAppUserUseCase
 from app.application.use_cases.drafts import GetDraftUseCase, ListDraftsUseCase, SaveDraftUseCase
@@ -45,6 +46,7 @@ from app.application.use_cases.generate_posts import (
     GeneratePostsUseCase,
     RefinePostUseCase,
 )
+from app.application.use_cases.user_memory import GetUserMemoryUseCase, UpsertUserMemoryUseCase
 from app.application.use_cases.upload_files import (
     DeleteFileUseCase,
     GetFileUseCase,
@@ -62,6 +64,7 @@ from app.infrastructure.db.repositories import (
     SqlAlchemyGenerateJobRepository,
     SqlAlchemyPublicationRepository,
     SqlAlchemySocialConnectionRepository,
+    SqlAlchemyUserMemoryRepository,
 )
 from app.infrastructure.messaging.rabbitmq import RabbitMqGenerateJobQueue, RabbitMqPublicationJobQueue
 from app.infrastructure.db.session import Database
@@ -137,6 +140,12 @@ def get_publication_repository(
     session: AsyncSession = Depends(get_session),
 ) -> PublicationRepository:
     return SqlAlchemyPublicationRepository(session)
+
+
+def get_user_memory_repository(
+    session: AsyncSession = Depends(get_session),
+) -> UserMemoryRepository:
+    return SqlAlchemyUserMemoryRepository(session)
 
 
 def get_ai_usage_summary_use_case(
@@ -374,6 +383,18 @@ def get_submit_generate_job_use_case(
     files: FileRepository = Depends(get_file_repository),
 ) -> SubmitGenerateJobUseCase:
     return SubmitGenerateJobUseCase(jobs=jobs, queue=queue, files=files)
+
+
+def get_upsert_user_memory_use_case(
+    repo: UserMemoryRepository = Depends(get_user_memory_repository),
+) -> UpsertUserMemoryUseCase:
+    return UpsertUserMemoryUseCase(repository=repo)
+
+
+def get_get_user_memory_use_case(
+    repo: UserMemoryRepository = Depends(get_user_memory_repository),
+) -> GetUserMemoryUseCase:
+    return GetUserMemoryUseCase(repository=repo)
 
 
 def get_submit_publication_job_use_case(

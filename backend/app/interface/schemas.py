@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 
 PlatformLiteral = Literal["linkedin", "instagram", "x"]
@@ -187,6 +187,32 @@ class AiExecutionDetailResponse(BaseModel):
     raw_generation_response: dict | None
     error_message: str | None
     error_json: dict | None
+
+
+_ShortId = Annotated[str, StringConstraints(max_length=50)]
+_FreeText = Annotated[str, StringConstraints(max_length=60)]
+
+
+class UserMemoryRequest(BaseModel):
+    self_description: str | None = Field(default=None, max_length=120)
+    interests_tags: list[_FreeText] = Field(default_factory=list, max_length=5)
+    primary_platforms: list[_ShortId] = Field(default_factory=list, max_length=5)
+    target_audience_intents: list[_FreeText] = Field(default_factory=list, max_length=5)
+    post_goals: list[_ShortId] = Field(default_factory=list, max_length=2)
+
+
+class UserMemoryResponse(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: UUID
+    app_user_id: UUID
+    self_description: str | None
+    interests_tags: list[str]
+    primary_platforms: list[str]
+    target_audience_intents: list[str]
+    post_goals: list[str]
+    created_at: datetime
+    updated_at: datetime
 
 
 class SocialConnectionResponse(BaseModel):

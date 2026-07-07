@@ -4,7 +4,8 @@ from typing import Any
 from uuid import UUID
 
 from app.application.dto import ErrorView, GenerateJobAcceptedView, GenerateJobView
-from app.application.ports import FileRepository, GenerateJobQueue, GenerateJobRepository
+from app.application.ports import FileRepository, GenerateJobQueue, GenerateJobRepository, UserMemoryRepository
+from app.application.prompts.platform_prompts import build_memory_context
 from app.application.use_cases.generate_posts import GeneratePostsInput, GeneratePostsUseCase
 from app.domain.entities import GenerateJob
 from app.domain.error_codes import ErrorCode
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SubmitGenerateJobInput:
+    app_user_id: UUID
     raw_text: str
     platforms: list[Platform]
     file_ids: list[UUID]
@@ -36,10 +38,11 @@ class SubmitGenerateJobUseCase:
     async def execute(self, payload: SubmitGenerateJobInput) -> GenerateJobAcceptedView:
         _validate_generate_input(payload.raw_text, payload.platforms, payload.file_ids)
         for file_id in payload.file_ids:
-            if await self._files.get(file_id) is None:
+            if await self._files.get(file_id, app_user_id=payload.app_user_id) is None:
                 raise InvalidGenerateInputError(f"Plik '{file_id}' nie istnieje")
 
         job = GenerateJob(
+            app_user_id=payload.app_user_id,
             raw_text=payload.raw_text,
             selected_platforms=payload.platforms,
             file_ids=payload.file_ids,
@@ -71,9 +74,15 @@ class GetGenerateJobUseCase:
 
 
 class ProcessGenerateJobUseCase:
-    def __init__(self, jobs: GenerateJobRepository, generator: GeneratePostsUseCase) -> None:
+    def __init__(
+        self,
+        jobs: GenerateJobRepository,
+        generator: GeneratePostsUseCase,
+        memory: UserMemoryRepository | None = None,
+    ) -> None:
         self._jobs = jobs
         self._generator = generator
+        self._memory = memory
 
     async def execute(self, job_id: UUID) -> None:
         job = await self._jobs.get(job_id)
@@ -82,6 +91,12 @@ class ProcessGenerateJobUseCase:
         if not await self._jobs.mark_processing(job_id):
             return
 
+        memory_context = ""
+        if self._memory is not None:
+            memory_context = build_memory_context(
+                await self._memory.get_by_app_user_id(job.app_user_id)
+            )
+
         try:
             result = await self._generator.execute(
                 GeneratePostsInput(
@@ -89,6 +104,8 @@ class ProcessGenerateJobUseCase:
                     platforms=job.selected_platforms,
                     file_ids=job.file_ids,
                     actor_user_id=job.actor_user_id,
+                    app_user_id=job.app_user_id,
+                    memory_context=memory_context,
                 )
             )
         except DomainError as exc:
@@ -135,6 +152,7 @@ def _validate_generate_input(raw_text: str, platforms: list[Platform], file_ids:
 def _to_job_view(job: GenerateJob) -> GenerateJobView:
     return GenerateJobView(
         job_id=job.id,
+        app_user_id=job.app_user_id,
         actor_user_id=job.actor_user_id,
         status=job.status,
         posts=job.posts,
