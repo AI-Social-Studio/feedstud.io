@@ -17,6 +17,7 @@ export class BackendRequestError extends Error {
 type BackendRequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
+  rawBody?: BodyInit;
   headers?: HeadersInit;
   cache?: RequestCache;
 };
@@ -33,13 +34,18 @@ export async function backendFetch(
       method: options.method ?? "GET",
       cache: options.cache ?? "no-store",
       headers: {
-        "Content-Type": "application/json",
+        ...(options.rawBody === undefined ? { "Content-Type": "application/json" } : {}),
         ...options.headers,
         ...(env.BACKEND_INTERNAL_API_KEY
           ? { "X-Backend-Token": env.BACKEND_INTERNAL_API_KEY }
           : {}),
       },
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body:
+        options.rawBody !== undefined
+          ? options.rawBody
+          : options.body === undefined
+            ? undefined
+            : JSON.stringify(options.body),
       signal: controller.signal,
     });
   } catch (error) {

@@ -10,10 +10,28 @@ class Base(DeclarativeBase):
     pass
 
 
-class UploadedFileModel(Base):
-    __tablename__ = "uploaded_files"
+class AppUserModel(Base):
+    __tablename__ = "app_users"
+    __table_args__ = (
+        Index("ix_app_users_auth_identity", "auth_provider", "auth_subject", unique=True),
+    )
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    auth_provider: Mapped[str] = mapped_column(String(32), nullable=False)
+    auth_subject: Mapped[str] = mapped_column(String(255), nullable=False)
+    primary_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    display_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class UploadedFileModel(Base):
+    __tablename__ = "uploaded_files"
+    __table_args__ = (Index("ix_uploaded_files_app_user_id", "app_user_id"),)
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    app_user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
     original_filename: Mapped[str] = mapped_column(String(512), nullable=False)
     storage_key: Mapped[str] = mapped_column(String(1024), nullable=False, unique=True)
     content_type: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -24,8 +42,10 @@ class UploadedFileModel(Base):
 
 class DraftModel(Base):
     __tablename__ = "drafts"
+    __table_args__ = (Index("ix_drafts_app_user_id", "app_user_id"),)
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    app_user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
     title: Mapped[str] = mapped_column(String(120), nullable=False)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
     selected_platforms: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
@@ -33,6 +53,84 @@ class DraftModel(Base):
     file_ids: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class SocialConnectionModel(Base):
+    __tablename__ = "social_connections"
+    __table_args__ = (
+        Index("ix_social_connections_app_user_id", "app_user_id"),
+        Index(
+            "ix_social_connections_provider_account",
+            "provider",
+            "provider_account_id",
+            unique=True,
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    app_user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    provider: Mapped[str] = mapped_column(String(32), nullable=False)
+    provider_account_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    provider_account_urn: Mapped[str] = mapped_column(String(255), nullable=False)
+    provider_account_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    access_token_encrypted: Mapped[str] = mapped_column(Text, nullable=False)
+    refresh_token_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    scopes: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class PublicationModel(Base):
+    __tablename__ = "publications"
+    __table_args__ = (
+        Index("ix_publications_app_user_id", "app_user_id"),
+        Index("ix_publications_draft_id", "draft_id"),
+        Index("ix_publications_status", "status"),
+        Index("ix_publications_created_at", "created_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    app_user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    draft_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    provider: Mapped[str] = mapped_column(String(32), nullable=False)
+    social_connection_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    mode: Mapped[str] = mapped_column(String(32), nullable=False)
+    platform_text: Mapped[str] = mapped_column(Text, nullable=False)
+    platform_payload: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False, default=dict)
+    external_post_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    external_post_urn: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    external_post_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    error_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class PublicationAssetModel(Base):
+    __tablename__ = "publication_assets"
+    __table_args__ = (
+        Index("ix_publication_assets_publication_id", "publication_id"),
+        Index("ix_publication_assets_uploaded_file_id", "uploaded_file_id"),
+        Index(
+            "ix_publication_assets_publication_sort_order",
+            "publication_id",
+            "sort_order",
+            unique=True,
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    publication_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    uploaded_file_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    sort_order: Mapped[int] = mapped_column(nullable=False)
+    provider_asset_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    provider_asset_urn: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    alt_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class AiExecutionModel(Base):
@@ -103,6 +201,7 @@ class AiExecutionModel(Base):
 class GenerateJobModel(Base):
     __tablename__ = "generate_jobs"
     __table_args__ = (
+        Index("ix_generate_jobs_app_user_id", "app_user_id"),
         Index("ix_generate_jobs_status", "status"),
         Index("ix_generate_jobs_created_at", "created_at"),
         CheckConstraint(
@@ -112,6 +211,7 @@ class GenerateJobModel(Base):
     )
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
+    app_user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
     selected_platforms: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     file_ids: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
@@ -128,9 +228,10 @@ class GenerateJobModel(Base):
 
 class UserMemoryModel(Base):
     __tablename__ = "user_memories"
+    __table_args__ = (Index("ix_user_memories_app_user_id", "app_user_id", unique=True),)
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
-    user_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    app_user_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
     self_description: Mapped[str | None] = mapped_column(String(120), nullable=True)
     interests_tags: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     primary_platforms: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)

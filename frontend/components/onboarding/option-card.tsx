@@ -1,5 +1,6 @@
-import { cn } from "@/lib/utils";
+import type { ElementType } from "react";
 import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
+import { cn } from "@/lib/utils";
 
 export function OptionCard({
   icon: Icon,
@@ -8,7 +9,7 @@ export function OptionCard({
   selected,
   onClick,
 }: {
-  icon: React.ElementType;
+  icon: ElementType;
   title: string;
   description?: string;
   selected: boolean;
@@ -44,11 +45,11 @@ export function OptionCard({
         >
           {title}
         </h3>
-        {description && (
+        {description ? (
           <p className="mt-1 text-sm leading-relaxed text-gray-500 dark:text-gray-400">
             {description}
           </p>
-        )}
+        ) : null}
       </div>
 
       <div

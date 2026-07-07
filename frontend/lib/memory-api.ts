@@ -1,14 +1,6 @@
-import type { UserMemory } from "@/types/memory";
+import type { UpsertMemoryRequest, UserMemory } from "@/types/memory";
 
-type UpsertMemoryPayload = {
-  self_description?: string | null;
-  interests_tags?: string[];
-  primary_platforms?: string[];
-  target_audience_intents?: string[];
-  post_goals?: string[];
-};
-
-export async function upsertUserMemory(data: UpsertMemoryPayload): Promise<void> {
+export async function upsertUserMemory(data: UpsertMemoryRequest): Promise<void> {
   const response = await fetch("/api/memory/upsert", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -27,15 +19,12 @@ export async function upsertUserMemory(data: UpsertMemoryPayload): Promise<void>
 }
 
 export async function getUserMemory(): Promise<UserMemory | null> {
-  const response = await fetch("/api/memory/me", {
-    method: "GET",
-  });
+  const response = await fetch("/api/memory/me", { method: "GET" });
 
   if (!response.ok) {
     if (response.status === 404) return null;
     throw new Error(`Failed to fetch user memory: ${response.status}`);
   }
 
-  const data = (await response.json()) as UserMemory | null;
-  return data;
+  return (await response.json()) as UserMemory | null;
 }

@@ -2,22 +2,88 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from sqlalchemy import case, delete, func, select, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.application.ports import (
     AiExecutionRepository,
+    AppUserRepository,
     DraftRepository,
     FileRepository,
     GenerateJobRepository,
+    PublicationRepository,
+    SocialConnectionRepository,
     UserMemoryRepository,
 )
-from app.domain.entities import AiExecution, Draft, GenerateJob, UploadedFile, UserMemory
+from app.domain.entities import (
+    AiExecution,
+    AppUser,
+    Draft,
+    GenerateJob,
+    Publication,
+    PublicationAsset,
+    SocialConnection,
+    UploadedFile,
+    UserMemory,
+)
 from app.domain.value_objects import ImageContentType, Platform
-from app.infrastructure.db.models import AiExecutionModel, DraftModel, GenerateJobModel, UploadedFileModel, UserMemoryModel
+from app.infrastructure.db.models import (
+    AiExecutionModel,
+    AppUserModel,
+    DraftModel,
+    GenerateJobModel,
+    PublicationAssetModel,
+    PublicationModel,
+    SocialConnectionModel,
+    UploadedFileModel,
+    UserMemoryModel,
+)
 
 STALE_JOB_TIMEOUT = timedelta(minutes=15)
+
+
+class SqlAlchemyAppUserRepository(AppUserRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def get_by_auth_identity(self, *, provider: str, subject: str) -> AppUser | None:
+        result = await self._session.execute(
+            select(AppUserModel)
+            .where(AppUserModel.auth_provider == provider)
+            .where(AppUserModel.auth_subject == subject)
+        )
+        model = result.scalar_one_or_none()
+        if model is None:
+            return None
+        return AppUser(
+            id=model.id,
+            auth_provider=model.auth_provider,
+            auth_subject=model.auth_subject,
+            primary_email=model.primary_email,
+            display_name=model.display_name,
+            status=model.status,
+            created_at=model.created_at,
+            updated_at=model.updated_at,
+        )
+
+    async def add(self, app_user: AppUser) -> None:
+        await self._session.execute(
+            insert(AppUserModel)
+            .values(
+                id=app_user.id,
+                auth_provider=app_user.auth_provider,
+                auth_subject=app_user.auth_subject,
+                primary_email=app_user.primary_email,
+                display_name=app_user.display_name,
+                status=app_user.status,
+                created_at=app_user.created_at,
+                updated_at=app_user.updated_at,
+            )
+            .on_conflict_do_nothing(index_elements=["auth_provider", "auth_subject"])
+        )
+        await self._session.commit()
 
 
 class SqlAlchemyFileRepository(FileRepository):
@@ -28,6 +94,7 @@ class SqlAlchemyFileRepository(FileRepository):
         assert file.content_type is not None
         model = UploadedFileModel(
             id=file.id,
+            app_user_id=file.app_user_id,
             original_filename=file.original_filename,
             storage_key=file.storage_key,
             content_type=file.content_type.value,
@@ -38,25 +105,28 @@ class SqlAlchemyFileRepository(FileRepository):
         self._session.add(model)
         await self._session.commit()
 
-    async def get(self, file_id: UUID) -> UploadedFile | None:
-        result = await self._session.execute(
-            select(UploadedFileModel).where(UploadedFileModel.id == file_id)
-        )
+    async def get(self, file_id: UUID, *, app_user_id: UUID | None = None) -> UploadedFile | None:
+        stmt = select(UploadedFileModel).where(UploadedFileModel.id == file_id)
+        if app_user_id is not None:
+            stmt = stmt.where(UploadedFileModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
         return self._to_entity(model) if model else None
 
-    async def list_recent(self, limit: int = 50) -> list[UploadedFile]:
+    async def list_recent(self, limit: int = 50, *, app_user_id: UUID | None = None) -> list[UploadedFile]:
+        stmt = select(UploadedFileModel)
+        if app_user_id is not None:
+            stmt = stmt.where(UploadedFileModel.app_user_id == app_user_id)
         result = await self._session.execute(
-            select(UploadedFileModel)
-            .order_by(UploadedFileModel.created_at.desc())
-            .limit(limit)
+            stmt.order_by(UploadedFileModel.created_at.desc()).limit(limit)
         )
         return [self._to_entity(m) for m in result.scalars().all()]
 
-    async def delete(self, file_id: UUID) -> bool:
-        result = await self._session.execute(
-            delete(UploadedFileModel).where(UploadedFileModel.id == file_id)
-        )
+    async def delete(self, file_id: UUID, *, app_user_id: UUID | None = None) -> bool:
+        stmt = delete(UploadedFileModel).where(UploadedFileModel.id == file_id)
+        if app_user_id is not None:
+            stmt = stmt.where(UploadedFileModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt)
         await self._session.commit()
         return result.rowcount > 0
 
@@ -64,11 +134,318 @@ class SqlAlchemyFileRepository(FileRepository):
     def _to_entity(model: UploadedFileModel) -> UploadedFile:
         return UploadedFile(
             id=model.id,
+            app_user_id=model.app_user_id,
             original_filename=model.original_filename,
             storage_key=model.storage_key,
             content_type=ImageContentType(value=model.content_type, extension=model.extension),
             size_bytes=model.size_bytes,
             created_at=model.created_at,
+        )
+
+
+class SqlAlchemySocialConnectionRepository(SocialConnectionRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, connection: SocialConnection) -> None:
+        await self._session.execute(
+            insert(SocialConnectionModel)
+            .values(
+                id=connection.id,
+                app_user_id=connection.app_user_id,
+                provider=connection.provider,
+                provider_account_id=connection.provider_account_id,
+                provider_account_urn=connection.provider_account_urn,
+                provider_account_name=connection.provider_account_name,
+                access_token_encrypted=connection.access_token_encrypted,
+                refresh_token_encrypted=connection.refresh_token_encrypted,
+                expires_at=connection.expires_at,
+                scopes=connection.scopes,
+                status=connection.status,
+                created_at=connection.created_at,
+                updated_at=connection.updated_at,
+            )
+            .on_conflict_do_nothing(index_elements=["provider", "provider_account_id"])
+        )
+        await self._session.commit()
+
+    async def update(self, connection: SocialConnection) -> bool:
+        model = await self._session.get(SocialConnectionModel, connection.id)
+        if model is None:
+            return False
+        model.provider_account_urn = connection.provider_account_urn
+        model.provider_account_name = connection.provider_account_name
+        model.access_token_encrypted = connection.access_token_encrypted
+        model.refresh_token_encrypted = connection.refresh_token_encrypted
+        model.expires_at = connection.expires_at
+        model.scopes = connection.scopes
+        model.status = connection.status
+        model.updated_at = connection.updated_at
+        await self._session.commit()
+        return True
+
+    async def get(
+        self, connection_id: UUID, *, app_user_id: UUID | None = None
+    ) -> SocialConnection | None:
+        stmt = select(SocialConnectionModel).where(SocialConnectionModel.id == connection_id)
+        if app_user_id is not None:
+            stmt = stmt.where(SocialConnectionModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+        return self._to_entity(model) if model else None
+
+    async def get_by_provider_account(
+        self, *, provider: str, provider_account_id: str
+    ) -> SocialConnection | None:
+        result = await self._session.execute(
+            select(SocialConnectionModel)
+            .where(SocialConnectionModel.provider == provider)
+            .where(SocialConnectionModel.provider_account_id == provider_account_id)
+        )
+        model = result.scalar_one_or_none()
+        return self._to_entity(model) if model else None
+
+    async def list_by_user(self, *, app_user_id: UUID) -> list[SocialConnection]:
+        result = await self._session.execute(
+            select(SocialConnectionModel)
+            .where(SocialConnectionModel.app_user_id == app_user_id)
+            .order_by(SocialConnectionModel.created_at.desc())
+        )
+        return [self._to_entity(model) for model in result.scalars().all()]
+
+    async def delete(self, connection_id: UUID, *, app_user_id: UUID | None = None) -> bool:
+        stmt = delete(SocialConnectionModel).where(SocialConnectionModel.id == connection_id)
+        if app_user_id is not None:
+            stmt = stmt.where(SocialConnectionModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt)
+        await self._session.commit()
+        return result.rowcount > 0
+
+    @staticmethod
+    def _to_model(connection: SocialConnection) -> SocialConnectionModel:
+        return SocialConnectionModel(
+            id=connection.id,
+            app_user_id=connection.app_user_id,
+            provider=connection.provider,
+            provider_account_id=connection.provider_account_id,
+            provider_account_urn=connection.provider_account_urn,
+            provider_account_name=connection.provider_account_name,
+            access_token_encrypted=connection.access_token_encrypted,
+            refresh_token_encrypted=connection.refresh_token_encrypted,
+            expires_at=connection.expires_at,
+            scopes=connection.scopes,
+            status=connection.status,
+            created_at=connection.created_at,
+            updated_at=connection.updated_at,
+        )
+
+    @staticmethod
+    def _to_entity(model: SocialConnectionModel) -> SocialConnection:
+        return SocialConnection(
+            id=model.id,
+            app_user_id=model.app_user_id,
+            provider=model.provider,
+            provider_account_id=model.provider_account_id,
+            provider_account_urn=model.provider_account_urn,
+            provider_account_name=model.provider_account_name,
+            access_token_encrypted=model.access_token_encrypted,
+            refresh_token_encrypted=model.refresh_token_encrypted,
+            expires_at=model.expires_at,
+            scopes=model.scopes,
+            status=model.status,
+            created_at=model.created_at,
+            updated_at=model.updated_at,
+        )
+
+
+class SqlAlchemyPublicationRepository(PublicationRepository):
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, publication: Publication) -> None:
+        self._session.add(self._to_model(publication))
+        self._session.add_all(self._to_asset_model(asset) for asset in publication.assets)
+        await self._session.commit()
+
+    async def get(self, publication_id: UUID, *, app_user_id: UUID | None = None) -> Publication | None:
+        stmt = select(PublicationModel).where(PublicationModel.id == publication_id)
+        if app_user_id is not None:
+            stmt = stmt.where(PublicationModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+        if model is None:
+            return None
+        assets = await self._get_assets(publication_id)
+        return self._to_entity(model, assets)
+
+    async def list_by_draft(self, *, draft_id: UUID, app_user_id: UUID) -> list[Publication]:
+        result = await self._session.execute(
+            select(PublicationModel)
+            .where(PublicationModel.draft_id == draft_id)
+            .where(PublicationModel.app_user_id == app_user_id)
+            .order_by(PublicationModel.created_at.desc())
+        )
+        models = result.scalars().all()
+        publications: list[Publication] = []
+        for model in models:
+            publications.append(self._to_entity(model, await self._get_assets(model.id)))
+        return publications
+
+    async def mark_processing(self, publication_id: UUID) -> bool:
+        result = await self._session.execute(
+            update(PublicationModel)
+            .where(PublicationModel.id == publication_id)
+            .where(PublicationModel.status == "queued")
+            .values(status="processing", updated_at=datetime.now(timezone.utc))
+        )
+        await self._session.commit()
+        return result.rowcount > 0
+
+    async def update_assets(self, publication_id: UUID, assets: list[PublicationAsset]) -> bool:
+        models_result = await self._session.execute(
+            select(PublicationAssetModel).where(PublicationAssetModel.publication_id == publication_id)
+        )
+        models = {model.id: model for model in models_result.scalars().all()}
+        updated = False
+        for asset in assets:
+            model = models.get(asset.id)
+            if model is None:
+                continue
+            model.provider_asset_id = asset.provider_asset_id
+            model.provider_asset_urn = asset.provider_asset_urn
+            model.alt_text = asset.alt_text
+            updated = True
+        if updated:
+            await self._session.commit()
+        return updated
+
+    async def complete(
+        self,
+        publication_id: UUID,
+        *,
+        from_status: str,
+        external_post_id: str,
+        external_post_urn: str,
+        external_post_url: str | None,
+        published_at: datetime | None,
+    ) -> bool:
+        now = datetime.now(timezone.utc)
+        result = await self._session.execute(
+            update(PublicationModel)
+            .where(PublicationModel.id == publication_id)
+            .where(PublicationModel.status == from_status)
+            .values(
+                status="completed",
+                external_post_id=external_post_id,
+                external_post_urn=external_post_urn,
+                external_post_url=external_post_url,
+                error_code=None,
+                error_detail=None,
+                published_at=published_at or now,
+                updated_at=now,
+            )
+        )
+        await self._session.commit()
+        return result.rowcount > 0
+
+    async def fail(
+        self,
+        publication_id: UUID,
+        *,
+        from_status: str,
+        code: str,
+        detail: str,
+    ) -> bool:
+        result = await self._session.execute(
+            update(PublicationModel)
+            .where(PublicationModel.id == publication_id)
+            .where(PublicationModel.status == from_status)
+            .values(
+                status="failed",
+                error_code=code,
+                error_detail=detail,
+                updated_at=datetime.now(timezone.utc),
+            )
+        )
+        await self._session.commit()
+        return result.rowcount > 0
+
+    async def _get_assets(self, publication_id: UUID) -> list[PublicationAssetModel]:
+        result = await self._session.execute(
+            select(PublicationAssetModel)
+            .where(PublicationAssetModel.publication_id == publication_id)
+            .order_by(PublicationAssetModel.sort_order.asc())
+        )
+        return list(result.scalars().all())
+
+    @staticmethod
+    def _to_model(publication: Publication) -> PublicationModel:
+        return PublicationModel(
+            id=publication.id,
+            app_user_id=publication.app_user_id,
+            draft_id=publication.draft_id,
+            provider=publication.provider,
+            social_connection_id=publication.social_connection_id,
+            status=publication.status,
+            mode=publication.mode,
+            platform_text=publication.platform_text,
+            platform_payload=publication.platform_payload,
+            external_post_id=publication.external_post_id,
+            external_post_urn=publication.external_post_urn,
+            external_post_url=publication.external_post_url,
+            error_code=publication.error_code,
+            error_detail=publication.error_detail,
+            created_at=publication.created_at,
+            updated_at=publication.updated_at,
+            published_at=publication.published_at,
+        )
+
+    @staticmethod
+    def _to_asset_model(asset: PublicationAsset) -> PublicationAssetModel:
+        return PublicationAssetModel(
+            id=asset.id,
+            publication_id=asset.publication_id,
+            uploaded_file_id=asset.uploaded_file_id,
+            sort_order=asset.sort_order,
+            provider_asset_id=asset.provider_asset_id,
+            provider_asset_urn=asset.provider_asset_urn,
+            alt_text=asset.alt_text,
+            created_at=asset.created_at,
+        )
+
+    @staticmethod
+    def _to_entity(model: PublicationModel, asset_models: list[PublicationAssetModel]) -> Publication:
+        return Publication(
+            id=model.id,
+            app_user_id=model.app_user_id,
+            draft_id=model.draft_id,
+            provider=model.provider,
+            social_connection_id=model.social_connection_id,
+            status=model.status,
+            mode=model.mode,
+            platform_text=model.platform_text,
+            platform_payload=model.platform_payload,
+            external_post_id=model.external_post_id,
+            external_post_urn=model.external_post_urn,
+            external_post_url=model.external_post_url,
+            error_code=model.error_code,
+            error_detail=model.error_detail,
+            created_at=model.created_at,
+            updated_at=model.updated_at,
+            published_at=model.published_at,
+            assets=[
+                PublicationAsset(
+                    id=asset_model.id,
+                    publication_id=asset_model.publication_id,
+                    uploaded_file_id=asset_model.uploaded_file_id,
+                    sort_order=asset_model.sort_order,
+                    provider_asset_id=asset_model.provider_asset_id,
+                    provider_asset_urn=asset_model.provider_asset_urn,
+                    alt_text=asset_model.alt_text,
+                    created_at=asset_model.created_at,
+                )
+                for asset_model in asset_models
+            ],
         )
 
 
@@ -94,20 +471,26 @@ class SqlAlchemyDraftRepository(DraftRepository):
         await self._session.commit()
         return True
 
-    async def get(self, draft_id: UUID) -> Draft | None:
-        model = await self._session.get(DraftModel, draft_id)
+    async def get(self, draft_id: UUID, *, app_user_id: UUID | None = None) -> Draft | None:
+        stmt = select(DraftModel).where(DraftModel.id == draft_id)
+        if app_user_id is not None:
+            stmt = stmt.where(DraftModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
         return self._to_draft(model) if model else None
 
-    async def list_recent(self, limit: int = 50) -> list[Draft]:
-        result = await self._session.execute(
-            select(DraftModel).order_by(DraftModel.updated_at.desc()).limit(limit)
-        )
+    async def list_recent(self, limit: int = 50, *, app_user_id: UUID | None = None) -> list[Draft]:
+        stmt = select(DraftModel)
+        if app_user_id is not None:
+            stmt = stmt.where(DraftModel.app_user_id == app_user_id)
+        result = await self._session.execute(stmt.order_by(DraftModel.updated_at.desc()).limit(limit))
         return [self._to_draft(model) for model in result.scalars().all()]
 
     @staticmethod
     def _to_model(draft: Draft) -> DraftModel:
         return DraftModel(
             id=draft.id,
+            app_user_id=draft.app_user_id,
             title=draft.title,
             raw_text=draft.raw_text,
             selected_platforms=[platform.value for platform in draft.selected_platforms],
@@ -121,6 +504,7 @@ class SqlAlchemyDraftRepository(DraftRepository):
     def _to_draft(model: DraftModel) -> Draft:
         return Draft(
             id=model.id,
+            app_user_id=model.app_user_id,
             title=model.title,
             raw_text=model.raw_text,
             selected_platforms=[Platform(platform) for platform in model.selected_platforms],
@@ -498,6 +882,7 @@ class SqlAlchemyGenerateJobRepository(GenerateJobRepository):
     def _to_model(job: GenerateJob) -> GenerateJobModel:
         return GenerateJobModel(
             id=job.id,
+            app_user_id=job.app_user_id,
             raw_text=job.raw_text,
             selected_platforms=[platform.value for platform in job.selected_platforms],
             file_ids=[str(file_id) for file_id in job.file_ids],
@@ -516,6 +901,7 @@ class SqlAlchemyGenerateJobRepository(GenerateJobRepository):
     def _to_entity(model: GenerateJobModel) -> GenerateJob:
         return GenerateJob(
             id=model.id,
+            app_user_id=model.app_user_id,
             raw_text=model.raw_text,
             selected_platforms=[Platform(platform) for platform in model.selected_platforms],
             file_ids=[UUID(file_id) for file_id in model.file_ids],
@@ -540,7 +926,7 @@ class SqlAlchemyUserMemoryRepository(UserMemoryRepository):
             pg_insert(UserMemoryModel)
             .values(
                 id=memory.id,
-                user_id=memory.user_id,
+                app_user_id=memory.app_user_id,
                 self_description=memory.self_description,
                 interests_tags=memory.interests_tags,
                 primary_platforms=memory.primary_platforms,
@@ -550,7 +936,7 @@ class SqlAlchemyUserMemoryRepository(UserMemoryRepository):
                 updated_at=memory.updated_at,
             )
             .on_conflict_do_update(
-                index_elements=["user_id"],
+                index_elements=["app_user_id"],
                 set_={
                     "self_description": memory.self_description,
                     "interests_tags": memory.interests_tags,
@@ -564,9 +950,9 @@ class SqlAlchemyUserMemoryRepository(UserMemoryRepository):
         await self._session.execute(stmt)
         await self._session.commit()
 
-    async def get_by_user_id(self, user_id: str) -> UserMemory | None:
+    async def get_by_app_user_id(self, app_user_id: UUID) -> UserMemory | None:
         result = await self._session.execute(
-            select(UserMemoryModel).where(UserMemoryModel.user_id == user_id)
+            select(UserMemoryModel).where(UserMemoryModel.app_user_id == app_user_id)
         )
         model = result.scalar_one_or_none()
         return self._to_entity(model) if model else None
@@ -575,7 +961,7 @@ class SqlAlchemyUserMemoryRepository(UserMemoryRepository):
     def _to_entity(model: UserMemoryModel) -> UserMemory:
         return UserMemory(
             id=model.id,
-            user_id=model.user_id,
+            app_user_id=model.app_user_id,
             self_description=model.self_description,
             interests_tags=model.interests_tags,
             primary_platforms=model.primary_platforms,

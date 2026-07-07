@@ -11,7 +11,7 @@ ZASADY KRYTYCZNE:
 - NIGDY nie owijaj w markdown ```json fences. NIGDY nie dodawaj wstępu ani komentarza.
 - W polu "text" wstaw GOTOWY do wklejenia post:
   * hook w pierwszej linii,
-  * treść z naturalnymi przerwami akapitów (\n\n),
+  * treść z naturalnymi przerwami akapitów (\\n\\n),
   * hashtagi w OSTATNIEJ linii (oddzielone spacjami, każdy zaczyna się od #).
 - Nie wymyślaj faktów spoza brudnopisu. Gdy brief jest cienki — opieraj się na tonie platformy i obrazach.
 - Polski język, naturalny, bez kalek z angielskiego.
@@ -24,7 +24,7 @@ Audytorium: profesjonaliści B2B, founderzy, decydenci, technologie.
 Ton: pewny siebie, konkretny, lekko storytellingowy. Pierwsza osoba dozwolona. Zero korpomowy.
 Struktura:
 - Pierwsza linia = ostry hook (kontrowersja, konkretna liczba, mocna teza).
-- 2-4 krótkie akapity, oddzielone pustą linią (\n\n).
+- 2-4 krótkie akapity, oddzielone pustą linią (\\n\\n).
 - Ostatni akapit zawiera otwarte pytanie do społeczności.
 - Hashtagi w OSTATNIEJ linii: 3-5 tagów (mix: 1 broad + 2-3 nisza).
 Długość: 900-1300 znaków łącznie (limit twardy: 3000).
@@ -54,7 +54,7 @@ Emoji: 0-1, tylko jeśli zarabia na swoje miejsce.""",
 
 _GOAL_LABELS: dict[str, str] = {
     "awareness": "szerokie dotarcie i rozpoznawalność",
-    "inbound_contact": "generowanie inboundu — chcę, żeby ludzie pisali do mnie",
+    "inbound_contact": "generowanie inboundu - chcę, żeby ludzie pisali do mnie",
     "engagement": "maksymalne zaangażowanie (komentarze, udostępnienia)",
     "credibility": "budowanie autorytetu i wiarygodności eksperta",
     "networking": "nawiązywanie nowych relacji zawodowych",
@@ -63,40 +63,36 @@ _GOAL_LABELS: dict[str, str] = {
 
 
 def build_memory_context(memory: UserMemory | None) -> str:
-    """Return a prompt block describing the user's profile, or empty string."""
     if memory is None:
         return ""
 
     lines: list[str] = ["--- PROFIL AUTORA ---"]
-
     if memory.self_description:
         lines.append(f"Kim jest: {memory.self_description}")
-
     if memory.interests_tags:
         lines.append(f"Tematy: {', '.join(memory.interests_tags)}")
-
     if memory.primary_platforms:
         lines.append(f"Preferowane platformy: {', '.join(memory.primary_platforms)}")
-
     if memory.target_audience_intents:
         lines.append(f"Docelowi odbiorcy: {', '.join(memory.target_audience_intents)}")
-
     if memory.post_goals:
-        goal_descriptions = [
-            _GOAL_LABELS.get(g, g) for g in memory.post_goals
-        ]
-        lines.append(f"Cel postów: {'; '.join(goal_descriptions)}")
-
+        lines.append(
+            f"Cel postów: {'; '.join(_GOAL_LABELS.get(goal, goal) for goal in memory.post_goals)}"
+        )
     lines.append(
         "Dostosuj styl, tone of voice i dobór treści do powyższego profilu. "
         "Zachowaj spójność z platformą i celem autora."
     )
     lines.append("---")
-
     return "\n".join(lines)
 
 
-def build_generate_prompt(raw_text: str, image_urls: list[str], platform: Platform) -> str:
+def build_generate_prompt(
+    raw_text: str,
+    image_urls: list[str],
+    platform: Platform,
+    memory_context: str = "",
+) -> str:
     images_block = (
         "\n".join(f"- {url}" for url in image_urls) if image_urls else "(brak obrazów)"
     )
@@ -110,6 +106,8 @@ BRIEF (surowy input użytkownika, po polsku):
 ---
 OBRAZY (URL-e, których nie widzisz, ale możesz się do nich odwołać):
 {images_block}
+
+{memory_context}
 
 ---
 Wygeneruj post po polsku. Zwróć ŚCIŚLE JSON: {{"text": "..."}}.

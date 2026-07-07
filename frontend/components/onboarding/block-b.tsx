@@ -1,21 +1,19 @@
-"use client";
-
 import { useMemo } from "react";
-import { OptionCard } from "./option-card";
 import {
-  LinkedinLogo as LinkedinLogoIcon,
-  InstagramLogo as InstagramLogoIcon,
-  XLogo as XLogoIcon,
-  Question as QuestionIcon,
-  UsersThree as UsersThreeIcon,
-  Briefcase as BriefcaseIcon,
-  Users as UsersIcon,
-  ShoppingCart as ShoppingCartIcon,
-  GlobeHemisphereWest as GlobeHemisphereWestIcon,
-  Asterisk as AsteriskIcon,
+  AsteriskIcon,
+  BriefcaseIcon,
+  GlobeHemisphereWestIcon,
+  InstagramLogoIcon,
+  LinkedinLogoIcon,
+  QuestionIcon,
+  ShoppingCartIcon,
+  UsersIcon,
+  UsersThreeIcon,
+  XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import type { UserMemory } from "@/types/memory";
 import { useDictionary } from "@/lib/i18n";
+import type { UserMemory } from "@/types/memory";
+import { OptionCard } from "./option-card";
 
 export function BlockB({
   data,
@@ -25,7 +23,6 @@ export function BlockB({
   onChange: (updates: Partial<UserMemory>) => void;
 }) {
   const dict = useDictionary().onboarding.blockB;
-
   const platforms = useMemo(
     () => [
       { id: "linkedin", label: dict.platforms.linkedin, icon: LinkedinLogoIcon },
@@ -35,7 +32,6 @@ export function BlockB({
     ],
     [dict],
   );
-
   const audiences = useMemo(
     () => [
       { id: "employers", label: dict.audiences.employers, icon: BriefcaseIcon },
@@ -48,68 +44,62 @@ export function BlockB({
     [dict],
   );
 
-  const togglePlatform = (id: string) => {
+  function togglePlatform(id: string) {
     const current = data.primary_platforms || [];
     if (id === "unknown") {
       onChange({ primary_platforms: current.includes("unknown") ? [] : ["unknown"] });
       return;
     }
-    const filtered = current.filter((p) => p !== "unknown");
-    if (filtered.includes(id)) {
-      onChange({ primary_platforms: filtered.filter((p) => p !== id) });
-    } else {
-      onChange({ primary_platforms: [...filtered, id] });
-    }
-  };
+    const filtered = current.filter((platform) => platform !== "unknown");
+    onChange({
+      primary_platforms: filtered.includes(id)
+        ? filtered.filter((platform) => platform !== id)
+        : [...filtered, id],
+    });
+  }
 
-  const toggleAudience = (id: string) => {
+  function toggleAudience(id: string) {
     const current = data.target_audience_intents || [];
-    const knownIds = audiences.map((a) => a.id).filter((a) => a !== "other");
-
+    const knownIds = audiences.map((audience) => audience.id).filter((value) => value !== "other");
     if (id === "other") {
-      if (isAudienceSelected("other")) {
-        onChange({ target_audience_intents: current.filter((item) => knownIds.includes(item)) });
-      } else {
-        onChange({ target_audience_intents: [...current, "other"] });
-      }
+      onChange({
+        target_audience_intents: isAudienceSelected("other")
+          ? current.filter((item) => knownIds.includes(item))
+          : [...current, "other"],
+      });
       return;
     }
+    onChange({
+      target_audience_intents: current.includes(id)
+        ? current.filter((audience) => audience !== id)
+        : [...current, id],
+    });
+  }
 
-    if (current.includes(id)) {
-      onChange({ target_audience_intents: current.filter((a) => a !== id) });
-    } else {
-      onChange({ target_audience_intents: [...current, id] });
-    }
-  };
-
-  const isPlatformSelected = (id: string) => (data.primary_platforms || []).includes(id);
-
-  const isAudienceSelected = (id: string) => {
+  function isAudienceSelected(id: string) {
     const current = data.target_audience_intents || [];
     if (id !== "other") return current.includes(id);
-
-    const knownIds = audiences.map((a) => a.id).filter((a) => a !== "other");
+    const knownIds = audiences.map((audience) => audience.id).filter((value) => value !== "other");
     return current.includes("other") || current.some((item) => !knownIds.includes(item));
-  };
+  }
 
-  const updateCustomAudience = (value: string) => {
+  function updateCustomAudience(value: string) {
     const current = data.target_audience_intents || [];
-    const knownIds = audiences.map((a) => a.id).filter((a) => a !== "other");
+    const knownIds = audiences.map((audience) => audience.id).filter((item) => item !== "other");
     const withoutCustom = current.filter((item) => knownIds.includes(item));
+    onChange({
+      target_audience_intents: value.trim()
+        ? [...withoutCustom, value]
+        : [...withoutCustom, "other"],
+    });
+  }
 
-    if (value.trim() === "") {
-      onChange({ target_audience_intents: [...withoutCustom, "other"] });
-    } else {
-      onChange({ target_audience_intents: [...withoutCustom, value] });
-    }
-  };
-
-  const getCustomAudienceValue = () => {
+  function getCustomAudienceValue() {
     const current = data.target_audience_intents || [];
-    const knownIds = audiences.map((a) => a.id).filter((a) => a !== "other");
+    const knownIds = audiences.map((audience) => audience.id).filter((item) => item !== "other");
     const customValue = current.find((item) => !knownIds.includes(item));
     return customValue === "other" ? "" : customValue || "";
-  };
+  }
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both space-y-10 duration-500">
@@ -124,7 +114,7 @@ export function BlockB({
               key={platform.id}
               icon={platform.icon}
               title={platform.label}
-              selected={isPlatformSelected(platform.id)}
+              selected={(data.primary_platforms || []).includes(platform.id)}
               onClick={() => togglePlatform(platform.id)}
             />
           ))}
@@ -147,7 +137,7 @@ export function BlockB({
         </div>
       </div>
 
-      {isAudienceSelected("other") && (
+      {isAudienceSelected("other") ? (
         <div className="animate-in fade-in slide-in-from-top-2">
           <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
             {dict.otherAudienceLabel}
@@ -158,11 +148,11 @@ export function BlockB({
             maxLength={60}
             placeholder={dict.otherAudiencePlaceholder}
             value={getCustomAudienceValue()}
-            onChange={(e) => updateCustomAudience(e.target.value)}
+            onChange={(event) => updateCustomAudience(event.target.value)}
             className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 transition-colors outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:bg-gray-900"
           />
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

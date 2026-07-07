@@ -2,19 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-    Brain,
-    CaretRight,
-    House,
-    HouseIcon,
-    List,
-    ListIcon,
-    Megaphone, MegaphoneIcon,
-    Shield,
-    ShieldIcon
-} from "@phosphor-icons/react/dist/ssr";
+import { HouseIcon, ListIcon, MegaphoneIcon, ShieldIcon } from "@phosphor-icons/react/dist/ssr";
+import { BrainIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { useDictionary } from "@/lib/i18n";
-import {BrainIcon, CaretRightIcon} from "@phosphor-icons/react";
 
 export function TopHeader({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
   const pathname = usePathname();

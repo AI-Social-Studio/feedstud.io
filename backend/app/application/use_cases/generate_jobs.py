@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SubmitGenerateJobInput:
+    app_user_id: UUID
     raw_text: str
     platforms: list[Platform]
     file_ids: list[UUID]
@@ -37,10 +38,11 @@ class SubmitGenerateJobUseCase:
     async def execute(self, payload: SubmitGenerateJobInput) -> GenerateJobAcceptedView:
         _validate_generate_input(payload.raw_text, payload.platforms, payload.file_ids)
         for file_id in payload.file_ids:
-            if await self._files.get(file_id) is None:
+            if await self._files.get(file_id, app_user_id=payload.app_user_id) is None:
                 raise InvalidGenerateInputError(f"Plik '{file_id}' nie istnieje")
 
         job = GenerateJob(
+            app_user_id=payload.app_user_id,
             raw_text=payload.raw_text,
             selected_platforms=payload.platforms,
             file_ids=payload.file_ids,
@@ -89,16 +91,16 @@ class ProcessGenerateJobUseCase:
         if not await self._jobs.mark_processing(job_id):
             return
 
-        memory_ctx = ""
-        if self._memory is not None and job.actor_user_id:
+        memory_context = ""
+        if self._memory is not None:
             try:
-                user_memory = await self._memory.get_by_user_id(job.actor_user_id)
-                memory_ctx = build_memory_context(user_memory)
+                user_memory = await self._memory.get_by_app_user_id(job.app_user_id)
+                memory_context = build_memory_context(user_memory)
             except Exception:
                 logger.warning(
                     "Failed to load user memory, proceeding without context",
                     exc_info=True,
-                    extra={"job_id": str(job_id), "user_id": job.actor_user_id},
+                    extra={"job_id": str(job_id), "app_user_id": str(job.app_user_id)},
                 )
 
         try:
@@ -108,7 +110,8 @@ class ProcessGenerateJobUseCase:
                     platforms=job.selected_platforms,
                     file_ids=job.file_ids,
                     actor_user_id=job.actor_user_id,
-                    memory_context=memory_ctx,
+                    app_user_id=job.app_user_id,
+                    memory_context=memory_context,
                 )
             )
         except DomainError as exc:
@@ -155,6 +158,7 @@ def _validate_generate_input(raw_text: str, platforms: list[Platform], file_ids:
 def _to_job_view(job: GenerateJob) -> GenerateJobView:
     return GenerateJobView(
         job_id=job.id,
+        app_user_id=job.app_user_id,
         actor_user_id=job.actor_user_id,
         status=job.status,
         posts=job.posts,

@@ -1,18 +1,16 @@
-"use client";
-
 import { useMemo } from "react";
-import { OptionCard } from "./option-card";
 import {
-  Megaphone as MegaphoneIcon,
-  EnvelopeSimple as EnvelopeSimpleIcon,
-  ChatsCircle as ChatsCircleIcon,
-  Medal as MedalIcon,
-  Handshake as HandshakeIcon,
-  CurrencyCircleDollar as CurrencyCircleDollarIcon,
+  ChatsCircleIcon,
+  CurrencyCircleDollarIcon,
+  EnvelopeSimpleIcon,
+  HandshakeIcon,
+  MedalIcon,
+  MegaphoneIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import type { UserMemory } from "@/types/memory";
-import { cn } from "@/lib/utils";
 import { useDictionary } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
+import type { UserMemory } from "@/types/memory";
+import { OptionCard } from "./option-card";
 
 export function BlockC({
   data,
@@ -22,7 +20,6 @@ export function BlockC({
   onChange: (updates: Partial<UserMemory>) => void;
 }) {
   const dict = useDictionary().onboarding.blockC;
-
   const goals = useMemo(
     () => [
       {
@@ -64,20 +61,17 @@ export function BlockC({
     ],
     [dict],
   );
+  const currentGoals = data.post_goals || [];
 
-  const toggleGoal = (id: string) => {
-    const current = data.post_goals || [];
-    if (current.includes(id)) {
-      onChange({ post_goals: current.filter((g) => g !== id) });
-    } else {
-      if (current.length < 2) {
-        onChange({ post_goals: [...current, id] });
-      }
+  function toggleGoal(id: string) {
+    if (currentGoals.includes(id)) {
+      onChange({ post_goals: currentGoals.filter((goal) => goal !== id) });
+      return;
     }
-  };
-
-  const currentCount = (data.post_goals || []).length;
-  const isMaxSelected = currentCount >= 2;
+    if (currentGoals.length < 2) {
+      onChange({ post_goals: [...currentGoals, id] });
+    }
+  }
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both space-y-10 duration-500">
@@ -88,17 +82,14 @@ export function BlockC({
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {goals.map((goal) => {
-          const isSelected = (data.post_goals || []).includes(goal.id);
-          const isDisabled = isMaxSelected && !isSelected;
-
+          const isSelected = currentGoals.includes(goal.id);
+          const isDisabled = currentGoals.length >= 2 && !isSelected;
           return (
             <div
               key={goal.id}
               className={cn(
-                "h-full",
-                isDisabled
-                  ? "opacity-50 grayscale-[0.5] transition-opacity duration-300"
-                  : "transition-opacity duration-300",
+                "h-full transition-opacity duration-300",
+                isDisabled && "opacity-50 grayscale-[0.5]",
               )}
             >
               <OptionCard
@@ -113,11 +104,11 @@ export function BlockC({
         })}
       </div>
 
-      {isMaxSelected && (
+      {currentGoals.length >= 2 ? (
         <div className="animate-in fade-in slide-in-from-bottom-2 rounded-xl bg-blue-50/50 p-4 text-center text-sm font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
           {dict.maxGoalsReached}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

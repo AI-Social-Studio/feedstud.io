@@ -25,6 +25,82 @@ class UploadedFileView:
 
 
 @dataclass
+class SocialConnectionView:
+    id: UUID
+    provider: str
+    provider_account_id: str
+    provider_account_urn: str
+    provider_account_name: str | None
+    expires_at: datetime | None
+    scopes: list[str]
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+
+@dataclass
+class SocialConnectionStartView:
+    authorization_url: str
+
+
+@dataclass
+class SocialOAuthConnectionData:
+    provider: str
+    provider_account_id: str
+    provider_account_urn: str
+    access_token: str
+    refresh_token: str | None
+    expires_at: datetime | None
+    scopes: list[str]
+    provider_account_name: str | None = None
+
+
+@dataclass
+class PublishedPostData:
+    external_post_id: str
+    external_post_urn: str
+    external_post_url: str | None
+    published_at: datetime | None = None
+
+
+@dataclass
+class PreparedSocialAssetData:
+    provider_asset_id: str
+    provider_asset_urn: str
+
+
+@dataclass
+class PublicationAssetView:
+    id: UUID
+    uploaded_file_id: UUID
+    sort_order: int
+    provider_asset_id: str | None
+    provider_asset_urn: str | None
+    alt_text: str | None
+    created_at: datetime
+
+
+@dataclass
+class PublicationView:
+    id: UUID
+    draft_id: UUID
+    provider: str
+    social_connection_id: UUID
+    status: str
+    mode: str
+    platform_text: str
+    external_post_id: str | None
+    external_post_urn: str | None
+    external_post_url: str | None
+    error_code: str | None
+    error_detail: str | None
+    created_at: datetime
+    updated_at: datetime
+    published_at: datetime | None
+    assets: list[PublicationAssetView]
+
+
+@dataclass
 class ErrorView:
     code: ErrorCode
     detail: str
@@ -46,11 +122,25 @@ class GenerateJobAcceptedView:
 @dataclass
 class GenerateJobView:
     job_id: UUID
+    app_user_id: UUID
     actor_user_id: str | None
     status: str
     posts: dict[str, str]
     errors: dict[str, ErrorView]
     error: ErrorView | None
+    created_at: datetime
+    updated_at: datetime
+
+
+@dataclass
+class UserMemoryView:
+    id: UUID
+    app_user_id: UUID
+    self_description: str | None
+    interests_tags: list[str]
+    primary_platforms: list[str]
+    target_audience_intents: list[str]
+    post_goals: list[str]
     created_at: datetime
     updated_at: datetime
 
@@ -183,6 +273,7 @@ class DraftSummaryView:
 @dataclass
 class DraftView:
     id: UUID
+    app_user_id: UUID
     title: str
     raw_text: str
     selected_platforms: list[str]

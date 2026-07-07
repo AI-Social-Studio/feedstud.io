@@ -96,6 +96,7 @@ class DraftSummaryResponse(BaseModel):
 
 class DraftResponse(BaseModel):
     id: UUID
+    app_user_id: UUID
     title: str
     raw: str
     platforms: list[PlatformLiteral]
@@ -225,7 +226,7 @@ class UserMemoryResponse(BaseModel):
     model_config = {"from_attributes": True}
 
     id: UUID
-    user_id: str
+    app_user_id: UUID
     self_description: str | None
     interests_tags: list[str]
     primary_platforms: list[str]
@@ -233,3 +234,59 @@ class UserMemoryResponse(BaseModel):
     post_goals: list[str]
     created_at: datetime
     updated_at: datetime
+
+
+class SocialConnectionResponse(BaseModel):
+    id: UUID
+    provider: str
+    provider_account_id: str
+    provider_account_urn: str
+    provider_account_name: str | None
+    expires_at: datetime | None
+    scopes: list[str]
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class SocialConnectionStartResponse(BaseModel):
+    authorization_url: str
+
+
+class PublicationAssetResponse(BaseModel):
+    id: UUID
+    uploaded_file_id: UUID
+    sort_order: int
+    provider_asset_id: str | None
+    provider_asset_urn: str | None
+    alt_text: str | None
+    created_at: datetime
+
+
+class CreatePublicationRequest(BaseModel):
+    provider: Literal["linkedin"]
+    draft_id: UUID
+    social_connection_id: UUID
+    text: str = Field(..., min_length=1)
+    file_ids: list[UUID] = Field(default_factory=list)
+    asset_order: list[UUID] = Field(default_factory=list)
+    asset_alt_texts: dict[UUID, str] = Field(default_factory=dict)
+
+
+class PublicationResponse(BaseModel):
+    id: UUID
+    draft_id: UUID
+    provider: Literal["linkedin"]
+    social_connection_id: UUID
+    status: Literal["queued", "processing", "completed", "failed"]
+    mode: str
+    platform_text: str
+    external_post_id: str | None
+    external_post_urn: str | None
+    external_post_url: str | None
+    error_code: str | None
+    error_detail: str | None
+    created_at: datetime
+    updated_at: datetime
+    published_at: datetime | None
+    assets: list[PublicationAssetResponse]

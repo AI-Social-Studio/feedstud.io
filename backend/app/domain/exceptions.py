@@ -79,6 +79,83 @@ class InvalidGenerateInputError(DomainError):
         )
 
 
+class InvalidPublicationInputError(DomainError):
+    def __init__(self, reason: str, *, meta: dict[str, str | int] | None = None) -> None:
+        super().__init__(
+            reason,
+            code=ErrorCode.INVALID_PUBLICATION_INPUT,
+            public_message=reason,
+            meta=meta,
+        )
+
+
+class UnsupportedPublicationAssetTypeError(DomainError):
+    def __init__(self, content_type: str, *, file_id: str | None = None) -> None:
+        super().__init__(
+            f"Unsupported publication asset type '{content_type}'",
+            code=ErrorCode.UNSUPPORTED_ASSET_TYPE,
+            public_message="LinkedIn supports JPG, PNG, and GIF images only",
+            meta={
+                key: value
+                for key, value in {"content_type": content_type, "file_id": file_id}.items()
+                if value is not None
+            },
+        )
+
+
+class TooManyPublicationAssetsError(DomainError):
+    def __init__(self, *, max_assets: int, received: int) -> None:
+        super().__init__(
+            f"Too many publication assets: received {received}, max allowed {max_assets}",
+            code=ErrorCode.TOO_MANY_ASSETS,
+            public_message=f"LinkedIn supports at most {max_assets} images per post",
+            meta={"max_assets": max_assets, "received": received},
+        )
+
+
+class SocialConnectionInvalidError(DomainError):
+    def __init__(self, reason: str) -> None:
+        super().__init__(
+            reason,
+            code=ErrorCode.SOCIAL_CONNECTION_INVALID,
+            public_message=reason,
+        )
+
+
+class SocialTokenExpiredError(DomainError):
+    def __init__(self) -> None:
+        super().__init__(
+            "Social access token expired or is invalid",
+            code=ErrorCode.SOCIAL_TOKEN_EXPIRED,
+            public_message="LinkedIn authorization expired. Reconnect your account and try again.",
+        )
+
+
+class ProviderRateLimitedError(DomainError):
+    def __init__(self) -> None:
+        super().__init__(
+            "Social provider rate limited the request",
+            code=ErrorCode.PROVIDER_RATE_LIMITED,
+            public_message="LinkedIn rate limited this publication. Try again shortly.",
+        )
+
+
+class SocialPublishError(DomainError):
+    def __init__(
+        self,
+        reason: str,
+        *,
+        public_message: str = "Social publication failed",
+        meta: dict[str, str | int] | None = None,
+    ) -> None:
+        super().__init__(
+            reason,
+            code=ErrorCode.SOCIAL_PUBLISH_FAILED,
+            public_message=public_message,
+            meta=meta,
+        )
+
+
 class ContentGenerationError(DomainError):
     def __init__(
         self,

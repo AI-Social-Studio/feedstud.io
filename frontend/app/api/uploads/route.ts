@@ -1,0 +1,6 @@
+import type { NextRequest } from "next/server";
+import { createAuthedBackendMultipartProxy } from "@/lib/authenticated-backend-api-proxy";
+
+export async function POST(request: NextRequest) {
+  return createAuthedBackendMultipartProxy(request, "/uploads");
+}

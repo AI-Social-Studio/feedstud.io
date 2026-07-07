@@ -1,6 +1,5 @@
 import axios, { type AxiosError } from "axios";
 import type { Platform, RefineAction } from "@/components/studio/content-engine";
-import { env } from "@/env";
 import type { UploadedFile } from "@/lib/drafts-api";
 
 const studioApi = axios.create({
@@ -8,7 +7,6 @@ const studioApi = axios.create({
 });
 
 const uploadsApi = axios.create({
-  baseURL: env.NEXT_PUBLIC_BACKEND_URL,
   timeout: 60000,
 });
 
@@ -82,12 +80,12 @@ export async function refinePost(payload: RefineRequest): Promise<RefineResponse
 export async function uploadFiles(files: File[]): Promise<UploadResponse> {
   const formData = new FormData();
   for (const file of files) formData.append("files", file);
-  const response = await uploadsApi.post<UploadResponse>("/uploads", formData);
+  const response = await uploadsApi.post<UploadResponse>("/api/uploads", formData);
   return response.data;
 }
 
 export async function deleteUpload(fileId: string): Promise<void> {
-  await uploadsApi.delete(`/uploads/${fileId}`);
+  await uploadsApi.delete(`/api/uploads/${fileId}`);
 }
 
 export function getApiErrorMessage(error: unknown): string {

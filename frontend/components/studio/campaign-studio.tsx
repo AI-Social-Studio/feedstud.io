@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -23,6 +24,9 @@ import { PlatformIconBadge } from "@/components/ui/platform-icon-badge";
 import { StepHeader } from "@/components/ui/step-header";
 import type { Dictionary } from "@/dictionaries";
 import { useDictionary } from "@/lib/i18n";
+import type { CreatePublicationRequest, Publication } from "@/lib/publications-api";
+import { createPublication, waitForPublication } from "@/lib/publications-api";
+import type { SocialConnection } from "@/lib/social-connections-api";
 import { PlatformPreview } from "./platform-preview";
 import { PLATFORM_META, PLATFORM_ORDER, type Platform, type RefineAction } from "./content-engine";
 import { createDraft, type Draft, type UploadedFile, updateDraft } from "@/lib/drafts-api";
@@ -68,12 +72,16 @@ type Toast = {
 type Props = {
   initialDraft?: Draft | null;
   initialTitle?: string;
+  initialSocialConnections: SocialConnection[];
+  initialPublications: Publication[];
 };
 
 type PostingSettings = {
   publishMode: "now" | "schedule";
   schedulePerPlatform: Partial<Record<Platform, string>>;
 };
+
+type MoveDirection = -1 | 1;
 
 const INITIAL_ASSETS: AssetPreview[] = [
   {
@@ -122,7 +130,14 @@ function nowDatetimeLocal(): string {
   return now.toISOString().slice(0, 16);
 }
 
-export function CampaignStudio({ initialDraft, initialTitle }: Props) {
+const LINKEDIN_ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/gif"]);
+
+export function CampaignStudio({
+  initialDraft,
+  initialTitle,
+  initialSocialConnections,
+  initialPublications,
+}: Props) {
   const dict = useDictionary();
   const refineActions = buildRefineActions(dict.studio.refineActions);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
@@ -161,14 +176,18 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const [savedSnapshot, setSavedSnapshot] = useState(initialSnapshot);
   const [copied, setCopied] = useState<Platform | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(initialFiles);
+  const [assetAltTextByFileId, setAssetAltTextByFileId] = useState<Record<string, string>>({});
   const [showDemoAssets, setShowDemoAssets] = useState(!initialDraft && initialFiles.length === 0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [removingFileIds, setRemovingFileIds] = useState<string[]>([]);
   const [refining, setRefining] = useState<Partial<Record<Platform, boolean>>>({});
   const [regenerating, setRegenerating] = useState<Partial<Record<Platform, boolean>>>({});
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const socialConnections = initialSocialConnections;
+  const [publications, setPublications] = useState<Publication[]>(initialPublications);
   const anySelected = PLATFORM_ORDER.some((platform) => selected[platform]);
   const activePlatforms = PLATFORM_ORDER.filter((platform) => selected[platform]);
   const assets = uploadedFilesToAssets(uploadedFiles);
@@ -199,6 +218,26 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
   const focusedLength = focusedText.length;
   const focusedOver = focusedLength > focusedMeta.limit;
   const hasFocusedManualChanges = focusedText !== focusedPristine;
+  const linkedinConnection = socialConnections.find(
+    (connection) => connection.provider === "linkedin" && connection.status === "active",
+  );
+  const latestPublication = publications[0] ?? null;
+  const linkedinText = results.linkedin?.trim() ?? "";
+  const linkedinFileIds = uploadedFiles.map((file) => file.id);
+  const linkedinAssetAltTexts = buildAssetAltTexts(uploadedFiles, assetAltTextByFileId);
+  const unsupportedLinkedinFile = uploadedFiles.find((file) => {
+    const contentType = file.content_type.toLowerCase().split(";", 1)[0]?.trim() ?? "";
+    return !LINKEDIN_ALLOWED_IMAGE_TYPES.has(contentType);
+  });
+  const publishDisabled =
+    isPublishing ||
+    isGenerating ||
+    isSaving ||
+    !selected.linkedin ||
+    !linkedinConnection ||
+    !linkedinText ||
+    Boolean(unsupportedLinkedinFile) ||
+    uploadedFiles.length > 20;
 
   function togglePlatform(platform: Platform) {
     setSelected((prev) => ({ ...prev, [platform]: !prev[platform] }));
@@ -318,10 +357,10 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
     }
   }
 
-  async function saveDraftState() {
+  async function saveDraftState(): Promise<Draft | null> {
     if (!hasAnyContent) {
       pushToast("info", dict.studio.toasts.addContentFirst);
-      return;
+      return null;
     }
 
     setIsSaving(true);
@@ -353,8 +392,10 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
         "success",
         draftId ? dict.studio.toasts.draftUpdated : dict.studio.toasts.draftSaved,
       );
+      return savedDraft;
     } catch (error) {
       pushToast("error", getApiErrorMessage(error));
+      return null;
     } finally {
       setIsSaving(false);
     }
@@ -389,6 +430,10 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
     try {
       await deleteUpload(fileId);
       setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
+      setAssetAltTextByFileId((prev) => {
+        const { [fileId]: _removed, ...rest } = prev;
+        return rest;
+      });
       pushToast("success", dict.studio.toasts.fileDeleted);
     } catch (error) {
       pushToast("error", getApiErrorMessage(error));
@@ -410,13 +455,107 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
     setResults((prev) => ({ ...prev, [platform]: text }));
   }
 
+  function moveUploadedFile(fileId: string, direction: MoveDirection) {
+    if (isAssetMutationLocked) {
+      pushToast("info", dict.studio.toasts.waitForLock);
+      return;
+    }
+    setUploadedFiles((prev) => reorderUploadedFiles(prev, fileId, direction));
+  }
+
+  function updateAssetAltText(fileId: string, value: string) {
+    setAssetAltTextByFileId((prev) => ({ ...prev, [fileId]: value }));
+  }
+
+  function upsertPublication(nextPublication: Publication) {
+    setPublications((prev) => [
+      nextPublication,
+      ...prev.filter((item) => item.id !== nextPublication.id),
+    ]);
+  }
+
   function discardPlatformChanges(platform: Platform) {
     const nextText = pristineResults[platform] ?? "";
     setResults((prev) => ({ ...prev, [platform]: nextText }));
   }
 
-  function handlePublishNow() {
-    pushToast("success", dict.studio.toasts.publishQueued);
+  async function handlePublishNow() {
+    if (!selected.linkedin) {
+      pushToast("info", dict.studio.toasts.linkedinSelectFirst);
+      return;
+    }
+    if (!linkedinConnection) {
+      pushToast("info", dict.studio.toasts.linkedinConnectFirst);
+      return;
+    }
+    if (!linkedinText) {
+      pushToast("info", dict.studio.toasts.linkedinGenerateFirst);
+      return;
+    }
+    if (unsupportedLinkedinFile) {
+      pushToast("error", dict.studio.toasts.linkedinUnsupportedAsset);
+      return;
+    }
+    if (uploadedFiles.length > 20) {
+      pushToast("info", dict.studio.toasts.linkedinTooManyAssets);
+      return;
+    }
+
+    const saveWasRequired = !draftId || hasUnsavedChanges;
+    const savedDraft = saveWasRequired ? await saveDraftState() : null;
+    if (saveWasRequired && !savedDraft) return;
+    const savedDraftId = savedDraft?.id ?? draftId;
+    if (!savedDraftId) return;
+
+    setIsPublishing(true);
+    try {
+      const queuedPublication = await createPublication({
+        provider: "linkedin",
+        draft_id: savedDraftId,
+        social_connection_id: linkedinConnection.id,
+        text: linkedinText,
+        file_ids: linkedinFileIds,
+        asset_order: linkedinFileIds,
+        asset_alt_texts: linkedinAssetAltTexts,
+      });
+      upsertPublication(queuedPublication);
+      pushToast("success", dict.studio.toasts.publicationQueued);
+
+      const finalPublication = await waitForPublication(queuedPublication.id);
+      upsertPublication(finalPublication);
+      if (finalPublication.status === "completed") {
+        pushToast("success", dict.studio.toasts.publicationPublished);
+      } else {
+        pushToast("error", getPublicationErrorMessage(finalPublication, dict));
+      }
+    } catch (error) {
+      pushToast("error", getApiErrorMessage(error));
+    } finally {
+      setIsPublishing(false);
+    }
+  }
+
+  async function retryPublication(publication: Publication) {
+    if (publication.status !== "failed") return;
+
+    setIsPublishing(true);
+    try {
+      const queuedPublication = await createPublication(buildRetryPublicationRequest(publication));
+      upsertPublication(queuedPublication);
+      pushToast("success", dict.studio.toasts.publicationQueued);
+
+      const finalPublication = await waitForPublication(queuedPublication.id);
+      upsertPublication(finalPublication);
+      if (finalPublication.status === "completed") {
+        pushToast("success", dict.studio.toasts.publicationPublished);
+      } else {
+        pushToast("error", getPublicationErrorMessage(finalPublication, dict));
+      }
+    } catch (error) {
+      pushToast("error", getApiErrorMessage(error));
+    } finally {
+      setIsPublishing(false);
+    }
   }
 
   function handleSchedulePublication() {
@@ -568,6 +707,68 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                   {dict.studio.demoAssetsHint}
                 </p>
+              ) : null}
+              {uploadedFiles.length > 0 ? (
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                      {dict.studio.assetOrder}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {dict.studio.assetOrderHint}
+                    </p>
+                  </div>
+                  {uploadedFiles.map((file, index) => (
+                    <div
+                      key={file.id}
+                      className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex min-w-8 items-center justify-center rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                          {index + 1}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {file.filename}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {file.content_type}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => moveUploadedFile(file.id, -1)}
+                          disabled={index === 0 || isAssetMutationLocked}
+                          className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:pointer-events-none disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:border-blue-700 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
+                        >
+                          <CaretLeftIcon size={12} weight="bold" />
+                          {dict.studio.moveAssetEarlier}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveUploadedFile(file.id, 1)}
+                          disabled={index === uploadedFiles.length - 1 || isAssetMutationLocked}
+                          className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:pointer-events-none disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:border-blue-700 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
+                        >
+                          {dict.studio.moveAssetLater}
+                          <CaretRightIcon size={12} weight="bold" />
+                        </button>
+                      </div>
+                      <label className="mt-3 block">
+                        <span className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">
+                          {dict.studio.assetAltTextLabel}
+                        </span>
+                        <input
+                          type="text"
+                          value={assetAltTextByFileId[file.id] ?? ""}
+                          onChange={(event) => updateAssetAltText(file.id, event.target.value)}
+                          placeholder={dict.studio.assetAltTextPlaceholder}
+                          className="w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                        />
+                      </label>
+                    </div>
+                  ))}
+                </div>
               ) : null}
             </div>
           </div>
@@ -772,6 +973,130 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
         <div>
           <StepHeader marker="4" title={dict.studio.step4Title} />
           <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            {publishMode === "now" ? (
+              <div className="mb-5 space-y-3">
+                <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-4 text-sm dark:border-gray-700 dark:bg-gray-800/50">
+                  <div className="font-semibold text-gray-900 dark:text-gray-100">
+                    {dict.studio.linkedinPublishTitle}
+                  </div>
+                  <div className="mt-1 text-gray-600 dark:text-gray-400">
+                    {linkedinConnection
+                      ? dict.studio.linkedinConnectedAs(
+                          linkedinConnection.provider_account_name ??
+                            linkedinConnection.provider_account_id,
+                        )
+                      : dict.studio.linkedinDisconnected}
+                  </div>
+                  {!linkedinConnection ? (
+                    <Link
+                      href="/dashboard"
+                      className="mt-3 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      {dict.studio.manageConnectedAccounts}
+                    </Link>
+                  ) : null}
+                </div>
+
+                {latestPublication ? (
+                  <div
+                    className={`rounded-xl border p-4 text-sm ${
+                      latestPublication.status === "completed"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+                        : latestPublication.status === "failed"
+                          ? "border-red-200 bg-red-50 text-red-900 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+                          : "border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300"
+                    }`}
+                  >
+                    <div className="font-semibold">
+                      {latestPublication.status === "completed"
+                        ? dict.studio.publicationCompleted
+                        : latestPublication.status === "failed"
+                          ? dict.studio.publicationFailed
+                          : dict.studio.publicationInProgress}
+                    </div>
+                    <div className="mt-1 opacity-90">
+                      {getPublicationErrorMessage(latestPublication, dict)}
+                    </div>
+                    {latestPublication.status === "completed" &&
+                    latestPublication.external_post_url ? (
+                      <a
+                        href={latestPublication.external_post_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-3 inline-flex font-semibold underline underline-offset-2"
+                      >
+                        {dict.studio.openOnLinkedIn}
+                      </a>
+                    ) : null}
+                    {latestPublication.status === "failed" ? (
+                      <button
+                        type="button"
+                        onClick={() => retryPublication(latestPublication)}
+                        disabled={isPublishing}
+                        className="mt-3 inline-flex rounded-md border border-current px-3 py-1.5 text-xs font-semibold transition-opacity disabled:pointer-events-none disabled:opacity-60"
+                      >
+                        {dict.studio.retryPublication}
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm dark:border-gray-700 dark:bg-gray-900">
+                  <div className="font-semibold text-gray-900 dark:text-gray-100">
+                    {dict.studio.publicationHistory}
+                  </div>
+                  {publications.length === 0 ? (
+                    <div className="mt-2 text-gray-600 dark:text-gray-400">
+                      {dict.studio.publicationHistoryEmpty}
+                    </div>
+                  ) : (
+                    <div className="mt-3 space-y-3">
+                      {publications.map((publication) => (
+                        <div
+                          key={publication.id}
+                          className="rounded-lg border border-gray-200 bg-gray-50/70 p-3 dark:border-gray-700 dark:bg-gray-800/40"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="font-medium text-gray-900 dark:text-gray-100">
+                              {formatPublicationTimestamp(publication)}
+                            </div>
+                            <div className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                              {getPublicationStatusLabel(publication, dict)}
+                            </div>
+                          </div>
+                          <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            {getPublicationErrorMessage(publication, dict)}
+                          </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {publication.external_post_url ? (
+                              <a
+                                href={publication.external_post_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-blue-300 hover:text-blue-700 dark:border-gray-600 dark:text-gray-200 dark:hover:border-blue-700 dark:hover:text-blue-400"
+                              >
+                                {dict.studio.openOnLinkedIn}
+                              </a>
+                            ) : null}
+                            {publication.status === "failed" ? (
+                              <button
+                                type="button"
+                                onClick={() => retryPublication(publication)}
+                                disabled={isPublishing}
+                                className="inline-flex rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-blue-300 hover:text-blue-700 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:border-blue-700 dark:hover:text-blue-400"
+                              >
+                                {dict.studio.retryPublication}
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
+
             <div className="flex gap-2">
               <button
                 type="button"
@@ -839,7 +1164,8 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
               <button
                 type="button"
                 onClick={publishMode === "schedule" ? handleSchedulePublication : handlePublishNow}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:-translate-y-px hover:bg-blue-700"
+                disabled={publishMode === "now" ? publishDisabled : false}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-all duration-150 hover:-translate-y-px hover:bg-blue-700 disabled:pointer-events-none disabled:bg-blue-300 disabled:hover:translate-y-0 dark:disabled:bg-blue-900/40"
               >
                 {publishMode === "schedule" ? (
                   <>
@@ -849,7 +1175,7 @@ export function CampaignStudio({ initialDraft, initialTitle }: Props) {
                 ) : (
                   <>
                     <MegaphoneIcon size={15} weight="bold" />
-                    {dict.studio.publish}
+                    {isPublishing ? dict.studio.publicationInProgress : dict.studio.publish}
                   </>
                 )}
               </button>
@@ -905,6 +1231,88 @@ function uploadedFilesToAssets(files: UploadedFile[]): UploadedAssetPreview[] {
 
 function getPreviewImages(files: UploadedFile[], platform: Platform): string[] {
   return files.length > 0 ? files.map((file) => file.url) : DEMO_PREVIEW_IMAGES[platform];
+}
+
+function reorderUploadedFiles(files: UploadedFile[], fileId: string, direction: MoveDirection) {
+  const currentIndex = files.findIndex((file) => file.id === fileId);
+  if (currentIndex === -1) return files;
+  const nextIndex = currentIndex + direction;
+  if (nextIndex < 0 || nextIndex >= files.length) return files;
+
+  const reordered = [...files];
+  const [file] = reordered.splice(currentIndex, 1);
+  reordered.splice(nextIndex, 0, file);
+  return reordered;
+}
+
+function buildAssetAltTexts(files: UploadedFile[], altTextByFileId: Record<string, string>) {
+  return Object.fromEntries(
+    files
+      .map((file) => {
+        const altText = altTextByFileId[file.id]?.trim();
+        return altText ? [file.id, altText] : null;
+      })
+      .filter((entry): entry is [string, string] => Boolean(entry)),
+  );
+}
+
+function buildRetryPublicationRequest(publication: Publication): CreatePublicationRequest {
+  const orderedAssets = [...publication.assets].sort(
+    (left, right) => left.sort_order - right.sort_order,
+  );
+  return {
+    provider: "linkedin",
+    draft_id: publication.draft_id,
+    social_connection_id: publication.social_connection_id,
+    text: publication.platform_text,
+    file_ids: orderedAssets.map((asset) => asset.uploaded_file_id),
+    asset_order: orderedAssets.map((asset) => asset.uploaded_file_id),
+    asset_alt_texts: Object.fromEntries(
+      orderedAssets
+        .map((asset) => {
+          const altText = asset.alt_text?.trim();
+          return altText ? [asset.uploaded_file_id, altText] : null;
+        })
+        .filter((entry): entry is [string, string] => Boolean(entry)),
+    ),
+  };
+}
+
+function getPublicationStatusLabel(publication: Publication, dict: Dictionary) {
+  if (publication.status === "completed") return dict.studio.publicationCompleted;
+  if (publication.status === "failed") return dict.studio.publicationFailed;
+  return dict.studio.publicationInProgress;
+}
+
+function getPublicationErrorMessage(publication: Publication, dict: Dictionary) {
+  if (publication.status === "completed") {
+    return dict.studio.publicationCompleted;
+  }
+  if (publication.status !== "failed") {
+    return dict.studio.publicationProcessingHint;
+  }
+
+  if (publication.error_code === "social_token_expired") {
+    return dict.studio.toasts.linkedinReconnectRequired;
+  }
+  if (publication.error_code === "provider_rate_limited") {
+    return dict.studio.toasts.linkedinRateLimited;
+  }
+  if (publication.error_code === "unsupported_asset_type") {
+    return dict.studio.toasts.linkedinUnsupportedAsset;
+  }
+  if (publication.error_code === "too_many_assets") {
+    return dict.studio.toasts.linkedinTooManyAssets;
+  }
+  if (publication.error_code === "social_connection_invalid") {
+    return dict.studio.toasts.linkedinConnectFirst;
+  }
+  return publication.error_detail || dict.studio.publicationFailed;
+}
+
+function formatPublicationTimestamp(publication: Publication) {
+  const value = publication.published_at ?? publication.updated_at ?? publication.created_at;
+  return new Date(value).toLocaleString();
 }
 
 function buildSnapshot(

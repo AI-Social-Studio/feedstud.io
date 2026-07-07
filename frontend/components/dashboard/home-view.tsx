@@ -4,13 +4,15 @@ import { useCallback, useState } from "react";
 import Link from "next/link";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { NewCampaignButton } from "@/components/dashboard/new-campaign-button";
-import { PlatformIconBadge } from "@/components/ui/platform-icon-badge";
 import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
+import { SocialConnectionsCard } from "@/components/dashboard/social-connections-card";
+import { PlatformIconBadge } from "@/components/ui/platform-icon-badge";
 import type { AppRole } from "@/lib/auth/roles";
 import { useLanguage } from "@/lib/i18n";
 import type { DraftSummary } from "@/lib/drafts-api";
-import type { Platform } from "@/components/studio/content-engine";
 import { upsertUserMemory } from "@/lib/memory-api";
+import type { SocialConnection } from "@/lib/social-connections-api";
+import type { Platform } from "@/components/studio/content-engine";
 
 const ONBOARDING_DISMISSED_KEY = "feedstudio:onboarding_dismissed";
 
@@ -21,6 +23,8 @@ type Props = {
   last30Days: number;
   total: number;
   recentDrafts: DraftSummary[];
+  socialConnections: SocialConnection[];
+  hasUserMemory: boolean;
 };
 
 export function HomeView({
@@ -30,31 +34,33 @@ export function HomeView({
   last30Days,
   total,
   recentDrafts,
+  socialConnections,
+  hasUserMemory,
 }: Props) {
   const { locale, dict } = useLanguage();
   const [showOnboarding, setShowOnboarding] = useState(() => {
     if (typeof window === "undefined") return false;
-    return localStorage.getItem(ONBOARDING_DISMISSED_KEY) !== "1";
+    return !hasUserMemory && window.localStorage.getItem(ONBOARDING_DISMISSED_KEY) !== "1";
   });
 
   const dismissOnboarding = useCallback(() => {
     setShowOnboarding(false);
-    localStorage.setItem(ONBOARDING_DISMISSED_KEY, "1");
+    window.localStorage.setItem(ONBOARDING_DISMISSED_KEY, "1");
   }, []);
 
   return (
     <DashboardShell role={role} initialCollapsed={initialSidebarCollapsed}>
-      {showOnboarding && (
+      {showOnboarding ? (
         <OnboardingModal
           onComplete={(data) => {
             dismissOnboarding();
-            upsertUserMemory(data).catch((err: unknown) => {
-              console.error("Failed to save onboarding memory:", err);
+            upsertUserMemory(data).catch((error: unknown) => {
+              console.error("Failed to save onboarding memory:", error);
             });
           }}
           onSkip={dismissOnboarding}
         />
-      )}
+      ) : null}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-50">
@@ -70,6 +76,8 @@ export function HomeView({
         <StatCard label={dict.home.statLast30} value={last30Days} />
         <StatCard label={dict.home.statTotal} value={total} />
       </div>
+
+      <SocialConnectionsCard connections={socialConnections} />
 
       <div>
         <div className="mb-3 flex items-center justify-between">

@@ -53,8 +53,8 @@ class OpenRouterContentGenerator(ContentGenerator):
         image_urls: list[str],
         memory_context: str = "",
     ) -> GeneratedPostResult:
-        user = build_generate_prompt(raw_text, image_urls, platform)
-        system = f"{SYSTEM_PROMPT}\n\n{memory_context}" if memory_context else SYSTEM_PROMPT
+        user = build_generate_prompt(raw_text, image_urls, platform, memory_context)
+        system = SYSTEM_PROMPT
         trace = await self._call(
             kind="generate",
             system=system,

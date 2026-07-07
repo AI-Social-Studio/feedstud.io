@@ -1,19 +1,20 @@
-import { useState, useMemo } from "react";
-import { OptionCard } from "./option-card";
+import type { KeyboardEvent } from "react";
+import { useMemo, useState } from "react";
 import {
-  GraduationCap as GraduationCapIcon,
-  Briefcase as BriefcaseIcon,
-  Storefront as StorefrontIcon,
-  VideoCamera as VideoCameraIcon,
-  MagnifyingGlass as MagnifyingGlassIcon,
-  Globe as GlobeIcon,
-  Palette as PaletteIcon,
-  Question as QuestionIcon,
-  X as XIcon,
+  BriefcaseIcon,
+  GlobeIcon,
+  GraduationCapIcon,
+  MagnifyingGlassIcon,
+  PaletteIcon,
+  QuestionIcon,
+  StorefrontIcon,
+  VideoCameraIcon,
+  XIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import type { UserMemory } from "@/types/memory";
-import { cn } from "@/lib/utils";
 import { useDictionary } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
+import type { UserMemory } from "@/types/memory";
+import { OptionCard } from "./option-card";
 
 export function BlockA({
   data,
@@ -24,12 +25,7 @@ export function BlockA({
 }) {
   const dict = useDictionary().onboarding.blockA;
   const [tagInput, setTagInput] = useState("");
-  const MAX_TAGS = 5;
-  const MAX_TAG_LENGTH = 30;
-
   const currentTags = data.interests_tags || [];
-  const isTagLimitReached = currentTags.length >= MAX_TAGS;
-
   const profiles = useMemo(
     () => [
       {
@@ -84,28 +80,25 @@ export function BlockA({
     [dict],
   );
 
-  const addTag = () => {
+  function addTag() {
     const trimmed = tagInput.trim();
-    if (!trimmed) return;
-    if (trimmed.length > MAX_TAG_LENGTH) return;
-    if (isTagLimitReached) return;
-
+    if (!trimmed || trimmed.length > 30 || currentTags.length >= 5) return;
     if (!currentTags.includes(trimmed)) {
       onChange({ interests_tags: [...currentTags, trimmed] });
     }
     setTagInput("");
-  };
+  }
 
-  const removeTag = (tag: string) => {
-    onChange({ interests_tags: currentTags.filter((t) => t !== tag) });
-  };
+  function removeTag(tag: string) {
+    onChange({ interests_tags: currentTags.filter((value) => value !== tag) });
+  }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault();
       addTag();
     }
-  };
+  }
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both space-y-10 duration-500">
@@ -117,7 +110,7 @@ export function BlockA({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {profiles.map((profile) => {
           const isKnownId = profiles.some(
-            (p) => p.id === data.self_description && p.id !== "other",
+            (item) => item.id === data.self_description && item.id !== "other",
           );
           const isSelected =
             profile.id === "other"
@@ -138,38 +131,39 @@ export function BlockA({
                       data.self_description && !isKnownId && data.self_description !== "other";
                     onChange({ self_description: hasCustomText ? data.self_description : "other" });
                   }
-                } else {
-                  onChange({ self_description: profile.id });
+                  return;
                 }
+                onChange({ self_description: profile.id });
               }}
             />
           );
         })}
       </div>
 
-      {!profiles.some((p) => p.id === data.self_description && p.id !== "other") &&
-        data.self_description !== undefined && (
-          <div className="animate-in fade-in slide-in-from-top-2">
-            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {dict.otherIdentityLabel}
-            </label>
-            <input
-              type="text"
-              autoFocus
-              maxLength={50}
-              placeholder={dict.otherIdentityPlaceholder}
-              value={data.self_description === "other" ? "" : data.self_description || ""}
-              onChange={(e) => onChange({ self_description: e.target.value })}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 transition-colors outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:bg-gray-900"
-            />
-            <div className="mt-1.5 text-right text-xs text-gray-400">
-              {dict.charLimit(
-                data.self_description === "other" ? 0 : data.self_description?.length || 0,
-                50,
-              )}
-            </div>
+      {!profiles.some(
+        (profile) => profile.id === data.self_description && profile.id !== "other",
+      ) && data.self_description !== undefined ? (
+        <div className="animate-in fade-in slide-in-from-top-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {dict.otherIdentityLabel}
+          </label>
+          <input
+            type="text"
+            autoFocus
+            maxLength={50}
+            placeholder={dict.otherIdentityPlaceholder}
+            value={data.self_description === "other" ? "" : data.self_description || ""}
+            onChange={(event) => onChange({ self_description: event.target.value })}
+            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 transition-colors outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:bg-gray-900"
+          />
+          <div className="mt-1.5 text-right text-xs text-gray-400">
+            {dict.charLimit(
+              data.self_description === "other" ? 0 : data.self_description?.length || 0,
+              50,
+            )}
           </div>
-        )}
+        </div>
+      ) : null}
 
       <div className="pt-2">
         <div className="flex items-end justify-between">
@@ -178,13 +172,13 @@ export function BlockA({
             <p className="mt-1.5 text-base text-gray-500 dark:text-gray-400">{dict.subtitleTags}</p>
           </div>
           <span className="text-sm font-medium text-gray-400">
-            {dict.tagLimit(currentTags.length, MAX_TAGS)}
+            {dict.tagLimit(currentTags.length, 5)}
           </span>
         </div>
         <div
           className={cn(
             "mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-3 transition-colors dark:border-gray-800 dark:bg-gray-950/50",
-            !isTagLimitReached &&
+            currentTags.length < 5 &&
               "focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-500/10 dark:focus-within:border-blue-500 dark:focus-within:bg-gray-900",
           )}
         >
@@ -205,20 +199,20 @@ export function BlockA({
                 </button>
               </span>
             ))}
-            {!isTagLimitReached && (
+            {currentTags.length < 5 ? (
               <input
                 type="text"
-                maxLength={MAX_TAG_LENGTH}
+                maxLength={30}
                 placeholder={
                   currentTags.length ? dict.tagsPlaceholderMore : dict.tagsPlaceholderEmpty
                 }
                 value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
+                onChange={(event) => setTagInput(event.target.value)}
                 onKeyDown={handleKeyDown}
                 onBlur={addTag}
                 className="min-w-30 flex-1 bg-transparent px-2 py-1.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-gray-100 dark:placeholder:text-gray-500"
               />
-            )}
+            ) : null}
           </div>
         </div>
       </div>

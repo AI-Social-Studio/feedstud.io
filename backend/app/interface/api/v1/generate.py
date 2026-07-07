@@ -13,6 +13,7 @@ from app.application.use_cases.generate_posts import (
 from app.domain.error_codes import ErrorCode
 from app.domain.value_objects import Platform, RefineAction
 from app.interface.dependencies import (
+    get_current_app_user_id,
     get_get_generate_job_use_case,
     get_refine_post_use_case,
     get_submit_generate_job_use_case,
@@ -40,11 +41,13 @@ router = APIRouter(tags=["generate"])
 )
 async def generate_posts(
     payload: GenerateRequest,
+    app_user_id: UUID = Depends(get_current_app_user_id),
     actor_user_id: str | None = Depends(get_trusted_actor_user_id),
     use_case: SubmitGenerateJobUseCase = Depends(get_submit_generate_job_use_case),
 ) -> GenerateAcceptedResponse:
     result = await use_case.execute(
         SubmitGenerateJobInput(
+            app_user_id=app_user_id,
             raw_text=payload.raw,
             platforms=[Platform(p) for p in payload.platforms],
             file_ids=payload.file_ids,
@@ -62,11 +65,11 @@ async def generate_posts(
 )
 async def get_generate_job(
     job_id: UUID,
-    actor_user_id: str | None = Depends(get_trusted_actor_user_id),
+    app_user_id: UUID = Depends(get_current_app_user_id),
     use_case: GetGenerateJobUseCase = Depends(get_get_generate_job_use_case),
 ) -> GenerateJobResponse:
     result = await use_case.execute(job_id)
-    if result is None or result.actor_user_id != actor_user_id:
+    if result is None or result.app_user_id != app_user_id:
         raise api_error(status.HTTP_404_NOT_FOUND, ErrorCode.NOT_FOUND, "Generate job not found")
     return GenerateJobResponse(
         job_id=result.job_id,
