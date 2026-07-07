@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 from app.application.use_cases.publications import ReleaseScheduledPublicationsUseCase
 from app.core.config import get_settings
 from app.infrastructure.db.repositories import SqlAlchemyPublicationRepository
+from app.infrastructure.db.session import get_database
 from app.infrastructure.messaging.rabbitmq import RabbitMqPublicationJobQueue
-from app.interface.dependencies import _database
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ async def main() -> None:
 
 
 async def _release_due_publications(*, queue: RabbitMqPublicationJobQueue, limit: int) -> int:
-    async for session in _database().session():
+    async for session in get_database().session():
         use_case = ReleaseScheduledPublicationsUseCase(
             publications=SqlAlchemyPublicationRepository(session),
             queue=queue,
