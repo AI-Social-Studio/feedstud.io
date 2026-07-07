@@ -511,12 +511,14 @@ export function CampaignStudio({
     try {
       const queuedPublication = await createPublication({
         provider: "linkedin",
+        mode: "publish_now",
         draft_id: savedDraftId,
         social_connection_id: linkedinConnection.id,
         text: linkedinText,
         file_ids: linkedinFileIds,
         asset_order: linkedinFileIds,
         asset_alt_texts: linkedinAssetAltTexts,
+        scheduled_for: null,
       });
       upsertPublication(queuedPublication);
       pushToast("success", dict.studio.toasts.publicationQueued);
@@ -1262,6 +1264,7 @@ function buildRetryPublicationRequest(publication: Publication): CreatePublicati
   );
   return {
     provider: "linkedin",
+    mode: "publish_now",
     draft_id: publication.draft_id,
     social_connection_id: publication.social_connection_id,
     text: publication.platform_text,
@@ -1275,6 +1278,7 @@ function buildRetryPublicationRequest(publication: Publication): CreatePublicati
         })
         .filter((entry): entry is [string, string] => Boolean(entry)),
     ),
+    scheduled_for: null,
   };
 }
 

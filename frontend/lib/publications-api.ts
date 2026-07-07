@@ -19,8 +19,8 @@ export type Publication = {
   draft_id: string;
   provider: "linkedin";
   social_connection_id: string;
-  status: "queued" | "processing" | "completed" | "failed";
-  mode: string;
+  status: "scheduled" | "queued" | "processing" | "completed" | "failed";
+  mode: "publish_now" | "schedule";
   platform_text: string;
   external_post_id: string | null;
   external_post_urn: string | null;
@@ -38,12 +38,14 @@ export type Publication = {
 
 export type CreatePublicationRequest = {
   provider: "linkedin";
+  mode: "publish_now" | "schedule";
   draft_id: string;
   social_connection_id: string;
   text: string;
   file_ids: string[];
   asset_order: string[];
   asset_alt_texts: Record<string, string>;
+  scheduled_for: string | null;
 };
 
 export async function createPublication(payload: CreatePublicationRequest): Promise<Publication> {

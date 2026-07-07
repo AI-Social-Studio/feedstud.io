@@ -31,12 +31,14 @@ async def create_publication(
         SubmitPublicationJobInput(
             app_user_id=app_user_id,
             provider=payload.provider,
+            mode=payload.mode,
             draft_id=payload.draft_id,
             social_connection_id=payload.social_connection_id,
             text=payload.text,
             file_ids=payload.file_ids,
             asset_order=payload.asset_order,
             asset_alt_texts=payload.asset_alt_texts,
+            scheduled_for=payload.scheduled_for,
         )
     )
     return _to_response(view)
