@@ -382,6 +382,8 @@ export type Dictionary = {
     linkedinPublishTitle: string;
     linkedinConnectedAs: (accountName: string) => string;
     linkedinDisconnected: string;
+    publicationScheduled: string;
+    publicationScheduledFor: (scheduledFor: string) => string;
     publicationCompleted: string;
     publicationFailed: string;
     publicationInProgress: string;
@@ -453,9 +455,11 @@ export type Dictionary = {
       linkedinReconnectRequired: string;
       linkedinRateLimited: string;
       publicationQueued: string;
+      publicationScheduled: string;
       publicationPublished: string;
       scheduleMissingAll: string;
       scheduleMissingPerPost: string;
+      scheduleInvalidDateTime: string;
       scheduleReadyAll: string;
       scheduleReadyPerPost: string;
     };
