@@ -25,7 +25,8 @@ async def lifespan(_: FastAPI):
     db = _database()
     if settings.db_reset_on_start:
         await db.drop_all(Base.metadata)
-    await db.create_all(Base.metadata)
+    elif not await db.has_tables():
+        await db.create_all(Base.metadata)
     retention_cutoff = datetime.now(timezone.utc) - timedelta(days=settings.ai_execution_retention_days)
     session_stream = db.session()
     try:

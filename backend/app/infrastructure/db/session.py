@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 
+from sqlalchemy import inspect
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -21,6 +22,14 @@ class Database:
     async def create_all(self, metadata) -> None:
         async with self._engine.begin() as conn:
             await conn.run_sync(metadata.create_all)
+
+    async def has_tables(self) -> bool:
+        async with self._engine.connect() as conn:
+            return await conn.run_sync(_sync_has_tables)
+
+
+def _sync_has_tables(connection) -> bool:
+    return bool(inspect(connection).get_table_names())
 
     async def drop_all(self, metadata) -> None:
         async with self._engine.begin() as conn:

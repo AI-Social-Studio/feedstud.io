@@ -2,14 +2,15 @@ import { auth } from "@clerk/nextjs/server";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { backendJson } from "@/lib/backend-api-client";
+import { buildLinkedInCallbackUrl, buildLocalAppUrl, toErrorLog } from "@/lib/linkedin-oauth-url";
 
 export async function GET(request: NextRequest) {
   const { userId } = await auth();
   if (!userId) {
-    return NextResponse.redirect(new URL("/sign-in", request.url));
+    return NextResponse.redirect(buildLocalAppUrl(request, "/sign-in"));
   }
 
-  const redirectUri = new URL("/api/social-connections/linkedin/callback", request.url).toString();
+  const redirectUri = buildLinkedInCallbackUrl(request);
 
   try {
     const params = new URLSearchParams({ redirect_uri: redirectUri });
@@ -24,8 +25,8 @@ export async function GET(request: NextRequest) {
     console.error("LinkedIn start failed", {
       userId,
       redirectUri,
-      error,
+      error: toErrorLog(error),
     });
-    return NextResponse.redirect(new URL("/dashboard?linkedin=error", request.url));
+    return NextResponse.redirect(buildLocalAppUrl(request, "/dashboard?linkedin=error"));
   }
 }
