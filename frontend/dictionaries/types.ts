@@ -384,12 +384,15 @@ export type Dictionary = {
     linkedinDisconnected: string;
     publicationScheduled: string;
     publicationScheduledFor: (scheduledFor: string) => string;
+    publicationCancelled: string;
     publicationCompleted: string;
     publicationFailed: string;
     publicationInProgress: string;
     publicationProcessingHint: string;
     publicationHistory: string;
     publicationHistoryEmpty: string;
+    cancelScheduledPublication: string;
+    reschedulePublication: string;
     retryPublication: string;
     openOnLinkedIn: string;
     target: string;
@@ -456,6 +459,8 @@ export type Dictionary = {
       linkedinRateLimited: string;
       publicationQueued: string;
       publicationScheduled: string;
+      publicationCancelled: string;
+      publicationRescheduled: string;
       publicationPublished: string;
       scheduleMissingAll: string;
       scheduleMissingPerPost: string;

@@ -37,8 +37,10 @@ from app.application.use_cases.social_connections import (
     StartLinkedInConnectUseCase,
 )
 from app.application.use_cases.publications import (
+    CancelScheduledPublicationUseCase,
     GetPublicationUseCase,
     ListPublicationsUseCase,
+    ReschedulePublicationUseCase,
     SubmitPublicationJobUseCase,
 )
 from app.application.use_cases.generate_jobs import GetGenerateJobUseCase, SubmitGenerateJobUseCase
@@ -447,6 +449,18 @@ def get_list_publications_use_case(
     publications: PublicationRepository = Depends(get_publication_repository),
 ) -> ListPublicationsUseCase:
     return ListPublicationsUseCase(publications=publications)
+
+
+def get_cancel_scheduled_publication_use_case(
+    publications: PublicationRepository = Depends(get_publication_repository),
+) -> CancelScheduledPublicationUseCase:
+    return CancelScheduledPublicationUseCase(publications=publications)
+
+
+def get_reschedule_publication_use_case(
+    publications: PublicationRepository = Depends(get_publication_repository),
+) -> ReschedulePublicationUseCase:
+    return ReschedulePublicationUseCase(publications=publications)
 
 
 def get_get_generate_job_use_case(

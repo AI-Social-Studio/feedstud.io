@@ -137,6 +137,25 @@ class PublicationRepository(ABC):
     async def restore_scheduled(self, publication_id: UUID) -> bool: ...
 
     @abstractmethod
+    async def cancel_scheduled(
+        self,
+        publication_id: UUID,
+        *,
+        app_user_id: UUID,
+        now: datetime,
+    ) -> Publication | None: ...
+
+    @abstractmethod
+    async def reschedule(
+        self,
+        publication_id: UUID,
+        *,
+        app_user_id: UUID,
+        scheduled_for: datetime,
+        now: datetime,
+    ) -> Publication | None: ...
+
+    @abstractmethod
     async def mark_processing(self, publication_id: UUID) -> bool: ...
 
     @abstractmethod

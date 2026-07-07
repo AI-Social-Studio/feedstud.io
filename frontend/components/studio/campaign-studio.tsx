@@ -25,7 +25,12 @@ import { StepHeader } from "@/components/ui/step-header";
 import type { Dictionary } from "@/dictionaries";
 import { useDictionary } from "@/lib/i18n";
 import type { CreatePublicationRequest, Publication } from "@/lib/publications-api";
-import { createPublication, waitForPublication } from "@/lib/publications-api";
+import {
+  cancelPublication,
+  createPublication,
+  reschedulePublication,
+  waitForPublication,
+} from "@/lib/publications-api";
 import type { SocialConnection } from "@/lib/social-connections-api";
 import { PlatformPreview } from "./platform-preview";
 import { PLATFORM_META, PLATFORM_ORDER, type Platform, type RefineAction } from "./content-engine";
@@ -562,6 +567,43 @@ export function CampaignStudio({
     }
   }
 
+  async function cancelScheduledPublication(publication: Publication) {
+    if (publication.status !== "scheduled") return;
+    if (!window.confirm(dict.studio.cancelScheduledPublication)) return;
+
+    setIsPublishing(true);
+    try {
+      const cancelledPublication = await cancelPublication(publication.id);
+      upsertPublication(cancelledPublication);
+      pushToast("success", dict.studio.toasts.publicationCancelled);
+    } catch (error) {
+      pushToast("error", getApiErrorMessage(error));
+    } finally {
+      setIsPublishing(false);
+    }
+  }
+
+  async function updateScheduledPublication(publication: Publication) {
+    if (publication.status !== "scheduled") return;
+
+    const scheduledFor = toScheduledPublicationDate(linkedinScheduledAt);
+    if (!scheduledFor) {
+      pushToast("error", dict.studio.toasts.scheduleInvalidDateTime);
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      const nextPublication = await reschedulePublication(publication.id, scheduledFor);
+      upsertPublication(nextPublication);
+      pushToast("success", dict.studio.toasts.publicationRescheduled);
+    } catch (error) {
+      pushToast("error", getApiErrorMessage(error));
+    } finally {
+      setIsPublishing(false);
+    }
+  }
+
   async function handleSchedulePublication() {
     if (!selected.linkedin) {
       pushToast("info", dict.studio.toasts.linkedinSelectFirst);
@@ -1059,19 +1101,23 @@ export function CampaignStudio({
                         ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
                         : latestPublication.status === "scheduled"
                           ? "border-violet-200 bg-violet-50 text-violet-900 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-300"
-                          : latestPublication.status === "failed"
-                            ? "border-red-200 bg-red-50 text-red-900 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
-                            : "border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300"
+                          : latestPublication.status === "cancelled"
+                            ? "border-gray-200 bg-gray-50 text-gray-900 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-300"
+                            : latestPublication.status === "failed"
+                              ? "border-red-200 bg-red-50 text-red-900 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+                              : "border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300"
                     }`}
                   >
                     <div className="font-semibold">
                       {latestPublication.status === "scheduled"
                         ? dict.studio.publicationScheduled
-                        : latestPublication.status === "completed"
-                          ? dict.studio.publicationCompleted
-                          : latestPublication.status === "failed"
-                            ? dict.studio.publicationFailed
-                            : dict.studio.publicationInProgress}
+                        : latestPublication.status === "cancelled"
+                          ? dict.studio.publicationCancelled
+                          : latestPublication.status === "completed"
+                            ? dict.studio.publicationCompleted
+                            : latestPublication.status === "failed"
+                              ? dict.studio.publicationFailed
+                              : dict.studio.publicationInProgress}
                     </div>
                     <div className="mt-1 opacity-90">
                       {getPublicationErrorMessage(latestPublication, dict)}
@@ -1086,6 +1132,28 @@ export function CampaignStudio({
                       >
                         {dict.studio.openOnLinkedIn}
                       </a>
+                    ) : null}
+                    {latestPublication.status === "scheduled" ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => updateScheduledPublication(latestPublication)}
+                          disabled={
+                            isPublishing || !toScheduledPublicationDate(linkedinScheduledAt)
+                          }
+                          className="inline-flex rounded-md border border-current px-3 py-1.5 text-xs font-semibold transition-opacity disabled:pointer-events-none disabled:opacity-60"
+                        >
+                          {dict.studio.reschedulePublication}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => cancelScheduledPublication(latestPublication)}
+                          disabled={isPublishing}
+                          className="inline-flex rounded-md border border-current px-3 py-1.5 text-xs font-semibold transition-opacity disabled:pointer-events-none disabled:opacity-60"
+                        >
+                          {dict.studio.cancelScheduledPublication}
+                        </button>
+                      </div>
                     ) : null}
                     {latestPublication.status === "failed" ? (
                       <button
@@ -1136,6 +1204,28 @@ export function CampaignStudio({
                               >
                                 {dict.studio.openOnLinkedIn}
                               </a>
+                            ) : null}
+                            {publication.status === "scheduled" ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => updateScheduledPublication(publication)}
+                                  disabled={
+                                    isPublishing || !toScheduledPublicationDate(linkedinScheduledAt)
+                                  }
+                                  className="inline-flex rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-blue-300 hover:text-blue-700 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:border-blue-700 dark:hover:text-blue-400"
+                                >
+                                  {dict.studio.reschedulePublication}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => cancelScheduledPublication(publication)}
+                                  disabled={isPublishing}
+                                  className="inline-flex rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:border-blue-300 hover:text-blue-700 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:border-blue-700 dark:hover:text-blue-400"
+                                >
+                                  {dict.studio.cancelScheduledPublication}
+                                </button>
+                              </>
                             ) : null}
                             {publication.status === "failed" ? (
                               <button
@@ -1341,6 +1431,7 @@ function buildRetryPublicationRequest(publication: Publication): CreatePublicati
 
 function getPublicationStatusLabel(publication: Publication, dict: Dictionary) {
   if (publication.status === "scheduled") return dict.studio.publicationScheduled;
+  if (publication.status === "cancelled") return dict.studio.publicationCancelled;
   if (publication.status === "completed") return dict.studio.publicationCompleted;
   if (publication.status === "failed") return dict.studio.publicationFailed;
   return dict.studio.publicationInProgress;
@@ -1352,6 +1443,9 @@ function getPublicationErrorMessage(publication: Publication, dict: Dictionary) 
   }
   if (publication.status === "scheduled") {
     return getPublicationScheduledMessage(publication, dict);
+  }
+  if (publication.status === "cancelled") {
+    return dict.studio.publicationCancelled;
   }
   if (publication.status !== "failed") {
     return dict.studio.publicationProcessingHint;

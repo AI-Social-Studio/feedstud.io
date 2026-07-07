@@ -337,6 +337,57 @@ class SqlAlchemyPublicationRepository(PublicationRepository):
         await self._session.commit()
         return result.rowcount > 0
 
+    async def cancel_scheduled(
+        self,
+        publication_id: UUID,
+        *,
+        app_user_id: UUID,
+        now: datetime,
+    ) -> Publication | None:
+        result = await self._session.execute(
+            update(PublicationModel)
+            .where(PublicationModel.id == publication_id)
+            .where(PublicationModel.app_user_id == app_user_id)
+            .where(PublicationModel.status == "scheduled")
+            .values(
+                status="cancelled",
+                queued_at=None,
+                schedule_released_at=None,
+                updated_at=now,
+            )
+            .returning(PublicationModel)
+        )
+        model = result.scalar_one_or_none()
+        await self._session.commit()
+        if model is None:
+            return None
+        return self._to_entity(model, await self._get_assets(model.id))
+
+    async def reschedule(
+        self,
+        publication_id: UUID,
+        *,
+        app_user_id: UUID,
+        scheduled_for: datetime,
+        now: datetime,
+    ) -> Publication | None:
+        result = await self._session.execute(
+            update(PublicationModel)
+            .where(PublicationModel.id == publication_id)
+            .where(PublicationModel.app_user_id == app_user_id)
+            .where(PublicationModel.status == "scheduled")
+            .values(
+                scheduled_for=scheduled_for,
+                updated_at=now,
+            )
+            .returning(PublicationModel)
+        )
+        model = result.scalar_one_or_none()
+        await self._session.commit()
+        if model is None:
+            return None
+        return self._to_entity(model, await self._get_assets(model.id))
+
     async def mark_processing(self, publication_id: UUID) -> bool:
         result = await self._session.execute(
             update(PublicationModel)
