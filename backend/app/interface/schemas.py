@@ -290,4 +290,7 @@ class PublicationResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     published_at: datetime | None
+    scheduled_for: datetime | None
+    queued_at: datetime | None
+    schedule_released_at: datetime | None
     assets: list[PublicationAssetResponse]

@@ -398,6 +398,9 @@ class SqlAlchemyPublicationRepository(PublicationRepository):
             created_at=publication.created_at,
             updated_at=publication.updated_at,
             published_at=publication.published_at,
+            scheduled_for=publication.scheduled_for,
+            queued_at=publication.queued_at,
+            schedule_released_at=publication.schedule_released_at,
         )
 
     @staticmethod
@@ -433,6 +436,9 @@ class SqlAlchemyPublicationRepository(PublicationRepository):
             created_at=model.created_at,
             updated_at=model.updated_at,
             published_at=model.published_at,
+            scheduled_for=model.scheduled_for,
+            queued_at=model.queued_at,
+            schedule_released_at=model.schedule_released_at,
             assets=[
                 PublicationAsset(
                     id=asset_model.id,

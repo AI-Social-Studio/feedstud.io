@@ -86,6 +86,9 @@ def _to_response(view) -> PublicationResponse:
         created_at=view.created_at,
         updated_at=view.updated_at,
         published_at=view.published_at,
+        scheduled_for=view.scheduled_for,
+        queued_at=view.queued_at,
+        schedule_released_at=view.schedule_released_at,
         assets=[
             PublicationAssetResponse(
                 id=asset.id,
