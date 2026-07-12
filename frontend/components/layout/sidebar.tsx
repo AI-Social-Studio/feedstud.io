@@ -3,6 +3,7 @@
 import { UserButton } from "@clerk/nextjs";
 import {
   BrainIcon,
+  CalendarBlankIcon,
   CaretDoubleLeftIcon,
   HouseIcon,
   ListIcon,
@@ -99,6 +100,13 @@ export function Sidebar({
               pathname.startsWith("/dashboard/drafts/") ||
               pathname === "/dashboard/new"
             }
+            collapsed={effectiveCollapsed}
+          />
+          <SidebarNavItem
+            href="/dashboard/scheduled"
+            icon={<CalendarBlankIcon size={18} />}
+            label={dict.nav.scheduledPosts}
+            active={pathname === "/dashboard/scheduled"}
             collapsed={effectiveCollapsed}
           />
           <SidebarNavItem

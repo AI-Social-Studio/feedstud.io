@@ -36,6 +36,25 @@ export type Publication = {
   assets: PublicationAsset[];
 };
 
+export type ScheduledPublication = {
+  id: string;
+  draft_id: string;
+  provider: "linkedin";
+  social_connection_id: string;
+  status: "scheduled" | "queued";
+  mode: "publish_now" | "schedule";
+  platform_text: string;
+  created_at: string;
+  updated_at: string;
+  published_at: string | null;
+  scheduled_for: string | null;
+  queued_at: string | null;
+  schedule_released_at: string | null;
+  provider_account_name: string | null;
+  draft_title: string;
+  asset_count: number;
+};
+
 export type CreatePublicationRequest = {
   provider: "linkedin";
   mode: "publish_now" | "schedule";
@@ -82,6 +101,19 @@ export async function listPublications(draftId: string): Promise<Publication[]> 
   const response = await publicationsApi.get<Publication[]>("/api/publications", {
     params: { draft_id: draftId },
   });
+  return response.data;
+}
+
+export async function listScheduledPublications(
+  limit = 50,
+  offset = 0,
+): Promise<ScheduledPublication[]> {
+  const response = await publicationsApi.get<ScheduledPublication[]>(
+    "/api/publications/scheduled",
+    {
+      params: { limit, offset },
+    },
+  );
   return response.data;
 }
 
