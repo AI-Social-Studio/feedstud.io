@@ -382,6 +382,8 @@ export const pl: Dictionary = {
     errorState: "Nie udało się teraz załadować zaplanowanych postów.",
     successState: "Zaplanowany post został anulowany.",
     updatedState: "Zaplanowany post został zaktualizowany.",
+    rescheduledState: "Termin zaplanowanego posta został zmieniony.",
+    updatedAndRescheduledState: "Zaplanowany post został zaktualizowany i przełożony.",
     preview: "Podgląd",
     previewLoading: "Ładowanie podglądu...",
     previewTitle: "Podgląd zaplanowanego posta",
@@ -391,6 +393,10 @@ export const pl: Dictionary = {
     editTitle: "Edytuj zaplanowany post",
     editSubtitle: "Zaktualizuj treść posta LinkedIn przed wysłaniem.",
     editHelp: "W tym kroku można zmienić tylko końcową treść publikacji.",
+    editScheduleHelp:
+      "Możesz też zmienić godzinę wysyłki, dopóki publikacja pozostaje zaplanowana.",
+    editScheduleLocked:
+      "Po wejściu publikacji do kolejki nie można już zmienić zaplanowanego czasu.",
     editPlaceholder: "Wpisz treść posta LinkedIn",
     save: "Zapisz",
     saving: "Zapisywanie...",
@@ -401,6 +407,7 @@ export const pl: Dictionary = {
     platform: "Platforma",
     status: "Status",
     scheduledFor: "Zaplanowano na",
+    scheduleInvalidDateTime: "Wybierz prawidłową przyszłą datę i godzinę publikacji.",
     account: "Konto",
     assets: "Assety",
     draft: "Szkic",

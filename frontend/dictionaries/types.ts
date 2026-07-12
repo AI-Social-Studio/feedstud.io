@@ -216,6 +216,8 @@ export type Dictionary = {
     errorState: string;
     successState: string;
     updatedState: string;
+    rescheduledState: string;
+    updatedAndRescheduledState: string;
     preview: string;
     previewLoading: string;
     previewTitle: string;
@@ -225,6 +227,8 @@ export type Dictionary = {
     editTitle: string;
     editSubtitle: string;
     editHelp: string;
+    editScheduleHelp: string;
+    editScheduleLocked: string;
     editPlaceholder: string;
     save: string;
     saving: string;
@@ -235,6 +239,7 @@ export type Dictionary = {
     platform: string;
     status: string;
     scheduledFor: string;
+    scheduleInvalidDateTime: string;
     account: string;
     assets: string;
     draft: string;
