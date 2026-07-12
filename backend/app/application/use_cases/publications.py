@@ -70,16 +70,7 @@ class SubmitPublicationJobUseCase:
 
     async def execute(self, payload: SubmitPublicationJobInput) -> PublicationView:
         scheduled_for = _validate_publication_timing(payload)
-        text = payload.text.strip()
-        if payload.provider != Platform.LINKEDIN.value:
-            raise InvalidPublicationInputError("Only LinkedIn publishing is supported right now")
-        if not text:
-            raise InvalidPublicationInputError("LinkedIn post text is required")
-        if len(text) > Platform.LINKEDIN.char_limit:
-            raise InvalidPublicationInputError(
-                f"LinkedIn post text exceeds {Platform.LINKEDIN.char_limit} characters",
-                meta={"limit": Platform.LINKEDIN.char_limit},
-            )
+        text = _validate_publication_text(payload.text, payload.provider)
 
         draft = await self._drafts.get(payload.draft_id, app_user_id=payload.app_user_id)
         if draft is None:
@@ -258,6 +249,41 @@ class CancelScheduledPublicationUseCase:
                 extra=_publication_log_context(cancelled, current_status="cancelled"),
             )
         return _to_view(cancelled) if cancelled is not None else None
+
+
+class UpdateScheduledPublicationUseCase:
+    def __init__(self, publications: PublicationRepository) -> None:
+        self._publications = publications
+
+    async def execute(
+        self,
+        publication_id: UUID,
+        *,
+        app_user_id: UUID,
+        platform_text: str,
+    ) -> PublicationView | None:
+        publication = await self._publications.get(publication_id, app_user_id=app_user_id)
+        if publication is None:
+            return None
+        if publication.status not in {"scheduled", "queued"}:
+            raise InvalidPublicationInputError(
+                "Only scheduled or queued publications can be updated"
+            )
+
+        updated = await self._publications.update_scheduled_content(
+            publication_id,
+            app_user_id=app_user_id,
+            platform_text=_validate_publication_text(platform_text, publication.provider),
+            now=datetime.now(timezone.utc),
+        )
+        if updated is None:
+            raise InvalidPublicationInputError("Publication can no longer be updated")
+
+        logger.info(
+            "Publication content updated",
+            extra=_publication_log_context(updated, current_status=updated.status),
+        )
+        return _to_view(updated)
 
 
 class ReschedulePublicationUseCase:
@@ -487,6 +513,20 @@ def _normalize_future_scheduled_for(value: datetime) -> datetime:
     if scheduled_for < minimum_scheduled_for:
         raise InvalidPublicationInputError("Scheduled publication time must be at least 1 minute in the future")
     return scheduled_for
+
+
+def _validate_publication_text(text: str, provider: str) -> str:
+    normalized_text = text.strip()
+    if provider != Platform.LINKEDIN.value:
+        raise InvalidPublicationInputError("Only LinkedIn publishing is supported right now")
+    if not normalized_text:
+        raise InvalidPublicationInputError("LinkedIn post text is required")
+    if len(normalized_text) > Platform.LINKEDIN.char_limit:
+        raise InvalidPublicationInputError(
+            f"LinkedIn post text exceeds {Platform.LINKEDIN.char_limit} characters",
+            meta={"limit": Platform.LINKEDIN.char_limit},
+        )
+    return normalized_text
 
 
 def _publication_log_context(

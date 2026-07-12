@@ -452,6 +452,31 @@ class SqlAlchemyPublicationRepository(PublicationRepository):
             return None
         return self._to_entity(model, await self._get_assets(model.id))
 
+    async def update_scheduled_content(
+        self,
+        publication_id: UUID,
+        *,
+        app_user_id: UUID,
+        platform_text: str,
+        now: datetime,
+    ) -> Publication | None:
+        result = await self._session.execute(
+            update(PublicationModel)
+            .where(PublicationModel.id == publication_id)
+            .where(PublicationModel.app_user_id == app_user_id)
+            .where(PublicationModel.status.in_(("scheduled", "queued")))
+            .values(
+                platform_text=platform_text,
+                updated_at=now,
+            )
+            .returning(PublicationModel)
+        )
+        model = result.scalar_one_or_none()
+        await self._session.commit()
+        if model is None:
+            return None
+        return self._to_entity(model, await self._get_assets(model.id))
+
     async def mark_processing(self, publication_id: UUID) -> bool:
         result = await self._session.execute(
             update(PublicationModel)

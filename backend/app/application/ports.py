@@ -156,6 +156,16 @@ class PublicationRepository(ABC):
     ) -> Publication | None: ...
 
     @abstractmethod
+    async def update_scheduled_content(
+        self,
+        publication_id: UUID,
+        *,
+        app_user_id: UUID,
+        platform_text: str,
+        now: datetime,
+    ) -> Publication | None: ...
+
+    @abstractmethod
     async def reschedule(
         self,
         publication_id: UUID,

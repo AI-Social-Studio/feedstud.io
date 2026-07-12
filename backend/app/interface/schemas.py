@@ -280,6 +280,10 @@ class ReschedulePublicationRequest(BaseModel):
     scheduled_for: datetime
 
 
+class UpdateScheduledPublicationRequest(BaseModel):
+    text: str
+
+
 class ScheduledPublicationListItemResponse(BaseModel):
     id: UUID
     draft_id: UUID

@@ -84,6 +84,17 @@ export async function cancelPublication(publicationId: string): Promise<Publicat
   return response.data;
 }
 
+export async function updateScheduledPublication(
+  publicationId: string,
+  text: string,
+): Promise<Publication> {
+  const response = await publicationsApi.post<Publication>(
+    `/api/publications/${publicationId}/update-scheduled`,
+    { text },
+  );
+  return response.data;
+}
+
 export async function reschedulePublication(
   publicationId: string,
   scheduledFor: string,
