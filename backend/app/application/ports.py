@@ -6,6 +6,7 @@ from uuid import UUID
 from app.application.dto import (
     PreparedSocialAssetData,
     PublishedPostData,
+    ScheduledPublicationListItemView,
     SocialOAuthConnectionData,
     SocialOAuthProfileData,
 )
@@ -129,6 +130,15 @@ class PublicationRepository(ABC):
 
     @abstractmethod
     async def list_by_draft(self, *, draft_id: UUID, app_user_id: UUID) -> list[Publication]: ...
+
+    @abstractmethod
+    async def list_scheduled_for_management(
+        self,
+        *,
+        app_user_id: UUID,
+        limit: int,
+        offset: int,
+    ) -> list[ScheduledPublicationListItemView]: ...
 
     @abstractmethod
     async def claim_due_scheduled(self, *, now: datetime, limit: int) -> list[Publication]: ...

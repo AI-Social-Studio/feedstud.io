@@ -4,7 +4,11 @@ from dataclasses import dataclass
 from time import perf_counter
 from uuid import UUID
 
-from app.application.dto import PublicationAssetView, PublicationView
+from app.application.dto import (
+    PublicationAssetView,
+    PublicationView,
+    ScheduledPublicationListItemView,
+)
 from app.application.ports import (
     DraftRepository,
     FileRepository,
@@ -177,6 +181,24 @@ class ListPublicationsUseCase:
     async def execute(self, *, draft_id: UUID, app_user_id: UUID) -> list[PublicationView]:
         publications = await self._publications.list_by_draft(draft_id=draft_id, app_user_id=app_user_id)
         return [_to_view(publication) for publication in publications]
+
+
+class ListScheduledPublicationsUseCase:
+    def __init__(self, publications: PublicationRepository) -> None:
+        self._publications = publications
+
+    async def execute(
+        self,
+        *,
+        app_user_id: UUID,
+        limit: int,
+        offset: int,
+    ) -> list[ScheduledPublicationListItemView]:
+        return await self._publications.list_scheduled_for_management(
+            app_user_id=app_user_id,
+            limit=limit,
+            offset=offset,
+        )
 
 
 class ReleaseScheduledPublicationsUseCase:

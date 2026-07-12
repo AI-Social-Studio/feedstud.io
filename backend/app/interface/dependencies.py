@@ -40,6 +40,7 @@ from app.application.use_cases.publications import (
     CancelScheduledPublicationUseCase,
     GetPublicationUseCase,
     ListPublicationsUseCase,
+    ListScheduledPublicationsUseCase,
     ReschedulePublicationUseCase,
     SubmitPublicationJobUseCase,
 )
@@ -444,6 +445,12 @@ def get_list_publications_use_case(
     publications: PublicationRepository = Depends(get_publication_repository),
 ) -> ListPublicationsUseCase:
     return ListPublicationsUseCase(publications=publications)
+
+
+def get_list_scheduled_publications_use_case(
+    publications: PublicationRepository = Depends(get_publication_repository),
+) -> ListScheduledPublicationsUseCase:
+    return ListScheduledPublicationsUseCase(publications=publications)
 
 
 def get_cancel_scheduled_publication_use_case(

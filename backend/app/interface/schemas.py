@@ -280,6 +280,25 @@ class ReschedulePublicationRequest(BaseModel):
     scheduled_for: datetime
 
 
+class ScheduledPublicationListItemResponse(BaseModel):
+    id: UUID
+    draft_id: UUID
+    provider: Literal["linkedin"]
+    social_connection_id: UUID
+    status: Literal["scheduled", "queued"]
+    mode: Literal["publish_now", "schedule"]
+    platform_text: str
+    created_at: datetime
+    updated_at: datetime
+    published_at: datetime | None
+    scheduled_for: datetime | None
+    queued_at: datetime | None
+    schedule_released_at: datetime | None
+    provider_account_name: str | None
+    draft_title: str
+    asset_count: int
+
+
 class PublicationResponse(BaseModel):
     id: UUID
     draft_id: UUID

@@ -6,6 +6,7 @@ from app.application.use_cases.publications import (
     CancelScheduledPublicationUseCase,
     GetPublicationUseCase,
     ListPublicationsUseCase,
+    ListScheduledPublicationsUseCase,
     ReschedulePublicationUseCase,
     SubmitPublicationJobInput,
     SubmitPublicationJobUseCase,
@@ -15,6 +16,7 @@ from app.interface.dependencies import (
     get_current_app_user_id,
     get_get_publication_use_case,
     get_list_publications_use_case,
+    get_list_scheduled_publications_use_case,
     get_cancel_scheduled_publication_use_case,
     get_reschedule_publication_use_case,
     get_submit_publication_job_use_case,
@@ -25,6 +27,7 @@ from app.interface.schemas import (
     PublicationAssetResponse,
     PublicationResponse,
     ReschedulePublicationRequest,
+    ScheduledPublicationListItemResponse,
 )
 
 router = APIRouter(prefix="/publications", tags=["publications"])
@@ -61,6 +64,37 @@ async def list_publications(
 ) -> list[PublicationResponse]:
     views = await use_case.execute(draft_id=draft_id, app_user_id=app_user_id)
     return [_to_response(view) for view in views]
+
+
+@router.get("/scheduled", response_model=list[ScheduledPublicationListItemResponse])
+async def list_scheduled_publications(
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    app_user_id: UUID = Depends(get_current_app_user_id),
+    use_case: ListScheduledPublicationsUseCase = Depends(get_list_scheduled_publications_use_case),
+) -> list[ScheduledPublicationListItemResponse]:
+    views = await use_case.execute(app_user_id=app_user_id, limit=limit, offset=offset)
+    return [
+        ScheduledPublicationListItemResponse(
+            id=view.id,
+            draft_id=view.draft_id,
+            provider=view.provider,
+            social_connection_id=view.social_connection_id,
+            status=view.status,
+            mode=view.mode,
+            platform_text=view.platform_text,
+            created_at=view.created_at,
+            updated_at=view.updated_at,
+            published_at=view.published_at,
+            scheduled_for=view.scheduled_for,
+            queued_at=view.queued_at,
+            schedule_released_at=view.schedule_released_at,
+            provider_account_name=view.provider_account_name,
+            draft_title=view.draft_title,
+            asset_count=view.asset_count,
+        )
+        for view in views
+    ]
 
 
 @router.get("/{publication_id}", response_model=PublicationResponse)
