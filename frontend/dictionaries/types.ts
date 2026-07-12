@@ -88,6 +88,7 @@ export type Dictionary = {
     mainMenu: string;
     home: string;
     myCampaigns: string;
+    scheduledPosts: string;
     newCampaign: string;
     draft: string;
     adminSection: string;
@@ -207,6 +208,23 @@ export type Dictionary = {
     noDescription: string;
     version: string;
     versions: string;
+  };
+  scheduledPosts: {
+    title: string;
+    subtitle: string;
+    emptyState: string;
+    errorState: string;
+    platform: string;
+    status: string;
+    scheduledFor: string;
+    account: string;
+    assets: string;
+    draft: string;
+    noDraft: string;
+    noAccount: string;
+    assetCount: (count: number) => string;
+    queued: string;
+    scheduled: string;
   };
   adminTelemetry: {
     badge: string;

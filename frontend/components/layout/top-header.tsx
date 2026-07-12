@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HouseIcon, ListIcon, MegaphoneIcon, ShieldIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  CalendarBlankIcon,
+  HouseIcon,
+  ListIcon,
+  MegaphoneIcon,
+  ShieldIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { BrainIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { useDictionary } from "@/lib/i18n";
 
@@ -12,6 +18,7 @@ export function TopHeader({ onOpenMobileNav }: { onOpenMobileNav: () => void }) 
   const isHome = pathname === "/dashboard";
   const isProfile = pathname === "/dashboard/profile";
   const isMyCampaigns = pathname === "/dashboard/history";
+  const isScheduledPosts = pathname === "/dashboard/scheduled";
   const isNewCampaign = pathname === "/dashboard/new";
   const isAdmin = pathname === "/dashboard/admin" || pathname.startsWith("/dashboard/admin/");
   const isDraft = pathname.startsWith("/dashboard/drafts/");
@@ -42,6 +49,11 @@ export function TopHeader({ onOpenMobileNav }: { onOpenMobileNav: () => void }) 
           <span className="flex items-center gap-1.5 font-medium text-gray-900 dark:text-gray-100">
             <ShieldIcon size={16} weight="fill" />
             <span>{dict.nav.admin}</span>
+          </span>
+        ) : isScheduledPosts ? (
+          <span className="flex items-center gap-1.5 font-medium text-gray-900 dark:text-gray-100">
+            <CalendarBlankIcon size={16} weight="fill" />
+            <span>{dict.nav.scheduledPosts}</span>
           </span>
         ) : isUnderMyCampaigns ? (
           isMyCampaigns ? (
