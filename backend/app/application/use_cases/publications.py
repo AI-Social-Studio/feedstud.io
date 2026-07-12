@@ -244,8 +244,8 @@ class CancelScheduledPublicationUseCase:
         publication = await self._publications.get(publication_id, app_user_id=app_user_id)
         if publication is None:
             return None
-        if publication.status != "scheduled":
-            raise InvalidPublicationInputError("Only scheduled publications can be cancelled")
+        if publication.status not in {"scheduled", "queued"}:
+            raise InvalidPublicationInputError("Only scheduled or queued publications can be cancelled")
 
         cancelled = await self._publications.cancel_scheduled(
             publication_id,

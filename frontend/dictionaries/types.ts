@@ -214,11 +214,15 @@ export type Dictionary = {
     subtitle: string;
     emptyState: string;
     errorState: string;
+    successState: string;
     preview: string;
     previewLoading: string;
     previewTitle: string;
     previewSubtitle: string;
     fullContent: string;
+    cancel: string;
+    cancelling: string;
+    cancelConfirm: string;
     platform: string;
     status: string;
     scheduledFor: string;

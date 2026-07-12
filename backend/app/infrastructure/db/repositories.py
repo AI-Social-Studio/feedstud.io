@@ -412,7 +412,7 @@ class SqlAlchemyPublicationRepository(PublicationRepository):
             update(PublicationModel)
             .where(PublicationModel.id == publication_id)
             .where(PublicationModel.app_user_id == app_user_id)
-            .where(PublicationModel.status == "scheduled")
+            .where(PublicationModel.status.in_(("scheduled", "queued")))
             .values(
                 status="cancelled",
                 queued_at=None,
