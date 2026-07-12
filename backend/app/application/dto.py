@@ -113,6 +113,26 @@ class PublicationView:
 
 
 @dataclass
+class ScheduledPublicationListItemView:
+    id: UUID
+    draft_id: UUID
+    provider: str
+    social_connection_id: UUID
+    status: str
+    mode: str
+    platform_text: str
+    created_at: datetime
+    updated_at: datetime
+    published_at: datetime | None
+    scheduled_for: datetime | None
+    queued_at: datetime | None
+    schedule_released_at: datetime | None
+    provider_account_name: str | None
+    draft_title: str
+    asset_count: int
+
+
+@dataclass
 class ErrorView:
     code: ErrorCode
     detail: str

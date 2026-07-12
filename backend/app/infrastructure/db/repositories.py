@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from app.application.dto import ScheduledPublicationListItemView
 from app.application.ports import (
     AiExecutionRepository,
     AppUserRepository,
@@ -291,6 +292,62 @@ class SqlAlchemyPublicationRepository(PublicationRepository):
             publications.append(self._to_entity(model, await self._get_assets(model.id)))
         return publications
 
+    async def list_scheduled_for_management(
+        self,
+        *,
+        app_user_id: UUID,
+        limit: int,
+        offset: int,
+    ) -> list[ScheduledPublicationListItemView]:
+        result = await self._session.execute(
+            select(
+                PublicationModel,
+                SocialConnectionModel.provider_account_name,
+                DraftModel.title,
+            )
+            .join(
+                SocialConnectionModel,
+                SocialConnectionModel.id == PublicationModel.social_connection_id,
+                isouter=True,
+            )
+            .join(DraftModel, DraftModel.id == PublicationModel.draft_id, isouter=True)
+            .where(PublicationModel.app_user_id == app_user_id)
+            .where(PublicationModel.mode == "schedule")
+            .where(PublicationModel.status.in_(("scheduled", "queued")))
+            .order_by(PublicationModel.scheduled_for.asc(), PublicationModel.created_at.asc())
+            .offset(offset)
+            .limit(limit)
+        )
+        rows = result.all()
+        if not rows:
+            return []
+
+        asset_counts = await self._get_asset_counts_by_publication_ids(
+            [publication.id for publication, _, _ in rows]
+        )
+
+        return [
+            ScheduledPublicationListItemView(
+                id=publication.id,
+                draft_id=publication.draft_id,
+                provider=publication.provider,
+                social_connection_id=publication.social_connection_id,
+                status=publication.status,
+                mode=publication.mode,
+                platform_text=publication.platform_text,
+                created_at=publication.created_at,
+                updated_at=publication.updated_at,
+                published_at=publication.published_at,
+                scheduled_for=publication.scheduled_for,
+                queued_at=publication.queued_at,
+                schedule_released_at=publication.schedule_released_at,
+                provider_account_name=provider_account_name,
+                draft_title=draft_title or "",
+                asset_count=asset_counts.get(publication.id, 0),
+            )
+            for publication, provider_account_name, draft_title in rows
+        ]
+
     async def claim_due_scheduled(self, *, now: datetime, limit: int) -> list[Publication]:
         due_publication_ids = (
             select(PublicationModel.id)
@@ -497,6 +554,14 @@ class SqlAlchemyPublicationRepository(PublicationRepository):
         for asset in result.scalars().all():
             assets_by_publication_id.setdefault(asset.publication_id, []).append(asset)
         return assets_by_publication_id
+
+    async def _get_asset_counts_by_publication_ids(self, publication_ids: list[UUID]) -> dict[UUID, int]:
+        result = await self._session.execute(
+            select(PublicationAssetModel.publication_id, func.count(PublicationAssetModel.id))
+            .where(PublicationAssetModel.publication_id.in_(publication_ids))
+            .group_by(PublicationAssetModel.publication_id)
+        )
+        return {publication_id: asset_count for publication_id, asset_count in result.all()}
 
     @staticmethod
     def _to_model(publication: Publication) -> PublicationModel:
