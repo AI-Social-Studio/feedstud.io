@@ -412,6 +412,7 @@ class SqlAlchemyPublicationRepository(PublicationRepository):
             update(PublicationModel)
             .where(PublicationModel.id == publication_id)
             .where(PublicationModel.app_user_id == app_user_id)
+            .where(PublicationModel.mode == "schedule")
             .where(PublicationModel.status.in_(("scheduled", "queued")))
             .values(
                 status="cancelled",
@@ -464,6 +465,7 @@ class SqlAlchemyPublicationRepository(PublicationRepository):
             update(PublicationModel)
             .where(PublicationModel.id == publication_id)
             .where(PublicationModel.app_user_id == app_user_id)
+            .where(PublicationModel.mode == "schedule")
             .where(PublicationModel.status.in_(("scheduled", "queued")))
             .values(
                 platform_text=platform_text,
