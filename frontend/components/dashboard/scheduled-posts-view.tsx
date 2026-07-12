@@ -16,6 +16,7 @@ import {
   cancelPublication,
   getPublication,
   type Publication,
+  reschedulePublication,
   type ScheduledPublication,
   updateScheduledPublication,
 } from "@/lib/publications-api";
@@ -48,6 +49,7 @@ export function ScheduledPostsView({
     Publication | ScheduledPublication | null
   >(null);
   const [editText, setEditText] = useState("");
+  const [editScheduledAt, setEditScheduledAt] = useState("");
   const [saveLoadingId, setSaveLoadingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(
     null,
@@ -79,11 +81,13 @@ export function ScheduledPostsView({
     setFeedback(null);
     setEditingPublication(publication);
     setEditText(publication.platform_text);
+    setEditScheduledAt(toDateTimeInputValue(publication.scheduled_for));
   }
 
   function closeEdit() {
     setEditingPublication(null);
     setEditText("");
+    setEditScheduledAt("");
     setSaveLoadingId(null);
   }
 
@@ -108,10 +112,40 @@ export function ScheduledPostsView({
   async function handleSaveEdit() {
     if (!editingPublication) return;
 
+    const textChanged = editText.trim() !== editingPublication.platform_text.trim();
+    const canReschedule = isRescheduleEditable(editingPublication);
+    const scheduleChanged =
+      canReschedule && editScheduledAt !== toDateTimeInputValue(editingPublication.scheduled_for);
+
+    if (!textChanged && !scheduleChanged) {
+      closeEdit();
+      return;
+    }
+
     setFeedback(null);
     setSaveLoadingId(editingPublication.id);
     try {
-      const updated = await updateScheduledPublication(editingPublication.id, editText);
+      let updated = previewPublication?.id === editingPublication.id ? previewPublication : null;
+
+      if (textChanged) {
+        updated = await updateScheduledPublication(editingPublication.id, editText);
+      }
+
+      if (scheduleChanged) {
+        const scheduledFor = toScheduledPublicationDate(editScheduledAt);
+        if (!scheduledFor) {
+          setFeedback({ tone: "error", message: dict.scheduledPosts.scheduleInvalidDateTime });
+          setSaveLoadingId(null);
+          return;
+        }
+        updated = await reschedulePublication(editingPublication.id, scheduledFor);
+      }
+
+      if (!updated) {
+        closeEdit();
+        return;
+      }
+
       setItems((current) =>
         current.map((item) =>
           item.id === updated.id
@@ -119,6 +153,7 @@ export function ScheduledPostsView({
                 ...item,
                 status: updated.status === "queued" ? "queued" : "scheduled",
                 platform_text: updated.platform_text,
+                scheduled_for: updated.scheduled_for,
                 updated_at: updated.updated_at,
               }
             : item,
@@ -127,12 +162,25 @@ export function ScheduledPostsView({
       if (previewSummary?.id === updated.id) {
         setPreviewSummary((current) =>
           current
-            ? { ...current, platform_text: updated.platform_text, updated_at: updated.updated_at }
+            ? {
+                ...current,
+                platform_text: updated.platform_text,
+                scheduled_for: updated.scheduled_for,
+                updated_at: updated.updated_at,
+              }
             : current,
         );
         setPreviewPublication(updated);
       }
-      setFeedback({ tone: "success", message: dict.scheduledPosts.updatedState });
+      setFeedback({
+        tone: "success",
+        message:
+          textChanged && scheduleChanged
+            ? dict.scheduledPosts.updatedAndRescheduledState
+            : scheduleChanged
+              ? dict.scheduledPosts.rescheduledState
+              : dict.scheduledPosts.updatedState,
+      });
       closeEdit();
     } catch (error) {
       setFeedback({ tone: "error", message: getApiErrorMessage(error) });
@@ -269,8 +317,10 @@ export function ScheduledPostsView({
         <ScheduledPostEditModal
           publication={editingPublication}
           value={editText}
+          scheduledAt={editScheduledAt}
           saveLoading={saveLoadingId === editingPublication.id}
           onChange={setEditText}
+          onScheduledAtChange={setEditScheduledAt}
           onClose={closeEdit}
           onSave={handleSaveEdit}
         />
@@ -441,15 +491,19 @@ function ScheduledPostPreviewModal({
 function ScheduledPostEditModal({
   publication,
   value,
+  scheduledAt,
   saveLoading,
   onChange,
+  onScheduledAtChange,
   onClose,
   onSave,
 }: {
   publication: Publication | ScheduledPublication;
   value: string;
+  scheduledAt: string;
   saveLoading: boolean;
   onChange: (value: string) => void;
+  onScheduledAtChange: (value: string) => void;
   onClose: () => void;
   onSave: () => void;
 }) {
@@ -457,6 +511,7 @@ function ScheduledPostEditModal({
   const hasMounted = useHasMounted();
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const canReschedule = isRescheduleEditable(publication);
 
   useMountEffect(() => {
     previousFocusRef.current =
@@ -531,6 +586,25 @@ function ScheduledPostEditModal({
               <span>{publication.id}</span>
               <span>{dict.scheduledPosts.characterCount(value.length, LINKEDIN_CHAR_LIMIT)}</span>
             </div>
+
+            <div className="mt-6">
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                {dict.scheduledPosts.scheduledFor}
+              </label>
+              <input
+                type="datetime-local"
+                value={scheduledAt}
+                min={nowDatetimeLocal()}
+                disabled={!canReschedule || saveLoading}
+                onChange={(event) => onScheduledAtChange(event.target.value)}
+                className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 transition-colors outline-none placeholder:text-gray-400 focus:border-gray-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-gray-600"
+              />
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                {canReschedule
+                  ? dict.scheduledPosts.editScheduleHelp
+                  : dict.scheduledPosts.editScheduleLocked}
+              </p>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 border-t border-gray-100 px-6 py-4 dark:border-gray-800/60">
@@ -556,6 +630,41 @@ function ScheduledPostEditModal({
     </>,
     document.body,
   );
+}
+
+function nowDatetimeLocal(): string {
+  const now = new Date();
+  now.setSeconds(0, 0);
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function toDateTimeInputValue(value: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function toScheduledPublicationDate(value: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  if (date.getTime() <= Date.now()) return null;
+  return date.toISOString();
+}
+
+function isRescheduleEditable(publication: Publication | ScheduledPublication) {
+  return publication.status === "scheduled";
 }
 
 function StateCard({ children }: { children: string }) {
