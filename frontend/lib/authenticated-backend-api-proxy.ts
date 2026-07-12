@@ -9,6 +9,15 @@ function expectsJsonBody(method: ProxyMethod): boolean {
   return method === "POST" || method === "PUT";
 }
 
+function hasRequestBody(request: NextRequest): boolean {
+  const contentLength = request.headers.get("content-length");
+  if (contentLength !== null) {
+    return contentLength !== "0";
+  }
+
+  return request.headers.has("transfer-encoding");
+}
+
 function isBodylessStatus(status: number): boolean {
   return status === 204 || status === 205 || status === 304;
 }
@@ -38,7 +47,7 @@ export async function createAuthedBackendProxy(
   }
 
   let payload: unknown;
-  if (expectsJsonBody(method) && request.body !== null) {
+  if (expectsJsonBody(method) && hasRequestBody(request)) {
     try {
       payload = await request.json();
     } catch {
