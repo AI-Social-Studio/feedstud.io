@@ -10,6 +10,7 @@ from app.application.use_cases.publications import (
     ReschedulePublicationUseCase,
     SubmitPublicationJobInput,
     SubmitPublicationJobUseCase,
+    UpdateScheduledPublicationUseCase,
 )
 from app.domain.error_codes import ErrorCode
 from app.interface.dependencies import (
@@ -20,6 +21,7 @@ from app.interface.dependencies import (
     get_cancel_scheduled_publication_use_case,
     get_reschedule_publication_use_case,
     get_submit_publication_job_use_case,
+    get_update_scheduled_publication_use_case,
 )
 from app.interface.errors import api_error
 from app.interface.schemas import (
@@ -28,6 +30,7 @@ from app.interface.schemas import (
     PublicationResponse,
     ReschedulePublicationRequest,
     ScheduledPublicationListItemResponse,
+    UpdateScheduledPublicationRequest,
 )
 
 router = APIRouter(prefix="/publications", tags=["publications"])
@@ -121,6 +124,28 @@ async def cancel_publication(
     use_case: CancelScheduledPublicationUseCase = Depends(get_cancel_scheduled_publication_use_case),
 ) -> PublicationResponse:
     view = await use_case.execute(publication_id, app_user_id=app_user_id)
+    if view is None:
+        raise api_error(
+            status.HTTP_404_NOT_FOUND,
+            ErrorCode.PUBLICATION_NOT_FOUND,
+            "Publication not found",
+            {"publication_id": str(publication_id)},
+        )
+    return _to_response(view)
+
+
+@router.post("/{publication_id}/update-scheduled", response_model=PublicationResponse)
+async def update_scheduled_publication(
+    publication_id: UUID,
+    payload: UpdateScheduledPublicationRequest,
+    app_user_id: UUID = Depends(get_current_app_user_id),
+    use_case: UpdateScheduledPublicationUseCase = Depends(get_update_scheduled_publication_use_case),
+) -> PublicationResponse:
+    view = await use_case.execute(
+        publication_id,
+        app_user_id=app_user_id,
+        platform_text=payload.text,
+    )
     if view is None:
         raise api_error(
             status.HTTP_404_NOT_FOUND,

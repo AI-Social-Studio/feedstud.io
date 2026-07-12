@@ -43,6 +43,7 @@ from app.application.use_cases.publications import (
     ListScheduledPublicationsUseCase,
     ReschedulePublicationUseCase,
     SubmitPublicationJobUseCase,
+    UpdateScheduledPublicationUseCase,
 )
 from app.application.use_cases.generate_jobs import GetGenerateJobUseCase, SubmitGenerateJobUseCase
 from app.application.use_cases.generate_posts import (
@@ -457,6 +458,12 @@ def get_cancel_scheduled_publication_use_case(
     publications: PublicationRepository = Depends(get_publication_repository),
 ) -> CancelScheduledPublicationUseCase:
     return CancelScheduledPublicationUseCase(publications=publications)
+
+
+def get_update_scheduled_publication_use_case(
+    publications: PublicationRepository = Depends(get_publication_repository),
+) -> UpdateScheduledPublicationUseCase:
+    return UpdateScheduledPublicationUseCase(publications=publications)
 
 
 def get_reschedule_publication_use_case(

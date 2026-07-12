@@ -17,10 +17,13 @@ import {
   getPublication,
   type Publication,
   type ScheduledPublication,
+  updateScheduledPublication,
 } from "@/lib/publications-api";
 import { getApiErrorMessage } from "@/lib/studio-api";
 import { useHasMounted } from "@/lib/use-has-mounted";
 import { useMountEffect } from "@/lib/use-mount-effect";
+
+const LINKEDIN_CHAR_LIMIT = 3000;
 
 type Props = {
   publications: ScheduledPublication[];
@@ -41,6 +44,11 @@ export function ScheduledPostsView({
   const [previewSummary, setPreviewSummary] = useState<ScheduledPublication | null>(null);
   const [previewLoadingId, setPreviewLoadingId] = useState<string | null>(null);
   const [cancelLoadingId, setCancelLoadingId] = useState<string | null>(null);
+  const [editingPublication, setEditingPublication] = useState<
+    Publication | ScheduledPublication | null
+  >(null);
+  const [editText, setEditText] = useState("");
+  const [saveLoadingId, setSaveLoadingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(
     null,
   );
@@ -67,6 +75,18 @@ export function ScheduledPostsView({
     setPreviewLoadingId(null);
   }
 
+  function openEdit(publication: Publication | ScheduledPublication) {
+    setFeedback(null);
+    setEditingPublication(publication);
+    setEditText(publication.platform_text);
+  }
+
+  function closeEdit() {
+    setEditingPublication(null);
+    setEditText("");
+    setSaveLoadingId(null);
+  }
+
   async function handleCancel(publication: ScheduledPublication) {
     if (!window.confirm(dict.scheduledPosts.cancelConfirm)) return;
 
@@ -76,11 +96,47 @@ export function ScheduledPostsView({
       await cancelPublication(publication.id);
       setItems((current) => current.filter((item) => item.id !== publication.id));
       if (previewSummary?.id === publication.id) closePreview();
+      if (editingPublication?.id === publication.id) closeEdit();
       setFeedback({ tone: "success", message: dict.scheduledPosts.successState });
     } catch (error) {
       setFeedback({ tone: "error", message: getApiErrorMessage(error) });
     } finally {
       setCancelLoadingId(null);
+    }
+  }
+
+  async function handleSaveEdit() {
+    if (!editingPublication) return;
+
+    setFeedback(null);
+    setSaveLoadingId(editingPublication.id);
+    try {
+      const updated = await updateScheduledPublication(editingPublication.id, editText);
+      setItems((current) =>
+        current.map((item) =>
+          item.id === updated.id
+            ? {
+                ...item,
+                status: updated.status === "queued" ? "queued" : "scheduled",
+                platform_text: updated.platform_text,
+                updated_at: updated.updated_at,
+              }
+            : item,
+        ),
+      );
+      if (previewSummary?.id === updated.id) {
+        setPreviewSummary((current) =>
+          current
+            ? { ...current, platform_text: updated.platform_text, updated_at: updated.updated_at }
+            : current,
+        );
+        setPreviewPublication(updated);
+      }
+      setFeedback({ tone: "success", message: dict.scheduledPosts.updatedState });
+      closeEdit();
+    } catch (error) {
+      setFeedback({ tone: "error", message: getApiErrorMessage(error) });
+      setSaveLoadingId(null);
     }
   }
 
@@ -131,7 +187,9 @@ export function ScheduledPostsView({
                         type="button"
                         onClick={() => openPreview(publication)}
                         disabled={
-                          previewLoadingId === publication.id || cancelLoadingId === publication.id
+                          previewLoadingId === publication.id ||
+                          cancelLoadingId === publication.id ||
+                          saveLoadingId === publication.id
                         }
                         className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-wait disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
                       >
@@ -141,9 +199,25 @@ export function ScheduledPostsView({
                       </button>
                       <button
                         type="button"
+                        onClick={() => openEdit(publication)}
+                        disabled={
+                          cancelLoadingId === publication.id ||
+                          previewLoadingId === publication.id ||
+                          saveLoadingId === publication.id
+                        }
+                        className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-wait disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
+                      >
+                        {saveLoadingId === publication.id
+                          ? dict.scheduledPosts.saving
+                          : dict.scheduledPosts.edit}
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleCancel(publication)}
                         disabled={
-                          cancelLoadingId === publication.id || previewLoadingId === publication.id
+                          cancelLoadingId === publication.id ||
+                          previewLoadingId === publication.id ||
+                          saveLoadingId === publication.id
                         }
                         className="inline-flex items-center justify-center rounded-xl border border-red-200 bg-red-50 px-3.5 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-wait disabled:opacity-60 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-950/50"
                       >
@@ -185,8 +259,20 @@ export function ScheduledPostsView({
           publication={previewPublication}
           fallbackPublication={previewSummary}
           cancelLoading={cancelLoadingId === previewSummary.id}
+          saveLoading={saveLoadingId === previewSummary.id}
+          onEdit={() => openEdit(previewPublication ?? previewSummary)}
           onCancel={() => handleCancel(previewSummary)}
           onClose={closePreview}
+        />
+      ) : null}
+      {editingPublication ? (
+        <ScheduledPostEditModal
+          publication={editingPublication}
+          value={editText}
+          saveLoading={saveLoadingId === editingPublication.id}
+          onChange={setEditText}
+          onClose={closeEdit}
+          onSave={handleSaveEdit}
         />
       ) : null}
     </DashboardShell>
@@ -197,12 +283,16 @@ function ScheduledPostPreviewModal({
   publication,
   fallbackPublication,
   cancelLoading,
+  saveLoading,
+  onEdit,
   onCancel,
   onClose,
 }: {
   publication: Publication | null;
   fallbackPublication: ScheduledPublication | null;
   cancelLoading: boolean;
+  saveLoading: boolean;
+  onEdit: () => void;
   onCancel: () => void;
   onClose: () => void;
 }) {
@@ -326,11 +416,139 @@ function ScheduledPostPreviewModal({
             </button>
             <button
               type="button"
+              onClick={onEdit}
+              disabled={saveLoading || cancelLoading}
+              className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-wait disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
+            >
+              {saveLoading ? dict.scheduledPosts.saving : dict.scheduledPosts.edit}
+            </button>
+            <button
+              type="button"
               onClick={onCancel}
-              disabled={cancelLoading}
+              disabled={cancelLoading || saveLoading}
               className="inline-flex items-center justify-center rounded-xl border border-red-200 bg-red-50 px-3.5 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-wait disabled:opacity-60 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-950/50"
             >
               {cancelLoading ? dict.scheduledPosts.cancelling : dict.scheduledPosts.cancel}
+            </button>
+          </div>
+        </section>
+      </div>
+    </>,
+    document.body,
+  );
+}
+
+function ScheduledPostEditModal({
+  publication,
+  value,
+  saveLoading,
+  onChange,
+  onClose,
+  onSave,
+}: {
+  publication: Publication | ScheduledPublication;
+  value: string;
+  saveLoading: boolean;
+  onChange: (value: string) => void;
+  onClose: () => void;
+  onSave: () => void;
+}) {
+  const { dict } = useLanguage();
+  const hasMounted = useHasMounted();
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useMountEffect(() => {
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && !saveLoading) onClose();
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
+  });
+
+  if (!hasMounted) return null;
+
+  return createPortal(
+    <>
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        onClick={saveLoading ? undefined : onClose}
+        className="fixed inset-0 z-40 bg-gray-950/60 transition-opacity"
+      />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="scheduled-post-edit-title"
+          className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-[#0a0a0f] dark:ring-white/10"
+        >
+          <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5 dark:border-gray-800/60">
+            <div className="min-w-0">
+              <h2
+                id="scheduled-post-edit-title"
+                className="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-50"
+              >
+                {dict.scheduledPosts.editTitle}
+              </h2>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                {dict.scheduledPosts.editSubtitle}
+              </p>
+            </div>
+            <button
+              type="button"
+              ref={closeButtonRef}
+              onClick={onClose}
+              disabled={saveLoading}
+              className="inline-flex rounded-md p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-wait disabled:opacity-60 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+              aria-label={dict.common.cancel}
+            >
+              <XIcon className="size-5" />
+            </button>
+          </div>
+
+          <div className="overflow-y-auto px-6 py-5">
+            <div className="mb-3 text-sm text-gray-500 dark:text-gray-400">
+              {dict.scheduledPosts.editHelp}
+            </div>
+            <textarea
+              value={value}
+              onChange={(event) => onChange(event.target.value)}
+              placeholder={dict.scheduledPosts.editPlaceholder}
+              rows={10}
+              className="min-h-56 w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 transition-colors outline-none placeholder:text-gray-400 focus:border-gray-400 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-gray-600"
+            />
+            <div className="mt-3 flex items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400">
+              <span>{publication.id}</span>
+              <span>{dict.scheduledPosts.characterCount(value.length, LINKEDIN_CHAR_LIMIT)}</span>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 border-t border-gray-100 px-6 py-4 dark:border-gray-800/60">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saveLoading}
+              className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-wait disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
+            >
+              {dict.common.cancel}
+            </button>
+            <button
+              type="button"
+              onClick={onSave}
+              disabled={saveLoading}
+              className="inline-flex items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50"
+            >
+              {saveLoading ? dict.scheduledPosts.saving : dict.scheduledPosts.save}
             </button>
           </div>
         </section>
