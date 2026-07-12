@@ -19,6 +19,7 @@ export type Dictionary = {
     switchToLight: string;
     darkTheme: string;
     lightTheme: string;
+    close: string;
     cancel: string;
     createCampaign: string;
     campaignNamePromptTitle: string;
@@ -235,6 +236,8 @@ export type Dictionary = {
     cancel: string;
     cancelling: string;
     cancelConfirm: string;
+    loadMore: string;
+    loadingMore: string;
     characterCount: (count: number, limit: number) => string;
     platform: string;
     status: string;

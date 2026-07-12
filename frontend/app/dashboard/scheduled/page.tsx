@@ -4,6 +4,8 @@ import { getSessionAppRole } from "@/lib/auth/roles";
 import { listScheduledPublicationsServer } from "@/lib/server-publications-api";
 import { parseSidebarCollapsed, SIDEBAR_COLLAPSED_COOKIE_NAME } from "@/lib/sidebar-state";
 
+const SCHEDULED_POSTS_PAGE_SIZE = 100;
+
 export default async function ScheduledPostsPage() {
   const cookieStore = await cookies();
   const initialSidebarCollapsed = parseSidebarCollapsed(
@@ -18,6 +20,8 @@ export default async function ScheduledPostsPage() {
   return (
     <ScheduledPostsView
       publications={scheduledResult.publications}
+      hasMoreInitial={scheduledResult.hasMore}
+      pageSize={SCHEDULED_POSTS_PAGE_SIZE}
       role={role ?? "user"}
       initialSidebarCollapsed={initialSidebarCollapsed}
       hasError={scheduledResult.hasError}
@@ -27,11 +31,13 @@ export default async function ScheduledPostsPage() {
 
 async function loadScheduledPublications() {
   try {
+    const publications = await listScheduledPublicationsServer(SCHEDULED_POSTS_PAGE_SIZE, 0);
     return {
-      publications: await listScheduledPublicationsServer(100, 0),
+      publications,
+      hasMore: publications.length === SCHEDULED_POSTS_PAGE_SIZE,
       hasError: false,
     };
   } catch {
-    return { publications: [], hasError: true };
+    return { publications: [], hasMore: false, hasError: true };
   }
 }

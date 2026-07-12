@@ -15,6 +15,7 @@ import { useLanguage } from "@/lib/i18n";
 import {
   cancelPublication,
   getPublication,
+  listScheduledPublications,
   type Publication,
   reschedulePublication,
   type ScheduledPublication,
@@ -28,6 +29,8 @@ const LINKEDIN_CHAR_LIMIT = 3000;
 
 type Props = {
   publications: ScheduledPublication[];
+  hasMoreInitial: boolean;
+  pageSize: number;
   role: AppRole;
   initialSidebarCollapsed: boolean;
   hasError: boolean;
@@ -35,6 +38,8 @@ type Props = {
 
 export function ScheduledPostsView({
   publications,
+  hasMoreInitial,
+  pageSize,
   role,
   initialSidebarCollapsed,
   hasError,
@@ -51,30 +56,70 @@ export function ScheduledPostsView({
   const [editText, setEditText] = useState("");
   const [editScheduledAt, setEditScheduledAt] = useState("");
   const [saveLoadingId, setSaveLoadingId] = useState<string | null>(null);
+  const [loadMoreLoading, setLoadMoreLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(hasMoreInitial);
+  const [nextOffset, setNextOffset] = useState(publications.length);
   const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(
     null,
   );
+  const previewRequestIdRef = useRef(0);
 
   async function openPreview(publication: ScheduledPublication) {
+    const requestId = previewRequestIdRef.current + 1;
+    previewRequestIdRef.current = requestId;
     setFeedback(null);
     setPreviewSummary(publication);
     setPreviewPublication(null);
     setPreviewLoadingId(publication.id);
     try {
-      setPreviewPublication(await getPublication(publication.id));
+      const loadedPublication = await getPublication(publication.id);
+      if (previewRequestIdRef.current !== requestId) return;
+      setPreviewPublication(loadedPublication);
     } catch (error) {
+      if (previewRequestIdRef.current !== requestId) return;
       setPreviewPublication(null);
       setFeedback({ tone: "error", message: getApiErrorMessage(error) });
       setPreviewSummary(null);
     } finally {
+      if (previewRequestIdRef.current !== requestId) return;
       setPreviewLoadingId(null);
     }
   }
 
   function closePreview() {
+    previewRequestIdRef.current += 1;
     setPreviewPublication(null);
     setPreviewSummary(null);
     setPreviewLoadingId(null);
+  }
+
+  function applyUpdatedPublication(updated: Publication) {
+    setItems((current) =>
+      current.map((item) =>
+        item.id === updated.id
+          ? {
+              ...item,
+              status: updated.status === "queued" ? "queued" : "scheduled",
+              platform_text: updated.platform_text,
+              scheduled_for: updated.scheduled_for,
+              updated_at: updated.updated_at,
+            }
+          : item,
+      ),
+    );
+    setPreviewSummary((current) =>
+      current?.id === updated.id
+        ? {
+            ...current,
+            status: updated.status === "queued" ? "queued" : "scheduled",
+            platform_text: updated.platform_text,
+            scheduled_for: updated.scheduled_for,
+            updated_at: updated.updated_at,
+          }
+        : current,
+    );
+    setPreviewPublication((current) => (current?.id === updated.id ? updated : current));
+    setEditingPublication((current) => (current?.id === updated.id ? updated : current));
   }
 
   function openEdit(publication: Publication | ScheduledPublication) {
@@ -111,6 +156,7 @@ export function ScheduledPostsView({
 
   async function handleSaveEdit() {
     if (!editingPublication) return;
+    if (editText.length > LINKEDIN_CHAR_LIMIT) return;
 
     const textChanged = editText.trim() !== editingPublication.platform_text.trim();
     const canReschedule = isRescheduleEditable(editingPublication);
@@ -125,10 +171,9 @@ export function ScheduledPostsView({
     setFeedback(null);
     setSaveLoadingId(editingPublication.id);
     try {
-      let updated = previewPublication?.id === editingPublication.id ? previewPublication : null;
-
       if (textChanged) {
-        updated = await updateScheduledPublication(editingPublication.id, editText);
+        const updated = await updateScheduledPublication(editingPublication.id, editText);
+        applyUpdatedPublication(updated);
       }
 
       if (scheduleChanged) {
@@ -138,40 +183,10 @@ export function ScheduledPostsView({
           setSaveLoadingId(null);
           return;
         }
-        updated = await reschedulePublication(editingPublication.id, scheduledFor);
+        const updated = await reschedulePublication(editingPublication.id, scheduledFor);
+        applyUpdatedPublication(updated);
       }
 
-      if (!updated) {
-        closeEdit();
-        return;
-      }
-
-      setItems((current) =>
-        current.map((item) =>
-          item.id === updated.id
-            ? {
-                ...item,
-                status: updated.status === "queued" ? "queued" : "scheduled",
-                platform_text: updated.platform_text,
-                scheduled_for: updated.scheduled_for,
-                updated_at: updated.updated_at,
-              }
-            : item,
-        ),
-      );
-      if (previewSummary?.id === updated.id) {
-        setPreviewSummary((current) =>
-          current
-            ? {
-                ...current,
-                platform_text: updated.platform_text,
-                scheduled_for: updated.scheduled_for,
-                updated_at: updated.updated_at,
-              }
-            : current,
-        );
-        setPreviewPublication(updated);
-      }
       setFeedback({
         tone: "success",
         message:
@@ -185,6 +200,24 @@ export function ScheduledPostsView({
     } catch (error) {
       setFeedback({ tone: "error", message: getApiErrorMessage(error) });
       setSaveLoadingId(null);
+    }
+  }
+
+  async function handleLoadMore() {
+    setFeedback(null);
+    setLoadMoreLoading(true);
+    try {
+      const loaded = await listScheduledPublications(pageSize, nextOffset);
+      setItems((current) => {
+        const seenIds = new Set(current.map((item) => item.id));
+        return [...current, ...loaded.filter((item) => !seenIds.has(item.id))];
+      });
+      setNextOffset((current) => current + loaded.length);
+      setHasMore(loaded.length === pageSize);
+    } catch (error) {
+      setFeedback({ tone: "error", message: getApiErrorMessage(error) });
+    } finally {
+      setLoadMoreLoading(false);
     }
   }
 
@@ -302,6 +335,18 @@ export function ScheduledPostsView({
           ))}
         </div>
       )}
+      {!hasError && items.length > 0 && hasMore ? (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={handleLoadMore}
+            disabled={loadMoreLoading}
+            className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-wait disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
+          >
+            {loadMoreLoading ? dict.scheduledPosts.loadingMore : dict.scheduledPosts.loadMore}
+          </button>
+        </div>
+      ) : null}
       {previewSummary ? (
         <ScheduledPostPreviewModal
           publication={previewPublication}
@@ -413,7 +458,7 @@ function ScheduledPostPreviewModal({
               ref={closeButtonRef}
               onClick={onClose}
               className="inline-flex rounded-md p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-              aria-label={dict.common.cancel}
+              aria-label={dict.common.close}
             >
               <XIcon className="size-5" />
             </button>
@@ -512,6 +557,7 @@ function ScheduledPostEditModal({
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const canReschedule = isRescheduleEditable(publication);
+  const isTextOverflow = value.length > LINKEDIN_CHAR_LIMIT;
 
   useMountEffect(() => {
     previousFocusRef.current =
@@ -519,7 +565,7 @@ function ScheduledPostEditModal({
     closeButtonRef.current?.focus();
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !saveLoading) onClose();
+      if (event.key === "Escape" && !closeButtonRef.current?.disabled) onClose();
     }
 
     document.addEventListener("keydown", handleKeyDown);
@@ -565,7 +611,7 @@ function ScheduledPostEditModal({
               onClick={onClose}
               disabled={saveLoading}
               className="inline-flex rounded-md p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-wait disabled:opacity-60 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-              aria-label={dict.common.cancel}
+              aria-label={dict.common.close}
             >
               <XIcon className="size-5" />
             </button>
@@ -619,7 +665,7 @@ function ScheduledPostEditModal({
             <button
               type="button"
               onClick={onSave}
-              disabled={saveLoading}
+              disabled={saveLoading || isTextOverflow}
               className="inline-flex items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50"
             >
               {saveLoading ? dict.scheduledPosts.saving : dict.scheduledPosts.save}
