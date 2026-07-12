@@ -214,12 +214,18 @@ export type Dictionary = {
     subtitle: string;
     emptyState: string;
     errorState: string;
+    preview: string;
+    previewLoading: string;
+    previewTitle: string;
+    previewSubtitle: string;
+    fullContent: string;
     platform: string;
     status: string;
     scheduledFor: string;
     account: string;
     assets: string;
     draft: string;
+    publicationId: string;
     noDraft: string;
     noAccount: string;
     assetCount: (count: number) => string;
