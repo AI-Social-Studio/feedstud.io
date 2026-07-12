@@ -13,10 +13,12 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import type { AppRole } from "@/lib/auth/roles";
 import { useLanguage } from "@/lib/i18n";
 import {
+  cancelPublication,
   getPublication,
   type Publication,
   type ScheduledPublication,
 } from "@/lib/publications-api";
+import { getApiErrorMessage } from "@/lib/studio-api";
 import { useHasMounted } from "@/lib/use-has-mounted";
 import { useMountEffect } from "@/lib/use-mount-effect";
 
@@ -34,15 +36,26 @@ export function ScheduledPostsView({
   hasError,
 }: Props) {
   const { locale, dict } = useLanguage();
+  const [items, setItems] = useState(publications);
   const [previewPublication, setPreviewPublication] = useState<Publication | null>(null);
   const [previewSummary, setPreviewSummary] = useState<ScheduledPublication | null>(null);
   const [previewLoadingId, setPreviewLoadingId] = useState<string | null>(null);
+  const [cancelLoadingId, setCancelLoadingId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(
+    null,
+  );
 
   async function openPreview(publication: ScheduledPublication) {
+    setFeedback(null);
     setPreviewSummary(publication);
+    setPreviewPublication(null);
     setPreviewLoadingId(publication.id);
     try {
       setPreviewPublication(await getPublication(publication.id));
+    } catch (error) {
+      setPreviewPublication(null);
+      setFeedback({ tone: "error", message: getApiErrorMessage(error) });
+      setPreviewSummary(null);
     } finally {
       setPreviewLoadingId(null);
     }
@@ -54,6 +67,23 @@ export function ScheduledPostsView({
     setPreviewLoadingId(null);
   }
 
+  async function handleCancel(publication: ScheduledPublication) {
+    if (!window.confirm(dict.scheduledPosts.cancelConfirm)) return;
+
+    setFeedback(null);
+    setCancelLoadingId(publication.id);
+    try {
+      await cancelPublication(publication.id);
+      setItems((current) => current.filter((item) => item.id !== publication.id));
+      if (previewSummary?.id === publication.id) closePreview();
+      setFeedback({ tone: "success", message: dict.scheduledPosts.successState });
+    } catch (error) {
+      setFeedback({ tone: "error", message: getApiErrorMessage(error) });
+    } finally {
+      setCancelLoadingId(null);
+    }
+  }
+
   return (
     <DashboardShell role={role} initialCollapsed={initialSidebarCollapsed}>
       <div className="flex flex-col gap-2">
@@ -63,13 +93,15 @@ export function ScheduledPostsView({
         <p className="text-sm text-gray-500 dark:text-gray-400">{dict.scheduledPosts.subtitle}</p>
       </div>
 
+      {feedback ? <FeedbackBanner tone={feedback.tone}>{feedback.message}</FeedbackBanner> : null}
+
       {hasError ? (
         <StateCard>{dict.scheduledPosts.errorState}</StateCard>
-      ) : publications.length === 0 ? (
+      ) : items.length === 0 ? (
         <StateCard>{dict.scheduledPosts.emptyState}</StateCard>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {publications.map((publication) => (
+          {items.map((publication) => (
             <article
               key={publication.id}
               className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
@@ -94,16 +126,32 @@ export function ScheduledPostsView({
                     {publication.platform_text}
                   </p>
                   <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={() => openPreview(publication)}
-                      disabled={previewLoadingId === publication.id}
-                      className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-wait disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
-                    >
-                      {previewLoadingId === publication.id
-                        ? dict.scheduledPosts.previewLoading
-                        : dict.scheduledPosts.preview}
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openPreview(publication)}
+                        disabled={
+                          previewLoadingId === publication.id || cancelLoadingId === publication.id
+                        }
+                        className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-wait disabled:opacity-60 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
+                      >
+                        {previewLoadingId === publication.id
+                          ? dict.scheduledPosts.previewLoading
+                          : dict.scheduledPosts.preview}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCancel(publication)}
+                        disabled={
+                          cancelLoadingId === publication.id || previewLoadingId === publication.id
+                        }
+                        className="inline-flex items-center justify-center rounded-xl border border-red-200 bg-red-50 px-3.5 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-wait disabled:opacity-60 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-950/50"
+                      >
+                        {cancelLoadingId === publication.id
+                          ? dict.scheduledPosts.cancelling
+                          : dict.scheduledPosts.cancel}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -136,6 +184,8 @@ export function ScheduledPostsView({
         <ScheduledPostPreviewModal
           publication={previewPublication}
           fallbackPublication={previewSummary}
+          cancelLoading={cancelLoadingId === previewSummary.id}
+          onCancel={() => handleCancel(previewSummary)}
           onClose={closePreview}
         />
       ) : null}
@@ -146,10 +196,14 @@ export function ScheduledPostsView({
 function ScheduledPostPreviewModal({
   publication,
   fallbackPublication,
+  cancelLoading,
+  onCancel,
   onClose,
 }: {
   publication: Publication | null;
   fallbackPublication: ScheduledPublication | null;
+  cancelLoading: boolean;
+  onCancel: () => void;
   onClose: () => void;
 }) {
   const { locale, dict } = useLanguage();
@@ -261,6 +315,24 @@ function ScheduledPostPreviewModal({
               </div>
             </div>
           </div>
+
+          <div className="flex justify-end gap-2 border-t border-gray-100 px-6 py-4 dark:border-gray-800/60">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
+            >
+              {dict.common.cancel}
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={cancelLoading}
+              className="inline-flex items-center justify-center rounded-xl border border-red-200 bg-red-50 px-3.5 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-wait disabled:opacity-60 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-950/50"
+            >
+              {cancelLoading ? dict.scheduledPosts.cancelling : dict.scheduledPosts.cancel}
+            </button>
+          </div>
         </section>
       </div>
     </>,
@@ -271,6 +343,18 @@ function ScheduledPostPreviewModal({
 function StateCard({ children }: { children: string }) {
   return (
     <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+      {children}
+    </div>
+  );
+}
+
+function FeedbackBanner({ tone, children }: { tone: "success" | "error"; children: string }) {
+  return tone === "success" ? (
+    <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300">
+      {children}
+    </div>
+  ) : (
+    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
       {children}
     </div>
   );
